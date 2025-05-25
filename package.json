@@ -18,6 +18,14 @@
   "devDependencies": {
     "@antfu/eslint-config": "catalog:lint",
     "@antfu/nip": "catalog:dev",
-    "eslint": "catalog:lint"
+    "eslint": "catalog:lint",
+    "lint-staged": "catalog:lint",
+    "simple-git-hooks": "catalog:lint"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "pnpm run lint:fix"
   }
 }
