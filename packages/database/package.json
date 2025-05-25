@@ -1,9 +1,9 @@
 {
   "name": "@repo/database",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "SQLite database layer with Drizzle ORM for movie data",
-  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {

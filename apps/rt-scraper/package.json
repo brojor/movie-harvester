@@ -1,16 +1,15 @@
 {
   "name": "rt-scraper",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "Scrapes movie ratings from Rotten Tomatoes",
-  "type": "module",
   "main": "./dist/index.js",
   "bin": "./dist/index.js",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
     "start": "node ./dist/index.js",
-    "lint": "eslint .",
     "type-check": "tsc --noEmit"
   }
 }

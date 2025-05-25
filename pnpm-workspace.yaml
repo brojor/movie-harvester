@@ -1,3 +1,10 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+catalogs:
+  dev:
+    '@antfu/nip': ^0.1.0
+  lint:
+    '@antfu/eslint-config': ^4.13.2
+    eslint: ^9.27.0

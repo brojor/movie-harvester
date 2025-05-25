@@ -3,21 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "description": "Automated movie harvesting and management system",
-  "scripts": {
-    "build": "pnpm -r run build",
-    "dev": "pnpm -r --parallel run dev",
-    "test": "pnpm -r run test",
-    "lint": "pnpm -r run lint",
-    "type-check": "pnpm -r run type-check",
-    "clean": "pnpm -r run clean && rm -rf dist build .next",
-    "db:generate": "pnpm --filter @repo/database run generate",
-    "db:push": "pnpm --filter @repo/database run push",
-    "db:migrate": "pnpm --filter @repo/database run migrate",
-    "db:studio": "pnpm --filter @repo/database run studio"
-  },
   "engines": {
     "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
+    "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@9.1.0"
+  "scripts": {
+    "build": "pnpm -r run build",
+    "lint": "eslint --cache .",
+    "lint:fix": "pnpm run lint --fix",
+    "type-check": "pnpm -r run type-check",
+    "db:generate": "pnpm --filter @repo/database run generate",
+    "db:push": "pnpm --filter @repo/database run push"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:lint",
+    "@antfu/nip": "catalog:dev",
+    "eslint": "catalog:lint"
+  }
 }

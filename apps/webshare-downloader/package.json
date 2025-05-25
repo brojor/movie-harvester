@@ -1,16 +1,15 @@
 {
   "name": "webshare-downloader",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "Downloads movies from Webshare.cz",
-  "type": "module",
   "main": "./dist/index.js",
   "bin": "./dist/index.js",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
     "start": "node ./dist/index.js",
-    "lint": "eslint .",
     "type-check": "tsc --noEmit"
   }
 }
