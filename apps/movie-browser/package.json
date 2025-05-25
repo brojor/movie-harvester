@@ -1,0 +1,14 @@
+{
+  "name": "movie-browser",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web interface for browsing and selecting movies to download",
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  }
+}

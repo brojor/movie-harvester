@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@repo/database": ["./packages/database/src"],
+      "@repo/shared": ["./packages/shared/src"],  
+      "@repo/types": ["./packages/types/src"]
+    }
+  }
+}

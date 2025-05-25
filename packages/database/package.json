@@ -1,0 +1,17 @@
+{
+  "name": "@repo/database",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SQLite database layer with Drizzle ORM for movie data",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "generate": "drizzle-kit generate",
+    "push": "drizzle-kit push",
+    "migrate": "drizzle-kit migrate",
+    "studio": "drizzle-kit studio"
+  }
+}
