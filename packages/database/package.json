@@ -7,11 +7,17 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "tsup",
     "dev": "tsdown --watch",
     "generate": "drizzle-kit generate",
     "push": "drizzle-kit push",
     "migrate": "drizzle-kit migrate",
     "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@libsql/client": "catalog:prod",
+    "@repo/shared": "workspace:*",
+    "drizzle-kit": "catalog:dev",
+    "drizzle-orm": "catalog:prod"
   }
 }

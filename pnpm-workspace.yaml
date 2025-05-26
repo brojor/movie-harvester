@@ -5,8 +5,16 @@ packages:
 catalogs:
   dev:
     '@antfu/nip': ^0.1.0
+    '@types/node': ^22.15.21
+    drizzle-kit: ^0.31.1
+    tsup: ^8.5.0
   lint:
     '@antfu/eslint-config': ^4.13.2
     eslint: ^9.27.0
     lint-staged: ^16.0.0
     simple-git-hooks: ^2.13.0
+  prod:
+    '@adonisjs/env': ^6.2.0
+    '@libsql/client': ^0.15.7
+    dotenv: ^16.5.0
+    drizzle-orm: ^0.43.1
