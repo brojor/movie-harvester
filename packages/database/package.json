@@ -17,6 +17,7 @@
   "dependencies": {
     "@libsql/client": "catalog:prod",
     "@repo/shared": "workspace:*",
+    "dotenv": "catalog:prod",
     "drizzle-kit": "catalog:dev",
     "drizzle-orm": "catalog:prod"
   }

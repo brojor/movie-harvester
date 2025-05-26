@@ -4,5 +4,5 @@ export const baseConfig: Options = {
   entry: ['src/index.ts'],
   format: ['esm'],
   clean: true,
-  external: ['fs'],
+  dts: true,
 }

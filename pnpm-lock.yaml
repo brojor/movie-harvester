@@ -84,7 +84,11 @@ importers:
 
   apps/metadata-fetcher: {}
 
-  apps/movie-browser: {}
+  apps/movie-browser:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
 
   apps/rt-scraper: {}
 
@@ -102,6 +106,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../shared
+      dotenv:
+        specifier: catalog:prod
+        version: 16.5.0
       drizzle-kit:
         specifier: catalog:dev
         version: 0.31.1
@@ -109,7 +116,11 @@ importers:
         specifier: catalog:prod
         version: 0.43.1(@libsql/client@0.15.7)
 
-  packages/shared: {}
+  packages/shared:
+    dependencies:
+      '@adonisjs/env':
+        specifier: catalog:prod
+        version: 6.2.0
 
   packages/types: {}
 

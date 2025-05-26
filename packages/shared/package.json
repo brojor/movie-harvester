@@ -9,5 +9,8 @@
   "scripts": {
     "build": "tsup",
     "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@adonisjs/env": "catalog:prod"
   }
 }
