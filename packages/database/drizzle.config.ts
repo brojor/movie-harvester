@@ -1,13 +1,11 @@
-import process from 'node:process'
-import dotenv from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
-
-dotenv.config({ path: '../../.env' })
+// eslint-disable-next-line antfu/no-import-dist
+import { env } from '../shared/dist/index.js'
 
 export default defineConfig({
   schema: './src/schema.ts',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    url: env.DATABASE_URL,
   },
 })

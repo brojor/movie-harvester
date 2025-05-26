@@ -1,10 +1,14 @@
-import { cwd } from 'node:process'
-import { pathToFileURL } from 'node:url'
-import { Env } from '@adonisjs/env'
+import { dirname, resolve } from 'node:path'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import dotenv from 'dotenv'
+import { z } from 'zod'
 
-// eslint-disable-next-line antfu/no-top-level-await
-const env = await Env.create(pathToFileURL(cwd()), {
-  DATABASE_URL: Env.schema.string(),
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: resolve(__dirname, '../../../.env') })
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
 })
 
-export { env }
+export const env = envSchema.parse(process.env)
