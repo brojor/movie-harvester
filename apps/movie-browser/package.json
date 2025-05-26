@@ -12,6 +12,8 @@
   "dependencies": {
     "@nuxt/eslint": "catalog:lint",
     "@nuxt/fonts": "catalog:prod",
+    "@vueuse/core": "catalog:prod",
+    "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
     "nuxt": "catalog:prod",
     "vue": "catalog:prod",
