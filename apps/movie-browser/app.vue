@@ -1,6 +1,80 @@
+<script setup lang="ts">
+import { onKeyStroke } from '@vueuse/core'
+
+const { data: movies } = await useFetch('/api/movies')
+const img = useImage()
+
+const currentIndex = ref(0)
+const currentMovie = computed(() => movies.value?.[currentIndex.value])
+const moviesCount = computed(() => movies.value?.length ?? 0)
+
+onKeyStroke('ArrowDown', (e) => {
+  e.preventDefault()
+  currentIndex.value = (currentIndex.value + 1) % moviesCount.value
+})
+
+onKeyStroke('ArrowUp', (e) => {
+  e.preventDefault()
+  currentIndex.value = (currentIndex.value - 1 + moviesCount.value) % moviesCount.value
+})
+
+const prefetchLinks = computed(() => {
+  const nextMovie = (movies.value?.[(currentIndex.value + 1) % moviesCount.value])
+  if (!nextMovie)
+    return []
+  const poster = img.getImage(nextMovie.posterPath, { provider: 'tmdbPoster' })
+  const backdrop = img.getImage(nextMovie.backdropPath, { provider: 'tmdbBackdrop' })
+  return [
+    {
+      rel: 'prefetch',
+      href: poster.url,
+      as: 'image' as const,
+    },
+    {
+      rel: 'prefetch',
+      href: backdrop.url,
+      as: 'image' as const,
+    },
+  ]
+})
+
+function formatMinutesVerbose(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  else {
+    return `${minutes}m`
+  }
+}
+
+useHead({
+  link: prefetchLinks,
+})
+</script>
+
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
+  <div v-if="currentMovie" class="text-white">
+    <NuxtImg provider="tmdbBackdrop" :src="currentMovie.backdropPath" class="h-screen w-full object-cover" />
+    <div class="absolute top-0 left-0 w-full h-full bg-black/70">
+      <div class="px-[5vw] py-[10vh] h-full flex items-center gap-[5vw]">
+        <NuxtImg provider="tmdbPoster" :src="currentMovie.posterPath" class="h-[60vh]" />
+        <div class="h-full">
+          <h1 class="text-[3vw] font-bold mb-2">
+            {{ `${currentMovie.title} / ${currentMovie.originalTitle} (${currentMovie.releaseDate.split('-')[0]})` }}
+          </h1>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-[1vw]">{{ currentMovie.genres.join(', ') }}</span>
+            <span class="text-[1vw]">•</span>
+            <span class="text-[1vw]">{{ formatMinutesVerbose(currentMovie.runtime ?? 0) }}</span>
+          </div>
+          <p class="text-[1vw] max-w-[65ch]">
+            {{ currentMovie.overview }}
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

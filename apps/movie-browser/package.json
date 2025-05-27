@@ -3,8 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
     "dev": "nuxt dev",
+    "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -12,13 +12,21 @@
   "dependencies": {
     "@nuxt/eslint": "catalog:lint",
     "@nuxt/fonts": "catalog:prod",
+    "@nuxt/image": "catalog:prod",
+    "@repo/database": "workspace:*",
+    "@types/lodash-es": "catalog:dev",
     "@unocss/nuxt": "catalog:prod",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
+    "lodash-es": "catalog:prod",
     "nuxt": "catalog:prod",
+    "ufo": "catalog:prod",
     "unocss": "catalog:prod",
     "vue": "catalog:prod",
     "vue-router": "catalog:prod"
+  },
+  "devDependencies": {
+    "@antfu/nip": "catalog:dev"
   }
 }
