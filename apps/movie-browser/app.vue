@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onKeyStroke } from '@vueuse/core'
+import { onKeyStroke, useFullscreen } from '@vueuse/core'
 
 const { data: movies } = await useFetch('/api/movies')
 const img = useImage()
+const { toggle: toggleFullscreen } = useFullscreen()
 
 const currentIndex = ref(0)
 const currentMovie = computed(() => movies.value?.[currentIndex.value])
@@ -16,6 +17,10 @@ onKeyStroke('ArrowDown', (e) => {
 onKeyStroke('ArrowUp', (e) => {
   e.preventDefault()
   currentIndex.value = (currentIndex.value - 1 + moviesCount.value) % moviesCount.value
+})
+
+onKeyStroke('f', () => {
+  toggleFullscreen()
 })
 
 const prefetchLinks = computed(() => {
