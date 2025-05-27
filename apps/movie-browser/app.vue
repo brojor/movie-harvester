@@ -62,9 +62,13 @@ useHead({
       <div class="px-[5vw] py-[10vh] h-full flex items-center gap-[5vw]">
         <NuxtImg provider="tmdbPoster" :src="currentMovie.posterPath" class="h-[60vh]" />
         <div class="h-full">
-          <h1 class="text-[3vw] font-bold mb-2">
-            {{ `${currentMovie.title} / ${currentMovie.originalTitle} (${currentMovie.releaseDate.split('-')[0]})` }}
+          <h1 class="text-[2.5vw] font-bold mb-2">
+            {{ `${currentMovie.title} (${currentMovie.releaseDate.split('-')[0]})` }}
           </h1>
+          <h2 class="text-[1.25vw] font-bold mb-2 flex items-center gap-2">
+            <div :class="`i-circle-flags:${currentMovie.originalLanguage}`" />
+            <span class="text-[1.25vw]">{{ currentMovie.originalTitle }}</span>
+          </h2>
           <div class="flex items-center gap-2 mb-4">
             <span class="text-[1vw]">{{ currentMovie.genres.join(', ') }}</span>
             <span class="text-[1vw]">•</span>

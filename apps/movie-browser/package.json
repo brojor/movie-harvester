@@ -10,12 +10,14 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@iconify-json/circle-flags": "catalog:dev",
     "@nuxt/eslint": "catalog:lint",
     "@nuxt/fonts": "catalog:prod",
     "@nuxt/image": "catalog:prod",
     "@repo/database": "workspace:*",
     "@types/lodash-es": "catalog:dev",
     "@unocss/nuxt": "catalog:prod",
+    "@unocss/preset-icons": "catalog:dev",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
