@@ -18,6 +18,7 @@ export interface HttpClientOptions {
   userAgent?: string
   delayMs?: [number, number] | number
   cookie?: string
+  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream'
 }
 
 export function getThrottledClient(baseURL: string, options: HttpClientOptions = {}): {
@@ -30,6 +31,7 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
     delayMs,
     cookie,
+    responseType,
   } = options
 
   const httpsAgent = new https.Agent({
@@ -49,6 +51,7 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     baseURL,
     httpsAgent,
     headers,
+    responseType,
   })
 
   const onRejected = async (error: AxiosError): Promise<void> => {
