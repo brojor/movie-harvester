@@ -17,6 +17,7 @@ export interface HttpClientOptions {
   throttleConcurrency?: number
   userAgent?: string
   delayMs?: [number, number] | number
+  cookie?: string
 }
 
 export function getThrottledClient(baseURL: string, options: HttpClientOptions = {}): {
@@ -28,17 +29,26 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     throttleConcurrency = 2,
     userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
     delayMs,
+    cookie,
   } = options
 
-  const agent = new https.Agent({
+  const httpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets,
   })
 
+  const headers: Record<string, string> = {
+    'User-Agent': userAgent,
+  }
+
+  if (cookie) {
+    headers.Cookie = cookie
+  }
+
   const client = axios.create({
     baseURL,
-    httpsAgent: agent,
-    headers: { 'User-Agent': userAgent },
+    httpsAgent,
+    headers,
   })
 
   const onRejected = async (error: AxiosError): Promise<void> => {
