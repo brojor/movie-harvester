@@ -11,7 +11,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "axios": "catalog:prod",
     "dotenv": "catalog:prod",
+    "p-limit": "catalog:prod",
     "zod": "catalog:prod"
+  },
+  "devDependencies": {
+    "@antfu/nip": "catalog:dev"
   }
 }
