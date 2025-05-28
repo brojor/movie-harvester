@@ -9,6 +9,8 @@ dotenv.config({ path: resolve(__dirname, '../../../.env') })
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
+  WARFORUM_BASE_URL: z.string().url(),
+  WARFORUM_SID: z.string(),
 })
 
 export const env = envSchema.parse(process.env)
