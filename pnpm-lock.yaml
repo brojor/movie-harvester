@@ -21,6 +21,9 @@ catalogs:
     '@unocss/preset-icons':
       specifier: ^66.1.2
       version: 66.1.2
+    domhandler:
+      specifier: ^5.0.3
+      version: 5.0.3
     drizzle-kit:
       specifier: ^0.31.1
       version: 0.31.1
@@ -216,6 +219,10 @@ importers:
       iconv-lite:
         specifier: catalog:prod
         version: 0.6.3
+    devDependencies:
+      domhandler:
+        specifier: catalog:dev
+        version: 5.0.3
 
   apps/webshare-downloader: {}
 

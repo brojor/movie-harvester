@@ -16,5 +16,8 @@
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
     "iconv-lite": "catalog:prod"
+  },
+  "devDependencies": {
+    "domhandler": "catalog:dev"
   }
 }

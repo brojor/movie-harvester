@@ -1,3 +1,6 @@
+import type { Cheerio, CheerioAPI } from 'cheerio'
+import type { Element as DomElement } from 'domhandler'
+
 import { Buffer } from 'node:buffer'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
@@ -39,9 +42,14 @@ interface MovieWithTopicId extends Movie {
   topicNumber: number
 }
 
-/**
- * === Infrastructure ===
- */
+interface ParseResult {
+  movies: MovieWithTopicId[]
+  nextPage: string | null
+}
+
+/* ==========================================================================
+ * Infrastructure
+ * ========================================================================= */
 
 const ENV = {
   baseUrl: 'http://www.warforum.xyz',
@@ -83,57 +91,40 @@ main().catch(err => console.error('Fatal scraper error', err))
 async function fetchAllMovies(
   url: string,
   topicType: TopicKey,
-  allMovies: MovieWithTopicId[] = [],
+  acc: MovieWithTopicId[] = [],
 ): Promise<MovieWithTopicId[]> {
   try {
     const html = await fetchHtml(url)
-    const { movies, nextPage } = parseTopicNames(html, topicType)
+    const { movies, nextPage } = parseTopicPage(html, topicType)
 
-    const updatedMovies = [...allMovies, ...movies]
+    const collected = [...acc, ...movies]
 
     if (nextPage) {
-      return fetchAllMovies(nextPage, topicType, updatedMovies)
+      return fetchAllMovies(nextPage, topicType, collected)
     }
 
-    return updatedMovies
+    return collected
   }
   catch (error) {
     console.error('Chyba při načítání filmů:', error)
-    return allMovies
+    return acc
   }
 }
 
-function parseTopicNames(
-  htmlContent: string,
-  topicType: TopicKey,
-): { movies: MovieWithTopicId[], nextPage: string | null } {
-  const $ = cheerio.load(htmlContent)
+/* ==========================================================================
+ * HTML parsing helpers
+ * ========================================================================= */
+
+function parseTopicPage(html: string, topicType: TopicKey): ParseResult {
+  const $ = cheerio.load(html)
+
   const movies: MovieWithTopicId[] = []
-  let lastMovieDate: Date = new Date()
+  let lastRowDate: Date = new Date()
 
-  const elements = $('table.forumline:nth-child(1) tr').filter((_, element) => {
-    // filter out header and footer rows
-    if ($(element).children('td').length !== 5) {
-      return false
-    }
+  const rows = extractMovieRows($)
 
-    // filter out pinned topics
-    if ($(element).children().eq(1).children().eq(0).text().trim() === 'Důležité:') {
-      return false
-    }
-
-    return true
-  })
-
-  const nextPage = $('a:contains("Další")').first().attr('href')!
-
-  elements.each((_, element) => {
-    const title = $(element).find('a.topictitle').text().trim()
-    const url = $(element).find('a.topictitle').attr('href')!
-    const topicNumber = extractTopicId(url)
-    const movie = parseTopicName(title, topicType)
-
-    const dateString = $(element)
+  rows.each((_, row) => {
+    const dateString = $(row)
       .find('td:nth-child(5) .gensmall')
       .contents()
       .filter(function () {
@@ -142,18 +133,56 @@ function parseTopicNames(
       .text()
 
     const date = parseDate(dateString)
+    lastRowDate = date
 
-    if (!isOld(date) && movie) {
-      movies.push({
-        ...movie,
-        topicNumber,
-      })
-    }
+    if (isOld(date))
+      return
 
-    lastMovieDate = date
+    const movie = parseMovieRow(row, topicType, $)
+    if (movie)
+      movies.push(movie)
   })
 
-  return { movies, nextPage: !isOld(lastMovieDate) ? nextPage : null }
+  const nextPage = !isOld(lastRowDate)
+    ? $('a:contains("Další")').first().attr('href') ?? null
+    : null
+
+  return { movies, nextPage }
+}
+
+function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {
+  const rows = $('table.forumline:nth-child(1) tr').filter((_, row) => {
+    const cells = $(row).children('td')
+
+    if (cells.length !== 5)
+      return false // header/footer
+
+    const maybePinned = cells.eq(1).children().eq(0).text().trim()
+    return maybePinned !== 'Důležité:' // skip pinned topics
+  })
+
+  return rows
+}
+
+function parseMovieRow(
+  row: DomElement,
+  topicType: TopicKey,
+  $: CheerioAPI,
+): MovieWithTopicId | null {
+  const title = $(row).find('a.topictitle').text().trim()
+  const href = $(row).find('a.topictitle').attr('href')
+  if (!href)
+    return null
+
+  const topicNumber = extractTopicId(href)
+  const movieInfo = parseTopicName(title, topicType)
+  if (!movieInfo)
+    return null
+
+  return {
+    ...movieInfo,
+    topicNumber,
+  }
 }
 
 /**
@@ -188,9 +217,8 @@ function parseTopicName(title: string, topicType: TopicKey): Movie | null {
   }
 }
 
-function parseDate(str: string): Date {
-  const dateString = str.trim()
-  return parse(dateString, 'dd MMMM yyyy, HH:mm', new Date(), { locale: cs })
+function parseDate(raw: string): Date {
+  return parse(raw.trim(), 'dd MMMM yyyy, HH:mm', new Date(), { locale: cs })
 }
 
 function isOld(date: Date): boolean {
