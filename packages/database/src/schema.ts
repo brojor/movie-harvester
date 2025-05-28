@@ -19,9 +19,9 @@ export const moviesSource = sqliteTable(
     uhd: int(),
     hdDub: int(),
     uhdDub: int(),
-    csfdId: int(),
+    csfdId: text(),
     tmdbId: int(),
-    rtId: int(),
+    rtId: text(),
     createdAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
     updatedAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
   },
@@ -30,6 +30,7 @@ export const moviesSource = sqliteTable(
     uniqueIndex('unique_original_title_year').on(table.originalTitle, table.year),
     uniqueIndex('unique_tmdb_id').on(table.tmdbId),
     uniqueIndex('unique_csfd_id').on(table.csfdId),
+    uniqueIndex('unique_rt_id').on(table.rtId),
   ],
 )
 
