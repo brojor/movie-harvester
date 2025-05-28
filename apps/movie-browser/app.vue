@@ -63,18 +63,18 @@ useHead({
 <template>
   <div v-if="currentMovie" class="text-white">
     <NuxtImg provider="tmdbBackdrop" :src="currentMovie.backdropPath" class="h-screen w-full object-cover" />
-    <div class="absolute top-0 left-0 w-full h-full bg-black/70">
-      <div class="px-[5vw] py-[10vh] h-full flex items-center gap-[5vw]">
+    <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex items-center">
+      <div class="px-[5vw] py-[10vh] flex gap-[5vw]">
         <NuxtImg provider="tmdbPoster" :src="currentMovie.posterPath" class="h-[60vh]" />
-        <div class="h-full">
-          <h1 class="text-[2.5vw] font-bold mb-2">
+        <div class="space-y-4">
+          <h1 class="text-[2.5vw] font-bold leading-[0.8] pb-2">
             {{ `${currentMovie.title} (${currentMovie.releaseDate.split('-')[0]})` }}
           </h1>
-          <h2 class="text-[1.25vw] font-bold mb-2 flex items-center gap-2">
+          <h2 class="text-[1.25vw] font-bold flex items-center gap-2">
             <div :class="`i-circle-flags:${currentMovie.originalLanguage}`" />
             <span class="text-[1.25vw]">{{ currentMovie.originalTitle }}</span>
           </h2>
-          <div class="flex items-center gap-2 mb-4">
+          <div class="flex items-center gap-2">
             <span class="text-[1vw]">{{ currentMovie.genres.join(', ') }}</span>
             <span class="text-[1vw]">•</span>
             <span class="text-[1vw]">{{ formatMinutesVerbose(currentMovie.runtime ?? 0) }}</span>
