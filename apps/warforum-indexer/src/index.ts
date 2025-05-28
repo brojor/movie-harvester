@@ -5,29 +5,41 @@ import { isBefore, parse, sub } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import iconv from 'iconv-lite'
 
-type TopicType = keyof typeof topicMap
-interface MovieInfo {
+enum TopicKey {
+  Hd = 'hd',
+  HdDub = 'hdDub',
+  Uhd = 'uhd',
+  UhdDub = 'uhdDub',
+}
+
+interface TopicMeta {
+  id: number
+  isDub: boolean
+}
+
+const TOPIC_META: Record<TopicKey, TopicMeta> = {
+  [TopicKey.Hd]: { id: 322, isDub: false },
+  [TopicKey.HdDub]: { id: 323, isDub: true },
+  [TopicKey.Uhd]: { id: 374, isDub: false },
+  [TopicKey.UhdDub]: { id: 373, isDub: true },
+} as const
+
+interface Movie {
   czechTitle: string
   originalTitle: string
   year: number
 }
 
-interface MovieWithTopic extends MovieInfo {
+interface MovieWithTopicId extends Movie {
   topicNumber: number
 }
 
 const BASE_URL = 'http://www.warforum.xyz'
 const SID = 'b7067a87df1c392366aaba56485d093f'
 
-const topicMap = {
-  hd: 322,
-  hdDub: 323,
-  uhd: 374,
-  uhdDub: 373,
-} as const
-
 async function main(): Promise<void> {
-  for (const [topicType, topicId] of Object.entries(topicMap) as [TopicType, number][]) {
+  for (const topicType of Object.values(TopicKey)) {
+    const { id: topicId } = TOPIC_META[topicType]
     const movies = await fetchAllMovies(`viewforum.php?f=${topicId}`, topicType)
     for (const movie of movies) {
       await upsertMovie(movie, topicType)
@@ -37,7 +49,11 @@ async function main(): Promise<void> {
 
 main()
 
-async function fetchAllMovies(url: string, topicType: TopicType, allMovies: MovieWithTopic[] = []): Promise<MovieWithTopic[]> {
+async function fetchAllMovies(
+  url: string,
+  topicType: TopicKey,
+  allMovies: MovieWithTopicId[] = [],
+): Promise<MovieWithTopicId[]> {
   await new Promise(resolve => setTimeout(resolve, 1000))
   try {
     const response = await fetch(`${BASE_URL}/${url}`, {
@@ -66,9 +82,12 @@ async function fetchAllMovies(url: string, topicType: TopicType, allMovies: Movi
   }
 }
 
-function parseTopicNames(htmlContent: string, topicType: TopicType): { movies: MovieWithTopic[], nextPage: string | null } {
+function parseTopicNames(
+  htmlContent: string,
+  topicType: TopicKey,
+): { movies: MovieWithTopicId[], nextPage: string | null } {
   const $ = cheerio.load(htmlContent)
-  const movies: MovieWithTopic[] = []
+  const movies: MovieWithTopicId[] = []
   let lastMovieDate: Date = new Date()
 
   const elements = $('table.forumline:nth-child(1) tr').filter((_, element) => {
@@ -87,15 +106,19 @@ function parseTopicNames(htmlContent: string, topicType: TopicType): { movies: M
 
   const nextPage = $('a:contains("Další")').first().attr('href')!
 
-  elements.each((i, element) => {
+  elements.each((_, element) => {
     const title = $(element).find('a.topictitle').text().trim()
     const url = $(element).find('a.topictitle').attr('href')!
     const topicNumber = extractTopicId(url)
     const movie = parseTopicName(title, topicType)
 
-    const dateString = $(element).find('td:nth-child(5) .gensmall').contents().filter(function () {
-      return this.type === 'text'
-    }).text()
+    const dateString = $(element)
+      .find('td:nth-child(5) .gensmall')
+      .contents()
+      .filter(function () {
+        return this.type === 'text'
+      })
+      .text()
 
     const date = parseDate(dateString)
 
@@ -120,7 +143,7 @@ function extractTopicId(url: string): number {
   return Number.parseInt(match[1], 10)
 }
 
-function parseTopicName(title: string, topicType: TopicType): MovieInfo | null {
+function parseTopicName(title: string, topicType: TopicKey): Movie | null {
   const regex = /^(?:(.*?) \/ )?(.*?) \((\d{4})\)$/
   const match = title.match(regex)
 
@@ -131,9 +154,7 @@ function parseTopicName(title: string, topicType: TopicType): MovieInfo | null {
   const [, first, second, yearStr] = match
   const year = Number.parseInt(yearStr, 10)
 
-  // Pro HD a UHD je první název originální, druhý český
-  // Pro HD Dub a UHD Dub je první název český, druhý originální
-  const isDub = topicType === 'hdDub' || topicType === 'uhdDub'
+  const isDub = TOPIC_META[topicType].isDub
 
   return {
     czechTitle: isDub ? (first || second).trim() : second.trim(),
@@ -151,18 +172,28 @@ function isOld(date: Date): boolean {
   return isBefore(date, sub(new Date(), { months: 6 }))
 }
 
-async function upsertMovie(movie: MovieWithTopic, topicType: TopicType): Promise<void> {
-  const isDub = topicType === 'hdDub' || topicType === 'uhdDub'
+async function upsertMovie(
+  movie: MovieWithTopicId,
+  topicType: TopicKey,
+): Promise<void> {
+  const isDub = TOPIC_META[topicType].isDub
   try {
-    await db.insert(schema.moviesSource).values({ ...movie, [topicType]: movie.topicNumber }).onConflictDoUpdate({
-      target: isDub ? [schema.moviesSource.czechTitle, schema.moviesSource.year] : [schema.moviesSource.originalTitle, schema.moviesSource.year],
-      set: {
-        [topicType]: movie.topicNumber,
-        updatedAt: new Date(),
-      },
-    })
+    await db
+      .insert(schema.moviesSource)
+      .values({ ...movie, [topicType]: movie.topicNumber })
+      .onConflictDoUpdate({
+        target: isDub
+          ? [schema.moviesSource.czechTitle, schema.moviesSource.year]
+          : [schema.moviesSource.originalTitle, schema.moviesSource.year],
+        set: {
+          [topicType]: movie.topicNumber,
+          updatedAt: new Date(),
+        },
+      })
   }
   catch {
-    console.error(`Error upserting movie "${movie.czechTitle}" / "${movie.originalTitle}" (${movie.year})`)
+    console.error(
+      `Error upserting movie \"${movie.czechTitle}\" / \"${movie.originalTitle}\" (${movie.year})`,
+    )
   }
 }
