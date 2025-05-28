@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
     "iconv-lite": "catalog:prod"

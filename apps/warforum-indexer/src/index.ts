@@ -1,9 +1,14 @@
 import { Buffer } from 'node:buffer'
 import { db, schema } from '@repo/database'
+import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
 import { isBefore, parse, sub } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import iconv from 'iconv-lite'
+
+/**
+ * === Domain types ===
+ */
 
 enum TopicKey {
   Hd = 'hd',
@@ -34,38 +39,54 @@ interface MovieWithTopicId extends Movie {
   topicNumber: number
 }
 
-const BASE_URL = 'http://www.warforum.xyz'
-const SID = 'b7067a87df1c392366aaba56485d093f'
+/**
+ * === Infrastructure ===
+ */
+
+const ENV = {
+  baseUrl: 'http://www.warforum.xyz',
+  sid: 'b7067a87df1c392366aaba56485d093f',
+} as const
+
+const httpClient = getThrottledClient(ENV.baseUrl, {
+  cookie: `warforum_sid=${ENV.sid}`,
+  responseType: 'arraybuffer',
+  delayMs: [1000, 1500],
+})
+
+async function fetchHtml(relativeUrl: string): Promise<string> {
+  const data = await httpClient.get(relativeUrl)
+  return iconv.decode(Buffer.from(data), 'windows-1250')
+}
+
+/**
+ * === Entry point ===
+ */
 
 async function main(): Promise<void> {
   for (const topicType of Object.values(TopicKey)) {
     const { id: topicId } = TOPIC_META[topicType]
     const movies = await fetchAllMovies(`viewforum.php?f=${topicId}`, topicType)
+
     for (const movie of movies) {
       await upsertMovie(movie, topicType)
     }
   }
 }
 
-main()
+main().catch(err => console.error('Fatal scraper error', err))
+
+/**
+ * === Scraper pipeline ===
+ */
 
 async function fetchAllMovies(
   url: string,
   topicType: TopicKey,
   allMovies: MovieWithTopicId[] = [],
 ): Promise<MovieWithTopicId[]> {
-  await new Promise(resolve => setTimeout(resolve, 1000))
   try {
-    const response = await fetch(`${BASE_URL}/${url}`, {
-      method: 'GET',
-      headers: {
-        Cookie: `warforum_sid=${SID}`,
-      },
-    })
-
-    const buffer = await response.arrayBuffer()
-    const html = iconv.decode(Buffer.from(buffer), 'windows-1250')
-
+    const html = await fetchHtml(url)
     const { movies, nextPage } = parseTopicNames(html, topicType)
 
     const updatedMovies = [...allMovies, ...movies]
@@ -135,6 +156,10 @@ function parseTopicNames(
   return { movies, nextPage: !isOld(lastMovieDate) ? nextPage : null }
 }
 
+/**
+ * === Helpers ===
+ */
+
 function extractTopicId(url: string): number {
   const match = url.match(/t=(\d+)/)
   if (!match) {
@@ -172,6 +197,10 @@ function isOld(date: Date): boolean {
   return isBefore(date, sub(new Date(), { months: 6 }))
 }
 
+/**
+ * === Persistence layer ===
+ */
+
 async function upsertMovie(
   movie: MovieWithTopicId,
   topicType: TopicKey,
@@ -191,9 +220,10 @@ async function upsertMovie(
         },
       })
   }
-  catch {
+  catch (err) {
     console.error(
       `Error upserting movie \"${movie.czechTitle}\" / \"${movie.originalTitle}\" (${movie.year})`,
+      err,
     )
   }
 }
