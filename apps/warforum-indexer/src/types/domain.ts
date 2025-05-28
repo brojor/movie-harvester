@@ -6,8 +6,8 @@ export enum TopicKey {
 }
 
 export interface TopicMeta {
-  id: number
-  isDub: boolean
+  readonly id: number
+  readonly isDub: boolean
 }
 
 export const TOPIC_META: Record<TopicKey, TopicMeta> = {
@@ -18,13 +18,13 @@ export const TOPIC_META: Record<TopicKey, TopicMeta> = {
 } as const
 
 export interface Movie {
-  czechTitle: string
-  originalTitle: string
-  year: number
+  readonly czechTitle: string
+  readonly originalTitle: string
+  readonly year: number
 }
 
 export interface MovieWithTopicId extends Movie {
-  topicNumber: number
+  readonly topicNumber: number
 }
 
 export interface ParseResult {
