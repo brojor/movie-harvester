@@ -109,36 +109,36 @@ export const moviesToGenresRelations = relations(moviesToGenres, ({ one }) => ({
 
 export const moviesSourceRelations = relations(moviesSource, ({ one }) => ({
   tmdbData: one(tmdbData, {
-    fields: [moviesSource.tmdbId],
-    references: [tmdbData.id],
+    fields: [moviesSource.id],
+    references: [tmdbData.sourceId],
   }),
   csfdData: one(csfdData, {
-    fields: [moviesSource.csfdId],
-    references: [csfdData.id],
+    fields: [moviesSource.id],
+    references: [csfdData.sourceId],
   }),
   rtData: one(rtData, {
-    fields: [moviesSource.rtId],
-    references: [rtData.id],
+    fields: [moviesSource.id],
+    references: [rtData.sourceId],
   }),
 }))
 
 export const tmdbDataRelations = relations(tmdbData, ({ one }) => ({
   movieSource: one(moviesSource, {
-    fields: [tmdbData.id],
-    references: [moviesSource.tmdbId],
+    fields: [tmdbData.sourceId],
+    references: [moviesSource.id],
   }),
 }))
 
 export const csfdDataRelations = relations(csfdData, ({ one }) => ({
   movieSource: one(moviesSource, {
-    fields: [csfdData.id],
-    references: [moviesSource.csfdId],
+    fields: [csfdData.sourceId],
+    references: [moviesSource.id],
   }),
 }))
 
 export const rtDataRelations = relations(rtData, ({ one }) => ({
   movieSource: one(moviesSource, {
-    fields: [rtData.id],
-    references: [moviesSource.rtId],
+    fields: [rtData.sourceId],
+    references: [moviesSource.id],
   }),
 }))
