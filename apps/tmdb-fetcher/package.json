@@ -1,0 +1,22 @@
+{
+  "name": "tmdb-fetcher",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fetches movie metadata from TMDb based on local title database",
+  "main": "./dist/index.js",
+  "bin": "./dist/index.js",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "build": "tsup",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "drizzle-orm": "catalog:prod"
+  },
+  "devDependencies": {
+    "@repo/types": "workspace:*"
+  }
+}

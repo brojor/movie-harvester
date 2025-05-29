@@ -11,6 +11,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   WARFORUM_BASE_URL: z.string().url(),
   WARFORUM_SID: z.string(),
+  TMDB_BASE_URL: z.string().url(),
+  TMDB_API_KEY: z.string(),
 })
 
 export const env = envSchema.parse(process.env)

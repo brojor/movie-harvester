@@ -19,6 +19,7 @@ export interface HttpClientOptions {
   delayMs?: [number, number] | number
   cookie?: string
   responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream'
+  headers?: Record<string, string>
 }
 
 export function getThrottledClient(baseURL: string, options: HttpClientOptions = {}): {
@@ -32,6 +33,7 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     delayMs,
     cookie,
     responseType,
+    headers: headersFromOptions,
   } = options
 
   const httpsAgent = new https.Agent({
@@ -41,6 +43,7 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
 
   const headers: Record<string, string> = {
     'User-Agent': userAgent,
+    ...headersFromOptions,
   }
 
   if (cookie) {

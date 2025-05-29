@@ -1,0 +1,21 @@
+[
+  { "id": 12, "name": "Dobrodružný" },
+  { "id": 14, "name": "Fantasy" },
+  { "id": 16, "name": "Animovaný" },
+  { "id": 18, "name": "Drama" },
+  { "id": 27, "name": "Horor" },
+  { "id": 28, "name": "Akční" },
+  { "id": 35, "name": "Komedie" },
+  { "id": 36, "name": "Historický" },
+  { "id": 37, "name": "Western" },
+  { "id": 53, "name": "Thriller" },
+  { "id": 80, "name": "Krimi" },
+  { "id": 99, "name": "Dokumentární" },
+  { "id": 878, "name": "Vědeckofantastický" },
+  { "id": 9648, "name": "Mysteriózní" },
+  { "id": 10402, "name": "Hudební" },
+  { "id": 10749, "name": "Romantický" },
+  { "id": 10751, "name": "Rodinný" },
+  { "id": 10752, "name": "Válečný" },
+  { "id": 10770, "name": "Televizní film" }
+]

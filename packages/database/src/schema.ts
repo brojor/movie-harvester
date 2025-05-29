@@ -47,7 +47,7 @@ export const tmdbData = sqliteTable('tmdb_data', {
   originalTitle: text().notNull(),
   originalLanguage: text().notNull(),
   posterPath: text().notNull(),
-  backdropPath: text().notNull(),
+  backdropPath: text(),
   releaseDate: text().notNull(),
   runtime: int().notNull(),
   voteAverage: real().notNull(),
