@@ -8,6 +8,13 @@
   "bin": "./dist/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
+    "build": "tsup",
     "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "cheerio": "catalog:prod",
+    "drizzle-orm": "catalog:prod"
   }
 }
