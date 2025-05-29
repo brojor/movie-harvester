@@ -25,10 +25,12 @@
     "nuxt": "catalog:prod",
     "ufo": "catalog:prod",
     "unocss": "catalog:prod",
+    "unocss-preset-scrollbar-hide": "catalog:dev",
     "vue": "catalog:prod",
     "vue-router": "catalog:prod"
   },
   "devDependencies": {
-    "@antfu/nip": "catalog:dev"
+    "@antfu/nip": "catalog:dev",
+    "drizzle-orm": "catalog:prod"
   }
 }

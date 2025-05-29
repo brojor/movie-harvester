@@ -62,11 +62,16 @@ useHead({
 
 <template>
   <div v-if="currentMovie" class="text-white">
-    <NuxtImg provider="tmdbBackdrop" :src="currentMovie.backdropPath" class="h-screen w-full object-cover" />
+    <NuxtImg v-if="currentMovie.backdropPath" provider="tmdbBackdrop" :src="currentMovie.backdropPath" class="h-screen w-full object-cover" />
     <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex items-center">
       <div class="px-[5vw] py-[10vh] flex gap-[5vw]">
         <NuxtImg provider="tmdbPoster" :src="currentMovie.posterPath" class="h-[60vh]" />
-        <div class="space-y-4">
+        <div class="space-y-4 max-h-[60vh] flex flex-col">
+          <div class="font-bold text-lg">
+            <span :class="{ 'text-gray-500': currentMovie.csfdVoteAverage < 40, 'text-blue-500': currentMovie.csfdVoteAverage < 70, 'text-red-500': currentMovie.csfdVoteAverage >= 70 }">ČSFD: {{ currentMovie.csfdVoteAverage }}%</span>
+            <span class="mx-2">/</span>
+            <span :class="{ 'text-gray-500': currentMovie.tmdbVoteAverage < 40, 'text-blue-500': currentMovie.tmdbVoteAverage < 70, 'text-red-500': currentMovie.tmdbVoteAverage >= 70 }">TMDB: {{ (currentMovie.tmdbVoteAverage).toFixed(0) }}%</span>
+          </div>
           <h1 class="text-[2.5vw] font-bold leading-[0.8] pb-2">
             {{ `${currentMovie.title} (${currentMovie.releaseDate.split('-')[0]})` }}
           </h1>
@@ -79,7 +84,7 @@ useHead({
             <span class="text-[1vw]">•</span>
             <span class="text-[1vw]">{{ formatMinutesVerbose(currentMovie.runtime ?? 0) }}</span>
           </div>
-          <p class="text-[1vw] max-w-[65ch]">
+          <p class="text-[1.3vw] max-w-[65ch] overflow-y-auto scrollbar-hide">
             {{ currentMovie.overview }}
           </p>
         </div>
