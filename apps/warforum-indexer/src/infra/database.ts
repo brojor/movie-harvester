@@ -1,6 +1,9 @@
 import type { MovieWithTopicId, TopicKey } from '../types/domain.js'
 import { db, schema } from '@repo/database'
+import { eq, isNull } from 'drizzle-orm'
 import { TOPIC_META } from '../types/domain.js'
+
+export type MovieSource = typeof schema.moviesSource.$inferSelect
 
 export async function upsertMovie(
   movie: MovieWithTopicId,
@@ -27,4 +30,12 @@ export async function upsertMovie(
       err,
     )
   }
+}
+
+export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
+  return db.select().from(schema.moviesSource).where(isNull(schema.moviesSource.csfdId))
+}
+
+export async function updateCsfdId(movie: MovieSource, csfdId: string): Promise<void> {
+  await db.update(schema.moviesSource).set({ csfdId }).where(eq(schema.moviesSource.id, movie.id))
 }

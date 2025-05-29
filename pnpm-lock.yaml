@@ -12,6 +12,9 @@ catalogs:
     '@iconify-json/circle-flags':
       specifier: ^1.2.6
       version: 1.2.6
+    '@types/he':
+      specifier: ^1.2.3
+      version: 1.2.3
     '@types/lodash-es':
       specifier: ^4.17.12
       version: 4.17.12
@@ -80,6 +83,9 @@ catalogs:
     drizzle-orm:
       specifier: ^0.43.1
       version: 0.43.1
+    he:
+      specifier: ^1.2.0
+      version: 1.2.0
     iconv-lite:
       specifier: ^0.6.3
       version: 0.6.3
@@ -134,7 +140,20 @@ importers:
         specifier: catalog:dev
         version: 8.5.0(jiti@2.4.2)(postcss@8.5.3)(typescript@5.8.3)(yaml@2.8.0)
 
-  apps/csfd-scraper: {}
+  apps/csfd-scraper:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      cheerio:
+        specifier: catalog:prod
+        version: 1.0.0
+      drizzle-orm:
+        specifier: catalog:prod
+        version: 0.43.1(@libsql/client@0.15.7)
 
   apps/link-checker: {}
 
@@ -210,12 +229,21 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@types/he':
+        specifier: catalog:dev
+        version: 1.2.3
       cheerio:
         specifier: catalog:prod
         version: 1.0.0
       date-fns:
         specifier: catalog:prod
         version: 4.1.0
+      drizzle-orm:
+        specifier: catalog:prod
+        version: 0.43.1(@libsql/client@0.15.7)
+      he:
+        specifier: catalog:prod
+        version: 1.2.0
       iconv-lite:
         specifier: catalog:prod
         version: 0.6.3
@@ -1552,6 +1580,9 @@ packages:
 
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
+
+  '@types/he@1.2.3':
+    resolution: {integrity: sha512-q67/qwlxblDzEDvzHhVkwc1gzVWxaNxeyHUBF4xElrvjL11O+Ytze+1fGpBHlr/H9myiBUaUXNnNPmBHxxfAcA==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -3498,6 +3529,10 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  he@1.2.0:
+    resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
+    hasBin: true
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -7388,6 +7423,8 @@ snapshots:
 
   '@types/estree@1.0.7': {}
 
+  '@types/he@1.2.3': {}
+
   '@types/json-schema@7.0.15': {}
 
   '@types/lodash-es@4.17.12':
@@ -9589,6 +9626,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  he@1.2.0: {}
 
   hookable@5.5.3: {}
 

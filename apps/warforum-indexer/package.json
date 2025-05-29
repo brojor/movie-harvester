@@ -14,8 +14,11 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@types/he": "catalog:dev",
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
+    "drizzle-orm": "catalog:prod",
+    "he": "catalog:prod",
     "iconv-lite": "catalog:prod"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
-import type { Movie, TopicKey } from '../types/domain.js'
-import { TOPIC_META } from '../types/domain.js'
+import type { MovieSource } from '../infra/database.js'
+import type { Movie } from '../types/domain.js'
+import { TOPIC_META, TopicKey } from '../types/domain.js'
 
 export function extractTopicId(url: string): number {
   const match = url.match(/t=(\d+)/)
@@ -27,4 +28,14 @@ export function parseTopicName(title: string, topicType: TopicKey): Movie | null
     originalTitle: isDub ? second.trim() : (first || second).trim(),
     year,
   }
+}
+
+export function getTopicId(movie: MovieSource): number {
+  for (const key of Object.values(TopicKey)) {
+    const value = movie[key]
+    if (value) {
+      return value
+    }
+  }
+  throw new Error('No topic ID found')
 }
