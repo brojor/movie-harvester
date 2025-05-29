@@ -248,6 +248,9 @@ importers:
         specifier: catalog:prod
         version: 0.6.3
     devDependencies:
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       domhandler:
         specifier: catalog:dev
         version: 5.0.3
@@ -291,7 +294,11 @@ importers:
         specifier: catalog:dev
         version: 0.1.0
 
-  packages/types: {}
+  packages/types:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
 
 packages:
 

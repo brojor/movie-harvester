@@ -1,9 +1,8 @@
+import type { MovieSource } from '@repo/types'
 import type { MovieWithTopicId, TopicKey } from '../types/domain.js'
 import { db, schema } from '@repo/database'
 import { eq, isNull } from 'drizzle-orm'
 import { TOPIC_META } from '../types/domain.js'
-
-export type MovieSource = typeof schema.moviesSource.$inferSelect
 
 export async function upsertMovie(
   movie: MovieWithTopicId,
