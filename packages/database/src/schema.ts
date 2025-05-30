@@ -72,10 +72,10 @@ export const csfdData = sqliteTable('csfd_data', {
 export const rtData = sqliteTable('rt_data', {
   id: int().primaryKey(),
   sourceId: int().references(() => moviesSource.id),
-  criticsScore: real().notNull(),
-  criticsReviews: int().notNull(),
-  audienceScore: real().notNull(),
-  audienceReviews: int().notNull(),
+  criticsScore: int(),
+  criticsReviews: int(),
+  audienceScore: int(),
+  audienceReviews: int(),
 })
 
 export const moviesToGenres = sqliteTable(
