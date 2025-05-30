@@ -46,7 +46,7 @@ async function main(): Promise<void> {
       overview: movieDetails.overview,
     }).onConflictDoNothing()
 
-    await db.insert(schema.moviesToGenres).values(movieDetails.genres.map(genre => ({
+    await db.insert(schema.tmdbToGenres).values(movieDetails.genres.map(genre => ({
       movieId: movieDetails.id,
       genreId: genre.id,
     }))).onConflictDoNothing()
@@ -78,7 +78,7 @@ async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
 }
 
 async function seedTmdbGenres(): Promise<void> {
-  await db.insert(schema.genres).values(genres).onConflictDoNothing()
+  await db.insert(schema.tmdbGenres).values(genres).onConflictDoNothing()
 }
 
 function normalizeTitle(input: string): string {

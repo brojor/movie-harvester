@@ -8,6 +8,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
 
+// Movies source
 export const moviesSource = sqliteTable(
   'movies_source',
   {
@@ -34,11 +35,7 @@ export const moviesSource = sqliteTable(
   ],
 )
 
-export const genres = sqliteTable('genres', {
-  id: int('id').primaryKey(),
-  name: text('name').notNull(),
-})
-
+// TMDB
 export const tmdbData = sqliteTable('tmdb_data', {
   id: int().primaryKey(),
   sourceId: int().references(() => moviesSource.id),
@@ -56,6 +53,21 @@ export const tmdbData = sqliteTable('tmdb_data', {
   overview: text().notNull(),
 })
 
+export const tmdbGenres = sqliteTable('tmdb_genres', {
+  id: int('id').primaryKey(),
+  name: text('name').notNull(),
+})
+
+export const tmdbToGenres = sqliteTable(
+  'tmdb_to_genres',
+  {
+    movieId: int().notNull().references(() => tmdbData.id),
+    genreId: int().notNull().references(() => tmdbGenres.id),
+  },
+  t => [primaryKey({ columns: [t.movieId, t.genreId] })],
+)
+
+// CSFD
 export const csfdData = sqliteTable('csfd_data', {
   id: int().primaryKey(),
   sourceId: int().references(() => moviesSource.id),
@@ -69,6 +81,21 @@ export const csfdData = sqliteTable('csfd_data', {
   overview: text().notNull(),
 })
 
+export const csfdGenres = sqliteTable('csfd_genres', {
+  id: int('id').primaryKey(),
+  name: text('name').notNull(),
+})
+
+export const csfdToGenres = sqliteTable(
+  'csfd_to_genres',
+  {
+    csfdId: int().notNull().references(() => csfdData.id),
+    genreId: int().notNull().references(() => csfdGenres.id),
+  },
+  t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
+)
+
+// RT
 export const rtData = sqliteTable('rt_data', {
   id: int().primaryKey(),
   sourceId: int().references(() => moviesSource.id),
@@ -78,35 +105,7 @@ export const rtData = sqliteTable('rt_data', {
   audienceReviews: int(),
 })
 
-export const moviesToGenres = sqliteTable(
-  'movies_to_genres',
-  {
-    movieId: int().notNull().references(() => tmdbData.id),
-    genreId: int().notNull().references(() => genres.id),
-  },
-  t => [primaryKey({ columns: [t.movieId, t.genreId] })],
-)
-
-// RELATIONS
-export const genresRelations = relations(genres, ({ many }) => ({
-  genres: many(moviesToGenres),
-}))
-
-export const moviesRelations = relations(tmdbData, ({ many }) => ({
-  genres: many(moviesToGenres),
-}))
-
-export const moviesToGenresRelations = relations(moviesToGenres, ({ one }) => ({
-  movie: one(tmdbData, {
-    fields: [moviesToGenres.movieId],
-    references: [tmdbData.id],
-  }),
-  genre: one(genres, {
-    fields: [moviesToGenres.genreId],
-    references: [genres.id],
-  }),
-}))
-
+// Relations
 export const moviesSourceRelations = relations(moviesSource, ({ one }) => ({
   tmdbData: one(tmdbData, {
     fields: [moviesSource.id],
@@ -122,23 +121,55 @@ export const moviesSourceRelations = relations(moviesSource, ({ one }) => ({
   }),
 }))
 
-export const tmdbDataRelations = relations(tmdbData, ({ one }) => ({
+export const tmdbDataRelations = relations(tmdbData, ({ one, many }) => ({
   movieSource: one(moviesSource, {
     fields: [tmdbData.sourceId],
     references: [moviesSource.id],
   }),
+  genres: many(tmdbToGenres),
 }))
 
-export const csfdDataRelations = relations(csfdData, ({ one }) => ({
+export const csfdDataRelations = relations(csfdData, ({ one, many }) => ({
   movieSource: one(moviesSource, {
     fields: [csfdData.sourceId],
     references: [moviesSource.id],
   }),
+  genres: many(csfdToGenres),
 }))
 
 export const rtDataRelations = relations(rtData, ({ one }) => ({
   movieSource: one(moviesSource, {
     fields: [rtData.sourceId],
     references: [moviesSource.id],
+  }),
+}))
+
+export const tmdbGenresRelations = relations(tmdbGenres, ({ many }) => ({
+  movies: many(tmdbToGenres),
+}))
+
+export const csfdGenresRelations = relations(csfdGenres, ({ many }) => ({
+  movies: many(csfdToGenres),
+}))
+
+export const tmdbToGenresRelations = relations(tmdbToGenres, ({ one }) => ({
+  movie: one(tmdbData, {
+    fields: [tmdbToGenres.movieId],
+    references: [tmdbData.id],
+  }),
+  genre: one(tmdbGenres, {
+    fields: [tmdbToGenres.genreId],
+    references: [tmdbGenres.id],
+  }),
+}))
+
+export const csfdToGenresRelations = relations(csfdToGenres, ({ one }) => ({
+  movie: one(csfdData, {
+    fields: [csfdToGenres.csfdId],
+    references: [csfdData.id],
+  }),
+  genre: one(csfdGenres, {
+    fields: [csfdToGenres.genreId],
+    references: [csfdGenres.id],
   }),
 }))

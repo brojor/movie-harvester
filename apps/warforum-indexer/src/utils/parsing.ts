@@ -1,4 +1,4 @@
-import type { MovieSource } from '../infra/database.js'
+import type { MovieSource } from '@repo/types'
 import type { Movie } from '../types/domain.js'
 import { TOPIC_META, TopicKey } from '../types/domain.js'
 
