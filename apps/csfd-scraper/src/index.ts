@@ -2,13 +2,15 @@ import { URLSearchParams } from 'node:url'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
-import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
+import genres from './genres.json' with { type: 'json' }
 
 const httpClient = getThrottledClient('https://www.csfd.cz', {
   delayMs: [1000, 5000],
 })
 
 async function main(): Promise<void> {
+  await seedCsfdGenres()
   await fillMissingCsfdIds()
   await fetchMissingCsfdData()
 }
@@ -79,8 +81,9 @@ async function fetchMissingCsfdData(): Promise<void> {
     const highestRes = sources[sources.length - 1]
     const posterPath = highestRes.split(' ')[0].split('/').slice(-3).join('/')
     const overview = $('.plot-full p').find('em').remove().end().text().trim()
+    const genres = $('.genres').text().split('/').map(genre => genre.trim()).filter(Boolean)
 
-    await db.insert(schema.csfdData).values({
+    const csfdDataId = await db.insert(schema.csfdData).values({
       sourceId: movie.id,
       title,
       originalTitle,
@@ -90,6 +93,23 @@ async function fetchMissingCsfdData(): Promise<void> {
       voteCount,
       posterPath,
       overview,
-    })
+    }).returning({ id: schema.csfdData.id })
+
+    // Najdeme ID žánrů v databázi a propojíme je s filmem
+    const genreIds = await db
+      .select({ id: schema.csfdGenres.id })
+      .from(schema.csfdGenres)
+      .where(inArray(schema.csfdGenres.name, genres))
+
+    await db.insert(schema.csfdToGenres).values(
+      genreIds.map(genre => ({
+        csfdId: csfdDataId[0].id,
+        genreId: genre.id,
+      })),
+    )
   }
+}
+
+async function seedCsfdGenres(): Promise<void> {
+  await db.insert(schema.csfdGenres).values(genres).onConflictDoNothing()
 }
