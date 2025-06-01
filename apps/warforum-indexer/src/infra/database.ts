@@ -32,9 +32,6 @@ export async function upsertMovie(
 }
 
 export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
-  return db.select().from(schema.moviesSource).where(isNull(schema.moviesSource.csfdId))
-}
-
-export async function updateCsfdId(movie: MovieSource, csfdId: string): Promise<void> {
-  await db.update(schema.moviesSource).set({ csfdId }).where(eq(schema.moviesSource.id, movie.id))
+  const result = await db.select().from(schema.moviesSource).leftJoin(schema.csfdData, eq(schema.moviesSource.id, schema.csfdData.sourceId)).where(isNull(schema.csfdData.id))
+  return result.map(m => m.movies_source)
 }

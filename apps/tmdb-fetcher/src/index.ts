@@ -1,8 +1,6 @@
-import type { MovieSource } from '@repo/types'
 import type { MovieDetailsResponse, SearchResult } from './types.js'
 import { db, schema } from '@repo/database'
 import { env, getThrottledClient } from '@repo/shared'
-import { eq, isNull } from 'drizzle-orm'
 import genres from './genres.json' with { type: 'json' }
 
 // Rate limit is 50 requests per second range
@@ -15,13 +13,9 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
   },
 })
 
-export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
-  return db.select().from(schema.moviesSource).where(isNull(schema.moviesSource.tmdbId))
-}
-
 async function main(): Promise<void> {
   await seedTmdbGenres()
-  const movies = await getMoviesMissingCsfdId()
+  const movies = await db.select().from(schema.moviesSource)
   for (const movie of movies) {
     const searchResults = await searchMovies(movie.originalTitle, movie.year)
     if (searchResults.length === 0) {
@@ -50,10 +44,6 @@ async function main(): Promise<void> {
       movieId: movieDetails.id,
       genreId: genre.id,
     }))).onConflictDoNothing()
-
-    await db.update(schema.moviesSource).set({
-      tmdbId: movieDetails.id,
-    }).where(eq(schema.moviesSource.id, movie.id))
   }
 }
 

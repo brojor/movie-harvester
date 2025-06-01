@@ -1,4 +1,7 @@
-import { getMoviesMissingCsfdId, updateCsfdId, upsertMovie } from './infra/database.js'
+import { writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import process from 'node:process'
+import { getMoviesMissingCsfdId, upsertMovie } from './infra/database.js'
 import { fetchAllMovies } from './scraper/fetchAllMovies.js'
 import { fetchCsfdId } from './scraper/fetchCsfdId.js'
 import { TOPIC_META, TopicKey } from './types/domain.js'
@@ -18,11 +21,15 @@ async function main(): Promise<void> {
   // Fetch CSFD IDs for movies missing them
   const movies = await getMoviesMissingCsfdId()
 
+  const csfdIds = []
   for (const movie of movies) {
     const topicId = getTopicId(movie)
     const csfdId = await fetchCsfdId(topicId)
-    await updateCsfdId(movie, csfdId)
+    csfdIds.push(csfdId)
   }
+
+  const dataPath = path.join(process.cwd(), '../../', 'missingCsfdIds.json')
+  await writeFile(dataPath, JSON.stringify(csfdIds, null, 2))
 }
 
 main().catch(err => console.error('Fatal scraper error', err))

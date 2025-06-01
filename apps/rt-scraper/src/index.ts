@@ -2,7 +2,14 @@ import { URLSearchParams } from 'node:url'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
-import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+
+interface RtData {
+  criticsScore: number | null
+  audienceScore: number | null
+  criticsReviews: number | null
+  audienceReviews: number | null
+  rtId: string
+}
 
 const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
   delayMs: [1000, 5000],
@@ -10,20 +17,27 @@ const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
 
 async function main(): Promise<void> {
   await fillMissingRtIds()
-  await fetchMissingRtData()
 }
 
 main()
 
 async function fillMissingRtIds(): Promise<void> {
-  const movies = await db.select().from(schema.moviesSource).where(isNull(schema.moviesSource.rtId))
+  const movies = await db.select().from(schema.moviesSource)
   for (const movie of movies) {
-    const slug = await getRTSlug(normalizeTitle(movie.originalTitle), movie.year)
-    await db.update(schema.moviesSource).set({ rtId: slug }).where(eq(schema.moviesSource.id, movie.id))
+    const rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
+    if (!rtId) {
+      console.error(`Movie ${movie.originalTitle} (${movie.year}) not found`)
+      continue
+    }
+    const rtData = await fetchRtData(rtId)
+    await db.insert(schema.rtData).values({
+      sourceId: movie.id,
+      ...rtData,
+    })
   }
 }
 
-async function getRTSlug(title: string, year: number): Promise<string | null> {
+async function getRtId(title: string, year: number): Promise<string | null> {
   const queryString = new URLSearchParams({ search: title }).toString()
   const html = await httpClient.get(`/search?${queryString}`)
 
@@ -32,41 +46,29 @@ async function getRTSlug(title: string, year: number): Promise<string | null> {
     const parsedTitle = $(this).find('a[data-qa="info-name"]').text().trim()
     const parsedYear = $(this).attr('releaseyear')?.toString().trim()
 
-    console.log(parsedTitle === title && parsedYear === year.toString())
-
     return parsedTitle === title && parsedYear === year.toString()
   }).find('a[data-qa="info-name"]').attr('href')
 
-  const slug = url?.split('/').filter(Boolean).pop()
+  const id = url?.split('/').filter(Boolean).pop()
 
-  return slug ?? null
+  return id ?? null
 }
 
-async function fetchMissingRtData(): Promise<void> {
-  const moviesMissingRtData = (
-    await db
-      .select()
-      .from(schema.moviesSource)
-      .leftJoin(schema.rtData, eq(schema.rtData.sourceId, schema.moviesSource.id))
-      .where(and(isNotNull(schema.moviesSource.rtId), isNull(schema.rtData.id)))
-  ).map(m => m.movies_source)
+async function fetchRtData(rtId: string): Promise<RtData> {
+  const html = await httpClient.get(`/m/${rtId}`)
+  const $ = cheerio.load(html)
 
-  for (const movie of moviesMissingRtData) {
-    const html = await httpClient.get(`/m/${movie.rtId}`)
-    const $ = cheerio.load(html)
+  const criticsScore = $('media-scorecard rt-text[slot="criticsScore"]').text().trim()
+  const audienceScore = $('media-scorecard rt-text[slot="audienceScore"]').text().trim()
+  const criticsReviews = $('media-scorecard rt-link[slot="criticsReviews"]').text().trim().replace(/\D/g, '')
+  const audienceReviews = $('media-scorecard rt-link[slot="audienceReviews"]').text().trim().replace(/\D/g, '')
 
-    const criticsScore = $('media-scorecard rt-text[slot="criticsScore"]').text().trim()
-    const audienceScore = $('media-scorecard rt-text[slot="audienceScore"]').text().trim()
-    const criticsReviews = $('media-scorecard rt-link[slot="criticsReviews"]').text().trim().replace(/\D/g, '')
-    const audienceReviews = $('media-scorecard rt-link[slot="audienceReviews"]').text().trim().replace(/\D/g, '')
-
-    await db.insert(schema.rtData).values({
-      sourceId: movie.id,
-      criticsScore: parseNullableInt(criticsScore),
-      audienceScore: parseNullableInt(audienceScore),
-      criticsReviews: parseNullableInt(criticsReviews),
-      audienceReviews: parseNullableInt(audienceReviews),
-    })
+  return {
+    criticsScore: parseNullableInt(criticsScore),
+    audienceScore: parseNullableInt(audienceScore),
+    criticsReviews: parseNullableInt(criticsReviews),
+    audienceReviews: parseNullableInt(audienceReviews),
+    rtId,
   }
 }
 

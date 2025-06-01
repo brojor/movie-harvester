@@ -2,8 +2,21 @@ import { URLSearchParams } from 'node:url'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
-import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
+import { inArray } from 'drizzle-orm'
 import genres from './genres.json' with { type: 'json' }
+
+interface CsfdData {
+  title: string
+  originalTitle: string
+  releaseYear: number
+  runtime: number
+  voteAverage: number
+  voteCount: number
+  posterPath: string
+  overview: string
+  genres: string[]
+  csfdId: string
+}
 
 const httpClient = getThrottledClient('https://www.csfd.cz', {
   delayMs: [1000, 5000],
@@ -11,23 +24,41 @@ const httpClient = getThrottledClient('https://www.csfd.cz', {
 
 async function main(): Promise<void> {
   await seedCsfdGenres()
-  await fillMissingCsfdIds()
-  await fetchMissingCsfdData()
+  await populateCsfdData()
 }
 
 main()
 
-async function fillMissingCsfdIds(): Promise<void> {
-  const movies = await db.select().from(schema.moviesSource).where(isNull(schema.moviesSource.csfdId))
+async function populateCsfdData(): Promise<void> {
+  const movies = await db.select().from(schema.moviesSource)
   for (const movie of movies) {
-    const slug = await getCSFDSlug(movie.czechTitle, movie.year)
-    if (slug) {
-      await db.update(schema.moviesSource).set({ csfdId: slug }).where(eq(schema.moviesSource.id, movie.id))
+    const csfdId = await getCsfdId(movie.czechTitle, movie.year)
+    if (!csfdId) {
+      console.error(`Movie ${movie.czechTitle} (${movie.year}) not found`)
+      continue
     }
+    const csfdData = await fetchCsfdData(csfdId)
+
+    const csfdDataId = await db.insert(schema.csfdData).values({
+      sourceId: movie.id,
+      ...csfdData,
+    }).returning({ id: schema.csfdData.id })
+
+    const genreIds = await db
+      .select({ id: schema.csfdGenres.id })
+      .from(schema.csfdGenres)
+      .where(inArray(schema.csfdGenres.name, csfdData.genres))
+
+    await db.insert(schema.csfdToGenres).values(
+      genreIds.map(genre => ({
+        csfdId: csfdDataId[0].id,
+        genreId: genre.id,
+      })),
+    )
   }
 }
 
-async function getCSFDSlug(title: string, year: number): Promise<string | null> {
+async function getCsfdId(title: string, year: number): Promise<string | null> {
   const params = {
     q: `${title} ${year}`,
     series: '0',
@@ -53,60 +84,38 @@ async function getCSFDSlug(title: string, year: number): Promise<string | null> 
   return parts[parts.length - 1]
 }
 
-async function fetchMissingCsfdData(): Promise<void> {
-  const moviesMissingCsfdData = (
-    await db
-      .select()
-      .from(schema.moviesSource)
-      .leftJoin(schema.csfdData, eq(schema.csfdData.sourceId, schema.moviesSource.id))
-      .where(and(isNotNull(schema.moviesSource.csfdId), isNull(schema.csfdData.id)))
-  ).map(m => m.movies_source)
+async function fetchCsfdData(csfdId: string): Promise<CsfdData> {
+  const html = await httpClient.get(`/film/${csfdId}/prehled/`)
+  const $ = cheerio.load(html)
 
-  for (const movie of moviesMissingCsfdData) {
-    const html = await httpClient.get(`/film/${movie.csfdId}/prehled/`)
-    const $ = cheerio.load(html)
+  const title = $('h1').text().trim()
+  const originalTitle = $('ul.film-names').children().first().contents().filter(function () {
+    return this.type === 'text'
+  }).text().trim()
+  const origin = $('.film-info .origin').text().trim()
+  const [_country, releaseYear, runtimeString] = origin.split(', ').map(part => part.trim())
+  const runtime = Number.parseInt(runtimeString.replace('min', ''))
+  const voteAverage = Number.parseInt($('.film-info .film-rating-average').text().trim().replace(/\D/g, '')) || 0
+  const voteCount = Number.parseInt($('li.ratings-btn span.counter').text().trim().replace('(', '').replace(/\D/g, '')) || 0
 
-    const title = $('h1').text().trim()
-    const originalTitle = $('ul.film-names').children().first().contents().filter(function () {
-      return this.type === 'text'
-    }).text().trim()
-    const origin = $('.film-info .origin').text().trim()
-    const [_country, releaseYear, runtimeString] = origin.split(', ').map(part => part.trim())
-    const runtime = Number.parseInt(runtimeString.replace('min', ''))
-    const voteAverage = Number.parseInt($('.film-info .film-rating-average').text().trim().replace(/\D/g, '')) || 0
-    const voteCount = Number.parseInt($('li.ratings-btn span.counter').text().trim().replace('(', '').replace(/\D/g, '')) || 0
+  const posterSrcSet = $('.film-posters').find('img').attr('srcset') ?? ''
+  const sources = posterSrcSet.split(',').map(src => src.trim())
+  const highestRes = sources[sources.length - 1]
+  const posterPath = highestRes.split(' ')[0].split('/').slice(-3).join('/')
+  const overview = $('.plot-full p').find('em').remove().end().text().trim()
+  const genres = $('.genres').text().split('/').map(genre => genre.trim()).filter(Boolean)
 
-    const posterSrcSet = $('.film-posters').find('img').attr('srcset') ?? ''
-    const sources = posterSrcSet.split(',').map(src => src.trim())
-    const highestRes = sources[sources.length - 1]
-    const posterPath = highestRes.split(' ')[0].split('/').slice(-3).join('/')
-    const overview = $('.plot-full p').find('em').remove().end().text().trim()
-    const genres = $('.genres').text().split('/').map(genre => genre.trim()).filter(Boolean)
-
-    const csfdDataId = await db.insert(schema.csfdData).values({
-      sourceId: movie.id,
-      title,
-      originalTitle,
-      releaseYear: Number.parseInt(releaseYear),
-      runtime,
-      voteAverage,
-      voteCount,
-      posterPath,
-      overview,
-    }).returning({ id: schema.csfdData.id })
-
-    // Najdeme ID žánrů v databázi a propojíme je s filmem
-    const genreIds = await db
-      .select({ id: schema.csfdGenres.id })
-      .from(schema.csfdGenres)
-      .where(inArray(schema.csfdGenres.name, genres))
-
-    await db.insert(schema.csfdToGenres).values(
-      genreIds.map(genre => ({
-        csfdId: csfdDataId[0].id,
-        genreId: genre.id,
-      })),
-    )
+  return {
+    title,
+    originalTitle,
+    releaseYear: Number.parseInt(releaseYear),
+    runtime,
+    voteAverage,
+    voteCount,
+    posterPath,
+    overview,
+    genres,
+    csfdId,
   }
 }
 

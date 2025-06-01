@@ -8,6 +8,11 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
 
+const timestamps = {
+  createdAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}
+
 // Movies source
 export const moviesSource = sqliteTable(
   'movies_source',
@@ -20,24 +25,17 @@ export const moviesSource = sqliteTable(
     uhd: int(),
     hdDub: int(),
     uhdDub: int(),
-    csfdId: text(),
-    tmdbId: int(),
-    rtId: text(),
-    createdAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-    updatedAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+    ...timestamps,
   },
   table => [
     uniqueIndex('unique_czech_title_year').on(table.czechTitle, table.year),
     uniqueIndex('unique_original_title_year').on(table.originalTitle, table.year),
-    uniqueIndex('unique_tmdb_id').on(table.tmdbId),
-    uniqueIndex('unique_csfd_id').on(table.csfdId),
-    uniqueIndex('unique_rt_id').on(table.rtId),
   ],
 )
 
 // TMDB
 export const tmdbData = sqliteTable('tmdb_data', {
-  id: int().primaryKey(),
+  id: int().primaryKey({ autoIncrement: true }),
   sourceId: int().references(() => moviesSource.id),
   imdbId: text().notNull(),
   title: text().notNull(),
@@ -51,7 +49,10 @@ export const tmdbData = sqliteTable('tmdb_data', {
   voteCount: int().notNull(),
   tagline: text().notNull(),
   overview: text().notNull(),
-})
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_tmdb_source').on(table.sourceId),
+])
 
 export const tmdbGenres = sqliteTable('tmdb_genres', {
   id: int('id').primaryKey(),
@@ -69,17 +70,22 @@ export const tmdbToGenres = sqliteTable(
 
 // CSFD
 export const csfdData = sqliteTable('csfd_data', {
-  id: int().primaryKey(),
+  id: int().primaryKey({ autoIncrement: true }),
+  csfdId: text().notNull(),
   sourceId: int().references(() => moviesSource.id),
   title: text().notNull(),
   originalTitle: text().notNull(),
   releaseYear: int().notNull(),
   runtime: int().notNull(),
-  voteAverage: real().notNull(),
+  voteAverage: int().notNull(),
   voteCount: int().notNull(),
   posterPath: text().notNull(),
   overview: text().notNull(),
-})
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_csfd_source').on(table.sourceId),
+  uniqueIndex('unique_csfd_id').on(table.csfdId),
+])
 
 export const csfdGenres = sqliteTable('csfd_genres', {
   id: int('id').primaryKey(),
@@ -97,13 +103,18 @@ export const csfdToGenres = sqliteTable(
 
 // RT
 export const rtData = sqliteTable('rt_data', {
-  id: int().primaryKey(),
+  id: int().primaryKey({ autoIncrement: true }),
+  rtId: text().notNull(),
   sourceId: int().references(() => moviesSource.id),
   criticsScore: int(),
   criticsReviews: int(),
   audienceScore: int(),
   audienceReviews: int(),
-})
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_rt_source').on(table.sourceId),
+  uniqueIndex('unique_rt_id').on(table.rtId),
+])
 
 // Relations
 export const moviesSourceRelations = relations(moviesSource, ({ one }) => ({
