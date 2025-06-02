@@ -36,9 +36,21 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     headers: headersFromOptions,
   } = options
 
-  const httpsAgent = new https.Agent({
+  let httpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets,
+    keepAliveMsecs: 15_000,
+    timeout: 10_000,
+  })
+
+  httpsAgent.on('error', (err) => {
+    console.error('HTTPS agent error', err.message)
+    httpsAgent = new https.Agent({
+      keepAlive: true,
+      maxSockets,
+      keepAliveMsecs: 15_000,
+      timeout: 10_000,
+    })
   })
 
   const headers: Record<string, string> = {
@@ -55,6 +67,7 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
     httpsAgent,
     headers,
     responseType,
+    timeout: 10_000,
   })
 
   const onRejected = async (error: AxiosError): Promise<void> => {
@@ -66,7 +79,8 @@ export function getThrottledClient(baseURL: string, options: HttpClientOptions =
 
     const status = error.response?.status
 
-    if ((status === 429 || status === 503) && config.retryCount < maxRetries) {
+    const errorCodes = ['ECONNRESET', 'ETIMEDOUT', 'ECONNABORTED', 'ECONNREFUSED']
+    if ((status === 429 || status === 503 || errorCodes.includes(error.code ?? '')) && config.retryCount < maxRetries) {
       config.retryCount++
 
       const wait = 2 ** config.retryCount * 1000

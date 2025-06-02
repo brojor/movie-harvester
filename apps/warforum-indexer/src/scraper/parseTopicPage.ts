@@ -5,7 +5,7 @@ import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
 import { extractTopicId, parseTopicName } from '../utils/parsing.js'
 
-export function parseTopicPage(html: string, topicType: TopicKey): ParseResult {
+export function parseTopicPage(html: string, topicType: TopicKey, createdAfter?: Date): ParseResult {
   const $ = cheerio.load(html)
 
   const movies: MovieWithTopicId[] = []
@@ -25,7 +25,7 @@ export function parseTopicPage(html: string, topicType: TopicKey): ParseResult {
     const date = parseDate(dateString)
     lastRowDate = date
 
-    if (isOld(date))
+    if (isOld(date, createdAfter))
       return
 
     const movie = parseMovieRow(row, topicType, $)
@@ -33,7 +33,7 @@ export function parseTopicPage(html: string, topicType: TopicKey): ParseResult {
       movies.push(movie)
   })
 
-  const nextPage = !isOld(lastRowDate)
+  const nextPage = !isOld(lastRowDate, createdAfter)
     ? $('a:contains("Další")').first().attr('href') ?? null
     : null
 

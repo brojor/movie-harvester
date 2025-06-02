@@ -6,15 +6,16 @@ export async function fetchAllMovies(
   url: string,
   topicType: TopicKey,
   acc: MovieWithTopicId[] = [],
+  createdAfter?: Date,
 ): Promise<MovieWithTopicId[]> {
   try {
     const html = await fetchHtml(url)
-    const { movies, nextPage } = parseTopicPage(html, topicType)
+    const { movies, nextPage } = parseTopicPage(html, topicType, createdAfter)
 
     const collected = [...acc, ...movies]
 
     if (nextPage) {
-      return fetchAllMovies(nextPage, topicType, collected)
+      return fetchAllMovies(nextPage, topicType, collected, createdAfter)
     }
 
     return collected

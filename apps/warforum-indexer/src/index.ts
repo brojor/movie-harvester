@@ -1,35 +1,27 @@
-import { writeFile } from 'node:fs/promises'
-import path from 'node:path'
-import process from 'node:process'
-import { getMoviesMissingCsfdId, upsertMovie } from './infra/database.js'
+import type { MovieSource } from 'packages/types/dist/index.js'
+import { db, schema } from '@repo/database'
+import { desc } from 'drizzle-orm'
+import { upsertMovie } from './infra/database.js'
 import { fetchAllMovies } from './scraper/fetchAllMovies.js'
 import { fetchCsfdId } from './scraper/fetchCsfdId.js'
 import { TOPIC_META, TopicKey } from './types/domain.js'
 import { getTopicId } from './utils/parsing.js'
 
-async function main(): Promise<void> {
-  // Fetch all movies from all topics
+export async function parseTopics(): Promise<void> {
+  const lastRun = (await db.select().from(schema.moviesSource).orderBy(desc(schema.moviesSource.createdAt)).limit(1))?.[0]?.createdAt
+
   for (const topicType of Object.values(TopicKey)) {
     const { id: topicId } = TOPIC_META[topicType]
-    const movies = await fetchAllMovies(`viewforum.php?f=${topicId}`, topicType)
+    const movies = await fetchAllMovies(`viewforum.php?f=${topicId}`, topicType, [], lastRun)
 
     for (const movie of movies) {
       await upsertMovie(movie, topicType)
     }
   }
-
-  // Fetch CSFD IDs for movies missing them
-  const movies = await getMoviesMissingCsfdId()
-
-  const csfdIds = []
-  for (const movie of movies) {
-    const topicId = getTopicId(movie)
-    const csfdId = await fetchCsfdId(topicId)
-    csfdIds.push(csfdId)
-  }
-
-  const dataPath = path.join(process.cwd(), '../../', 'missingCsfdIds.json')
-  await writeFile(dataPath, JSON.stringify(csfdIds, null, 2))
 }
 
-main().catch(err => console.error('Fatal scraper error', err))
+export async function getCsfdIdFromTopic(movie: MovieSource): Promise<string | null> {
+  const topicId = getTopicId(movie)
+  const csfdId = await fetchCsfdId(topicId)
+  return csfdId
+}

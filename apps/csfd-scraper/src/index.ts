@@ -1,15 +1,16 @@
 import { URLSearchParams } from 'node:url'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
+import { getCsfdIdFromTopic } from '@repo/warforum-indexer'
 import * as cheerio from 'cheerio'
-import { inArray } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
 import genres from './genres.json' with { type: 'json' }
 
 interface CsfdData {
   title: string
   originalTitle: string
   releaseYear: number
-  runtime: number
+  runtime: number | null
   voteAverage: number
   voteCount: number
   posterPath: string
@@ -22,20 +23,19 @@ const httpClient = getThrottledClient('https://www.csfd.cz', {
   delayMs: [1000, 5000],
 })
 
-async function main(): Promise<void> {
+export async function populateCsfdData(): Promise<void> {
   await seedCsfdGenres()
-  await populateCsfdData()
-}
-
-main()
-
-async function populateCsfdData(): Promise<void> {
-  const movies = await db.select().from(schema.moviesSource)
+  const latestCsfdData = await db.select().from(schema.csfdData).orderBy(desc(schema.csfdData.createdAt)).limit(1)
+  const res = await db.select().from(schema.moviesSource).leftJoin(schema.csfdData, eq(schema.moviesSource.id, schema.csfdData.sourceId)).where(and(isNull(schema.csfdData.id), gt(schema.moviesSource.createdAt, latestCsfdData[0].createdAt)))
+  const movies = res.map(m => m.movies_source)
   for (const movie of movies) {
-    const csfdId = await getCsfdId(movie.czechTitle, movie.year)
+    let csfdId = await getCsfdId(movie.czechTitle, movie.year)
     if (!csfdId) {
-      console.error(`Movie ${movie.czechTitle} (${movie.year}) not found`)
-      continue
+      csfdId = await getCsfdIdFromTopic(movie)
+      if (!csfdId) {
+        console.error(`Movie ${movie.czechTitle} (${movie.year}) not found`)
+        continue
+      }
     }
     const csfdData = await fetchCsfdData(csfdId)
 
@@ -89,12 +89,22 @@ async function fetchCsfdData(csfdId: string): Promise<CsfdData> {
   const $ = cheerio.load(html)
 
   const title = $('h1').text().trim()
-  const originalTitle = $('ul.film-names').children().first().contents().filter(function () {
-    return this.type === 'text'
-  }).text().trim()
   const origin = $('.film-info .origin').text().trim()
-  const [_country, releaseYear, runtimeString] = origin.split(', ').map(part => part.trim())
-  const runtime = Number.parseInt(runtimeString.replace('min', ''))
+  const [countries, releaseYear, runtimeString] = origin.split(', ').map(part => part.trim())
+  const originalTitle = $('ul.film-names')
+    .children()
+    .filter(function () {
+      const country = $(this).find('img').attr('title')
+      return country === countries.split('/')[0].trim()
+    })
+    .first()
+    .contents()
+    .filter(function () {
+      return this.type === 'text'
+    })
+    .text()
+    .trim()
+  const runtime = runtimeString ? Number.parseInt(runtimeString.replace('min', '')) : null
   const voteAverage = Number.parseInt($('.film-info .film-rating-average').text().trim().replace(/\D/g, '')) || 0
   const voteCount = Number.parseInt($('li.ratings-btn span.counter').text().trim().replace('(', '').replace(/\D/g, '')) || 0
 
@@ -107,7 +117,7 @@ async function fetchCsfdData(csfdId: string): Promise<CsfdData> {
 
   return {
     title,
-    originalTitle,
+    originalTitle: originalTitle || title,
     releaseYear: Number.parseInt(releaseYear),
     runtime,
     voteAverage,

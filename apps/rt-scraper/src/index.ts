@@ -2,6 +2,7 @@ import { URLSearchParams } from 'node:url'
 import { db, schema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
+import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 
 interface RtData {
   criticsScore: number | null
@@ -15,19 +16,23 @@ const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
   delayMs: [1000, 5000],
 })
 
-async function main(): Promise<void> {
-  await fillMissingRtIds()
-}
-
-main()
-
-async function fillMissingRtIds(): Promise<void> {
-  const movies = await db.select().from(schema.moviesSource)
+export async function populateRtData(): Promise<void> {
+  const latestRtData = await db.select().from(schema.rtData).orderBy(desc(schema.rtData.createdAt)).limit(1)
+  const res = await db.select().from(schema.moviesSource).leftJoin(schema.rtData, eq(schema.moviesSource.id, schema.rtData.sourceId)).where(and(isNull(schema.rtData.id), gt(schema.moviesSource.createdAt, latestRtData[0].createdAt)))
+  const movies = res.map(m => m.movies_source)
   for (const movie of movies) {
-    const rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
+    let rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
     if (!rtId) {
-      console.error(`Movie ${movie.originalTitle} (${movie.year}) not found`)
-      continue
+      const csfdRow = (await db.select().from(schema.csfdData).where(eq(schema.csfdData.sourceId, movie.id)).limit(1))[0]
+      if (!csfdRow || !csfdRow.originalTitle) {
+        console.error(`Movie ${movie.originalTitle} (${movie.year}) not found`)
+        continue
+      }
+      rtId = await getRtId(normalizeTitle(csfdRow.originalTitle), movie.year)
+      if (!rtId) {
+        console.error(`Movie ${movie.originalTitle} (${movie.year}) not found`)
+        continue
+      }
     }
     const rtData = await fetchRtData(rtId)
     await db.insert(schema.rtData).values({

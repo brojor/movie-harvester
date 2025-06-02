@@ -1,6 +1,9 @@
+import type { MovieSource } from '@repo/types'
 import type { MovieDetailsResponse, SearchResult } from './types.js'
 import { db, schema } from '@repo/database'
 import { env, getThrottledClient } from '@repo/shared'
+
+import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 import genres from './genres.json' with { type: 'json' }
 
 // Rate limit is 50 requests per second range
@@ -13,16 +16,18 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
   },
 })
 
-async function main(): Promise<void> {
+export async function populateTmdbData(): Promise<void> {
   await seedTmdbGenres()
-  const movies = await db.select().from(schema.moviesSource)
+  const latestTmdbData = await db.select().from(schema.tmdbData).orderBy(desc(schema.tmdbData.createdAt)).limit(1)
+  const res = await db.select().from(schema.moviesSource).leftJoin(schema.tmdbData, eq(schema.moviesSource.id, schema.tmdbData.sourceId)).where(and(isNull(schema.tmdbData.id), gt(schema.moviesSource.createdAt, latestTmdbData[0].createdAt)))
+  const movies = res.map(m => m.movies_source)
   for (const movie of movies) {
-    const searchResults = await searchMovies(movie.originalTitle, movie.year)
-    if (searchResults.length === 0) {
-      console.error(`No search results for ${movie.originalTitle} in ${movie.year}`)
+    const movieId = await findMovieIdForMovie(movie)
+    if (!movieId) {
       continue
     }
-    const movieDetails = await getMovieDetails(searchResults[0].id)
+
+    const movieDetails = await getMovieDetails(movieId)
     await db.insert(schema.tmdbData).values({
       id: movieDetails.id,
       sourceId: movie.id,
@@ -47,10 +52,10 @@ async function main(): Promise<void> {
   }
 }
 
-async function searchMovies(originalTitle: string, year: number): Promise<SearchResult[]> {
+async function searchMovies(title: string, year: number): Promise<SearchResult[]> {
   const url = '/search/movie'
   const query = new URLSearchParams({
-    query: normalizeTitle(originalTitle),
+    query: normalizeTitle(title),
     year: year.toString(),
     language: 'cs',
   })
@@ -78,4 +83,60 @@ function normalizeTitle(input: string): string {
   return input
 }
 
-main()
+function getMovieId(searchResults: SearchResult[], title: string, year: number): number | null {
+  const normalizedTitle = normalizeTitle(title)
+  const acceptableYears = [year, year - 1, year + 1]
+
+  return searchResults.find((result) => {
+    const titleMatch = result.original_title.toLowerCase() === normalizedTitle.toLowerCase() || result.title.toLowerCase() === normalizedTitle.toLowerCase()
+    const yearMatch = acceptableYears.includes(Number(result.release_date.split('-')[0]))
+
+    return titleMatch && yearMatch
+  })?.id ?? null
+}
+
+async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
+  const idFromOriginal = await trySearchByTitle(movie.originalTitle, movie.year)
+  if (idFromOriginal) {
+    return idFromOriginal
+  }
+
+  const idFromCzech = await trySearchByTitle(movie.czechTitle, movie.year)
+  if (idFromCzech) {
+    return idFromCzech
+  }
+
+  const csfdRow = (
+    await db
+      .select()
+      .from(schema.csfdData)
+      .where(eq(schema.csfdData.sourceId, movie.id))
+      .limit(1)
+  )[0]
+
+  if (!csfdRow) {
+    return null
+  }
+
+  if (csfdRow.originalTitle) {
+    const idFromCsfdOriginal = await trySearchByTitle(csfdRow.originalTitle, movie.year)
+    if (idFromCsfdOriginal) {
+      return idFromCsfdOriginal
+    }
+  }
+
+  if (csfdRow.title) {
+    const idFromCsfdTitle = await trySearchByTitle(csfdRow.title, movie.year)
+    if (idFromCsfdTitle) {
+      return idFromCsfdTitle
+    }
+  }
+
+  return null
+}
+
+async function trySearchByTitle(title: string, year: number): Promise<number | null> {
+  const searchResults = await searchMovies(title, year)
+  const foundId = getMovieId(searchResults, title, year)
+  return foundId
+}

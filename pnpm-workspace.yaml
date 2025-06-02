@@ -36,12 +36,11 @@ catalogs:
     lodash-es: ^4.17.21
     nuxt: ^3.17.4
     p-limit: ^6.2.0
+    tsx: ^4.19.4
     ufo: ^1.6.1
     unocss: ^66.1.2
     vue: ^3.5.14
     vue-router: ^4.5.1
     zod: ^3.25.28
-  conflicts_prod_h0_44_0:
-    drizzle-orm: ^0.44.0
 onlyBuiltDependencies:
   - '@parcel/watcher'

@@ -1,10 +1,11 @@
 {
-  "name": "warforum-indexer",
+  "name": "@repo/warforum-indexer",
   "type": "module",
   "version": "1.0.0",
   "private": true,
   "description": "Indexes movies from Warforum discussions",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": "./dist/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
