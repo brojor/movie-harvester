@@ -1,40 +1,64 @@
-import type { schema } from '@repo/database'
-import { db } from '@repo/database'
-import { map } from 'lodash-es'
+import { db, schema } from '@repo/database'
+import { eq } from 'drizzle-orm'
 
-type TmdbDataWithRelations = typeof schema.tmdbData.$inferSelect & {
-  genres: Array<{
-    genre: typeof schema.genres.$inferSelect
-  }>
-}
+const { moviesSource, tmdbData, rtData, csfdData, tmdbToGenres, tmdbGenres, csfdToGenres, csfdGenres } = schema
 
 export default defineEventHandler(async () => {
-  const movies = await db.query.moviesSource.findMany({
-    with: {
-      csfdData: true,
-      tmdbData: {
-        with: {
-          genres: {
-            with: {
-              genre: true,
-            },
-          },
-        },
-      },
-    },
-  })
-  return movies.map(({ csfdData, tmdbData }) => {
-    const { voteCount: tmdbVoteCount, voteAverage: tmdbVoteAverage, genres: tmdbGenres, ...rest } = tmdbData as TmdbDataWithRelations
-    const { voteCount: csfdVoteCount, voteAverage: csfdVoteAverage } = csfdData
+  // 1. Základní dotaz
+  const movies = await db
+    .select({
+      movie: moviesSource,
+      tmdb: tmdbData,
+      rt: rtData,
+      csfd: csfdData,
+    })
+    .from(moviesSource)
+    .innerJoin(tmdbData, eq(moviesSource.id, tmdbData.sourceId))
+    .leftJoin(rtData, eq(moviesSource.id, rtData.sourceId))
+    .leftJoin(csfdData, eq(moviesSource.id, csfdData.sourceId))
 
-    return {
-      ...rest,
-      overview: tmdbData.overview || csfdData.overview,
-      genres: map(tmdbGenres, 'genre.name') as string[],
-      tmdbVoteCount,
-      tmdbVoteAverage: tmdbVoteAverage * 10,
-      csfdVoteCount,
-      csfdVoteAverage,
+  // 2. Načtení TMDB žánrů
+  const tmdbGenresMap = new Map<number, string[]>()
+
+  const tmdbGenresJoin = await db
+    .select({
+      movieId: tmdbToGenres.movieId,
+      genre: tmdbGenres.name,
+    })
+    .from(tmdbToGenres)
+    .innerJoin(tmdbGenres, eq(tmdbToGenres.genreId, tmdbGenres.id))
+
+  for (const { movieId, genre } of tmdbGenresJoin) {
+    if (!tmdbGenresMap.has(movieId)) {
+      tmdbGenresMap.set(movieId, [])
     }
-  })
+    tmdbGenresMap.get(movieId)!.push(genre)
+  }
+
+  // 3. Načtení CSFD žánrů
+  const csfdGenresMap = new Map<number, string[]>()
+
+  const csfdGenresJoin = await db
+    .select({
+      csfdId: csfdToGenres.csfdId,
+      genre: csfdGenres.name,
+    })
+    .from(csfdToGenres)
+    .innerJoin(csfdGenres, eq(csfdToGenres.genreId, csfdGenres.id))
+
+  for (const { csfdId, genre } of csfdGenresJoin) {
+    if (!csfdGenresMap.has(csfdId)) {
+      csfdGenresMap.set(csfdId, [])
+    }
+    csfdGenresMap.get(csfdId)!.push(genre)
+  }
+
+  // 4. Složení finálního výsledku
+  const enriched = movies.map(item => ({
+    ...item,
+    tmdbGenres: item.tmdb?.id ? tmdbGenresMap.get(item.tmdb.id) ?? [] : [],
+    csfdGenres: item.csfd?.id ? csfdGenresMap.get(item.csfd.id) ?? [] : [],
+  }))
+
+  return enriched
 })
