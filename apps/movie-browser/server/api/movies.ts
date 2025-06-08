@@ -1,9 +1,25 @@
+import type { SearchParams } from '../../types'
 import { db, schema } from '@repo/database'
-import { eq } from 'drizzle-orm'
+import { asc, desc, eq } from 'drizzle-orm'
 
 const { moviesSource, tmdbData, rtData, csfdData, tmdbToGenres, tmdbGenres, csfdToGenres, csfdGenres } = schema
 
-export default defineEventHandler(async () => {
+const ratingColumns = {
+  csfd: csfdData.voteAverage,
+  tmdb: tmdbData.voteAverage,
+  rt: rtData.criticsScore,
+}
+
+const sortByToColumn = {
+  title: tmdbData.title,
+  year: tmdbData.releaseDate,
+  rating: ratingColumns,
+  releaseDate: tmdbData.releaseDate,
+}
+
+export default defineEventHandler(async (event) => {
+  const { sortBy, ratingSource, order } = getQuery(event) as SearchParams
+
   // 1. Základní dotaz
   const movies = await db
     .select({
@@ -16,6 +32,9 @@ export default defineEventHandler(async () => {
     .innerJoin(tmdbData, eq(moviesSource.id, tmdbData.sourceId))
     .leftJoin(rtData, eq(moviesSource.id, rtData.sourceId))
     .leftJoin(csfdData, eq(moviesSource.id, csfdData.sourceId))
+    .orderBy((order === 'desc' ? desc : asc)(
+      sortBy === 'rating' ? ratingColumns[ratingSource] : sortByToColumn[sortBy],
+    ))
 
   // 2. Načtení TMDB žánrů
   const tmdbGenresMap = new Map<number, string[]>()

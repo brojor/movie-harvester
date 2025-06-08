@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import type { SearchParams } from './types'
 import { onKeyStroke, useFullscreen } from '@vueuse/core'
 
-const { data: movies } = await useFetch('/api/movies')
+const query = ref<SearchParams>({ sortBy: 'title', ratingSource: 'csfd', order: 'asc' })
+
+const { data: movies } = await useFetch('/api/movies', { query })
 const img = useImage()
 const { toggle: toggleFullscreen } = useFullscreen()
 
@@ -61,10 +64,12 @@ useHead({
 </script>
 
 <template>
+  <Html class="bg-black" />
   <div v-if="currentMovie" class="text-white">
     <NuxtImg v-if="currentMovie.tmdb.backdropPath" provider="tmdbBackdrop" :src="currentMovie.tmdb.backdropPath" class="h-screen w-full object-cover" />
-    <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex items-center">
-      <div class="px-[5vw] py-[10vh] flex gap-[5vw]">
+    <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex flex-col px-[5vw] justify-center">
+      <ControlPanel v-model="query" class="py-4" />
+      <div class="flex gap-[5vw] my-auto">
         <NuxtImg v-if="currentMovie.tmdb.posterPath" provider="tmdbPoster" :src="currentMovie.tmdb.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">
           <div class="font-bold text-lg">
@@ -88,11 +93,12 @@ useHead({
             <span class="text-[1vw]">•</span>
             <span class="text-[1vw]">{{ formatMinutesVerbose(currentMovie.tmdb.runtime ?? 0) }}</span>
           </div>
-          <p class="text-[1.3vw] max-w-[65ch] overflow-y-auto scrollbar-hide">
+          <p class="text-[1.3vw] max-w-prose overflow-y-auto scrollbar-hide">
             {{ currentMovie.tmdb.overview }}
           </p>
         </div>
       </div>
+      <div class="h-[72px]" />
     </div>
   </div>
 </template>

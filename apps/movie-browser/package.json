@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@headlessui/vue": "catalog:prod",
     "@iconify-json/circle-flags": "catalog:dev",
     "@nuxt/eslint": "catalog:lint",
     "@nuxt/fonts": "catalog:prod",
