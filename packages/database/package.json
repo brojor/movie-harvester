@@ -10,7 +10,7 @@
     "build": "tsup",
     "dev": "tsdown --watch",
     "generate": "drizzle-kit generate",
-    "push": "drizzle-kit push",
+    "push": "pnpm build && drizzle-kit push",
     "migrate": "drizzle-kit migrate",
     "studio": "drizzle-kit studio"
   },

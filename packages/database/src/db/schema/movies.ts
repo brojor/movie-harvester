@@ -24,8 +24,8 @@ export const movieSources = sqliteTable(
     ...timestamps,
   },
   table => [
-    uniqueIndex('unique_czech_title_year').on(table.czechTitle, table.year),
-    uniqueIndex('unique_original_title_year').on(table.originalTitle, table.year),
+    uniqueIndex('unique_czech_movie_title_year').on(table.czechTitle, table.year),
+    uniqueIndex('unique_original_movie_title_year').on(table.originalTitle, table.year),
   ],
 )
 

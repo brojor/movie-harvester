@@ -1,9 +1,8 @@
+import { env } from '@repo/shared/env'
 import { defineConfig } from 'drizzle-kit'
-// eslint-disable-next-line antfu/no-import-dist
-import { env } from '../shared/dist/index.js'
 
 export default defineConfig({
-  schema: './src/db/schema',
+  schema: './dist/*.js',
   dialect: 'sqlite',
   dbCredentials: {
     url: env.DATABASE_URL,

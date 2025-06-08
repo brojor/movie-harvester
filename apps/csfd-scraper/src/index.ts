@@ -26,9 +26,9 @@ const httpClient = getThrottledClient('https://www.csfd.cz', {
 
 export async function populateCsfdData(): Promise<void> {
   await seedCsfdGenres()
-  const latestCsfdData = await db.select().from(moviesSchema.csfdData).orderBy(desc(moviesSchema.csfdData.createdAt)).limit(1)
-  const res = await db.select().from(moviesSchema.moviesSource).leftJoin(moviesSchema.csfdData, eq(moviesSchema.moviesSource.id, moviesSchema.csfdData.sourceId)).where(and(isNull(moviesSchema.csfdData.id), gt(moviesSchema.moviesSource.createdAt, latestCsfdData[0].createdAt)))
-  const movies = res.map(m => m.movies_source)
+  const latestCsfdData = await db.select().from(moviesSchema.csfdMovieData).orderBy(desc(moviesSchema.csfdMovieData.createdAt)).limit(1)
+  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(and(isNull(moviesSchema.csfdMovieData.id), gt(moviesSchema.movieSources.createdAt, latestCsfdData[0].createdAt)))
+  const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
     let csfdId = await getCsfdId(movie.czechTitle, movie.year)
     if (!csfdId) {
@@ -40,17 +40,17 @@ export async function populateCsfdData(): Promise<void> {
     }
     const csfdData = await fetchCsfdData(csfdId)
 
-    const csfdDataId = await db.insert(moviesSchema.csfdData).values({
+    const csfdDataId = await db.insert(moviesSchema.csfdMovieData).values({
       sourceId: movie.id,
       ...csfdData,
-    }).returning({ id: moviesSchema.csfdData.id })
+    }).returning({ id: moviesSchema.csfdMovieData.id })
 
     const genreIds = await db
       .select({ id: moviesSchema.csfdGenres.id })
       .from(moviesSchema.csfdGenres)
       .where(inArray(moviesSchema.csfdGenres.name, csfdData.genres))
 
-    await db.insert(moviesSchema.csfdToGenres).values(
+    await db.insert(moviesSchema.csfdMoviesToGenres).values(
       genreIds.map(genre => ({
         csfdId: csfdDataId[0].id,
         genreId: genre.id,

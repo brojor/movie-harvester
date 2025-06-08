@@ -8,7 +8,7 @@ import { TOPIC_META, TopicKey } from './types/domain.js'
 import { getTopicId } from './utils/parsing.js'
 
 export async function parseTopics(): Promise<void> {
-  const lastRun = (await db.select().from(moviesSchema.moviesSource).orderBy(desc(moviesSchema.moviesSource.createdAt)).limit(1))?.[0]?.createdAt
+  const lastRun = (await db.select().from(moviesSchema.movieSources).orderBy(desc(moviesSchema.movieSources.createdAt)).limit(1))?.[0]?.createdAt
 
   for (const topicType of Object.values(TopicKey)) {
     const { id: topicId } = TOPIC_META[topicType]

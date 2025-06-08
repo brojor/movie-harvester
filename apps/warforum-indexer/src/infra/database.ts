@@ -11,12 +11,12 @@ export async function upsertMovie(
   const isDub = TOPIC_META[topicType].isDub
   try {
     await db
-      .insert(moviesSchema.moviesSource)
+      .insert(moviesSchema.movieSources)
       .values({ ...movie, [topicType]: movie.topicNumber })
       .onConflictDoUpdate({
         target: isDub
-          ? [moviesSchema.moviesSource.czechTitle, moviesSchema.moviesSource.year]
-          : [moviesSchema.moviesSource.originalTitle, moviesSchema.moviesSource.year],
+          ? [moviesSchema.movieSources.czechTitle, moviesSchema.movieSources.year]
+          : [moviesSchema.movieSources.originalTitle, moviesSchema.movieSources.year],
         set: {
           [topicType]: movie.topicNumber,
           updatedAt: new Date(),
@@ -32,6 +32,6 @@ export async function upsertMovie(
 }
 
 export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
-  const result = await db.select().from(moviesSchema.moviesSource).leftJoin(moviesSchema.csfdData, eq(moviesSchema.moviesSource.id, moviesSchema.csfdData.sourceId)).where(isNull(moviesSchema.csfdData.id))
-  return result.map(m => m.movies_source)
+  const result = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(isNull(moviesSchema.csfdMovieData.id))
+  return result.map(m => m.movie_sources)
 }

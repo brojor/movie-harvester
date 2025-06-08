@@ -1,6 +1,6 @@
 import type { MovieSource } from '@repo/types'
 import type { MovieDetailsResponse, SearchResult } from './types.js'
-import { db, moviesSchema } from '@repo/database'
+import { commonSchema, db, moviesSchema } from '@repo/database'
 import { env, getThrottledClient } from '@repo/shared'
 
 import { and, desc, eq, gt, isNull } from 'drizzle-orm'
@@ -18,9 +18,9 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
 
 export async function populateTmdbData(): Promise<void> {
   await seedTmdbGenres()
-  const latestTmdbData = await db.select().from(moviesSchema.tmdbData).orderBy(desc(moviesSchema.tmdbData.createdAt)).limit(1)
-  const res = await db.select().from(moviesSchema.moviesSource).leftJoin(moviesSchema.tmdbData, eq(moviesSchema.moviesSource.id, moviesSchema.tmdbData.sourceId)).where(and(isNull(moviesSchema.tmdbData.id), gt(moviesSchema.moviesSource.createdAt, latestTmdbData[0].createdAt)))
-  const movies = res.map(m => m.movies_source)
+  const latestTmdbData = await db.select().from(moviesSchema.tmdbMovieData).orderBy(desc(moviesSchema.tmdbMovieData.createdAt)).limit(1)
+  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.tmdbMovieData, eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId)).where(and(isNull(moviesSchema.tmdbMovieData.id), gt(moviesSchema.movieSources.createdAt, latestTmdbData[0].createdAt)))
+  const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
     const movieId = await findMovieIdForMovie(movie)
     if (!movieId) {
@@ -28,7 +28,7 @@ export async function populateTmdbData(): Promise<void> {
     }
 
     const movieDetails = await getMovieDetails(movieId)
-    await db.insert(moviesSchema.tmdbData).values({
+    await db.insert(moviesSchema.tmdbMovieData).values({
       id: movieDetails.id,
       sourceId: movie.id,
       imdbId: movieDetails.imdb_id,
@@ -45,7 +45,7 @@ export async function populateTmdbData(): Promise<void> {
       overview: movieDetails.overview,
     }).onConflictDoNothing()
 
-    await db.insert(moviesSchema.tmdbToGenres).values(movieDetails.genres.map(genre => ({
+    await db.insert(moviesSchema.tmdbMoviesToGenres).values(movieDetails.genres.map(genre => ({
       movieId: movieDetails.id,
       genreId: genre.id,
     }))).onConflictDoNothing()
@@ -73,7 +73,7 @@ async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
 }
 
 async function seedTmdbGenres(): Promise<void> {
-  await db.insert(moviesSchema.tmdbGenres).values(genres).onConflictDoNothing()
+  await db.insert(commonSchema.tmdbGenres).values(genres).onConflictDoNothing()
 }
 
 function normalizeTitle(input: string): string {
@@ -109,8 +109,8 @@ async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
   const csfdRow = (
     await db
       .select()
-      .from(moviesSchema.csfdData)
-      .where(eq(moviesSchema.csfdData.sourceId, movie.id))
+      .from(moviesSchema.csfdMovieData)
+      .where(eq(moviesSchema.csfdMovieData.sourceId, movie.id))
       .limit(1)
   )[0]
 
