@@ -1,3 +1,3 @@
-import type { schema } from '@repo/database'
+import type { moviesSchema } from '@repo/database'
 
-export type MovieSource = typeof schema.moviesSource.$inferSelect
+export type MovieSource = typeof moviesSchema.moviesSource.$inferSelect

@@ -1,5 +1,5 @@
 import type { MovieSource } from 'packages/types/dist/index.js'
-import { db, schema } from '@repo/database'
+import { db, moviesSchema } from '@repo/database'
 import { desc } from 'drizzle-orm'
 import { upsertMovie } from './infra/database.js'
 import { fetchAllMovies } from './scraper/fetchAllMovies.js'
@@ -8,7 +8,7 @@ import { TOPIC_META, TopicKey } from './types/domain.js'
 import { getTopicId } from './utils/parsing.js'
 
 export async function parseTopics(): Promise<void> {
-  const lastRun = (await db.select().from(schema.moviesSource).orderBy(desc(schema.moviesSource.createdAt)).limit(1))?.[0]?.createdAt
+  const lastRun = (await db.select().from(moviesSchema.moviesSource).orderBy(desc(moviesSchema.moviesSource.createdAt)).limit(1))?.[0]?.createdAt
 
   for (const topicType of Object.values(TopicKey)) {
     const { id: topicId } = TOPIC_META[topicType]

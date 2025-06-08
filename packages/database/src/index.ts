@@ -1,6 +1,6 @@
 import { env } from '@repo/shared'
 import { drizzle } from 'drizzle-orm/libsql'
-import * as schema from './schema.js'
+import * as moviesSchema from './db/schema/movies.js'
 
-export const db = drizzle(env.DATABASE_URL, { schema })
-export { schema }
+export const db = drizzle(env.DATABASE_URL)
+export { moviesSchema }

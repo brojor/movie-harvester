@@ -1,5 +1,5 @@
 import { URLSearchParams } from 'node:url'
-import { db, schema } from '@repo/database'
+import { db, moviesSchema } from '@repo/database'
 import { getThrottledClient } from '@repo/shared'
 import * as cheerio from 'cheerio'
 import { and, desc, eq, gt, isNull } from 'drizzle-orm'
@@ -17,13 +17,13 @@ const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
 })
 
 export async function populateRtData(): Promise<void> {
-  const latestRtData = await db.select().from(schema.rtData).orderBy(desc(schema.rtData.createdAt)).limit(1)
-  const res = await db.select().from(schema.moviesSource).leftJoin(schema.rtData, eq(schema.moviesSource.id, schema.rtData.sourceId)).where(and(isNull(schema.rtData.id), gt(schema.moviesSource.createdAt, latestRtData[0].createdAt)))
+  const latestRtData = await db.select().from(moviesSchema.rtData).orderBy(desc(moviesSchema.rtData.createdAt)).limit(1)
+  const res = await db.select().from(moviesSchema.moviesSource).leftJoin(moviesSchema.rtData, eq(moviesSchema.moviesSource.id, moviesSchema.rtData.sourceId)).where(and(isNull(moviesSchema.rtData.id), gt(moviesSchema.moviesSource.createdAt, latestRtData[0].createdAt)))
   const movies = res.map(m => m.movies_source)
   for (const movie of movies) {
     let rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
     if (!rtId) {
-      const csfdRow = (await db.select().from(schema.csfdData).where(eq(schema.csfdData.sourceId, movie.id)).limit(1))[0]
+      const csfdRow = (await db.select().from(moviesSchema.csfdData).where(eq(moviesSchema.csfdData.sourceId, movie.id)).limit(1))[0]
       if (!csfdRow || !csfdRow.originalTitle) {
         console.error(`Movie ${movie.originalTitle} (${movie.year}) not found`)
         continue
@@ -35,7 +35,7 @@ export async function populateRtData(): Promise<void> {
       }
     }
     const rtData = await fetchRtData(rtId)
-    await db.insert(schema.rtData).values({
+    await db.insert(moviesSchema.rtData).values({
       sourceId: movie.id,
       ...rtData,
     })

@@ -1,5 +1,6 @@
 import { URLSearchParams } from 'node:url'
-import { db, schema } from '@repo/database'
+import { db, moviesSchema } from '@repo/database'
+
 import { getThrottledClient } from '@repo/shared'
 import { getCsfdIdFromTopic } from '@repo/warforum-indexer'
 import * as cheerio from 'cheerio'
@@ -25,8 +26,8 @@ const httpClient = getThrottledClient('https://www.csfd.cz', {
 
 export async function populateCsfdData(): Promise<void> {
   await seedCsfdGenres()
-  const latestCsfdData = await db.select().from(schema.csfdData).orderBy(desc(schema.csfdData.createdAt)).limit(1)
-  const res = await db.select().from(schema.moviesSource).leftJoin(schema.csfdData, eq(schema.moviesSource.id, schema.csfdData.sourceId)).where(and(isNull(schema.csfdData.id), gt(schema.moviesSource.createdAt, latestCsfdData[0].createdAt)))
+  const latestCsfdData = await db.select().from(moviesSchema.csfdData).orderBy(desc(moviesSchema.csfdData.createdAt)).limit(1)
+  const res = await db.select().from(moviesSchema.moviesSource).leftJoin(moviesSchema.csfdData, eq(moviesSchema.moviesSource.id, moviesSchema.csfdData.sourceId)).where(and(isNull(moviesSchema.csfdData.id), gt(moviesSchema.moviesSource.createdAt, latestCsfdData[0].createdAt)))
   const movies = res.map(m => m.movies_source)
   for (const movie of movies) {
     let csfdId = await getCsfdId(movie.czechTitle, movie.year)
@@ -39,17 +40,17 @@ export async function populateCsfdData(): Promise<void> {
     }
     const csfdData = await fetchCsfdData(csfdId)
 
-    const csfdDataId = await db.insert(schema.csfdData).values({
+    const csfdDataId = await db.insert(moviesSchema.csfdData).values({
       sourceId: movie.id,
       ...csfdData,
-    }).returning({ id: schema.csfdData.id })
+    }).returning({ id: moviesSchema.csfdData.id })
 
     const genreIds = await db
-      .select({ id: schema.csfdGenres.id })
-      .from(schema.csfdGenres)
-      .where(inArray(schema.csfdGenres.name, csfdData.genres))
+      .select({ id: moviesSchema.csfdGenres.id })
+      .from(moviesSchema.csfdGenres)
+      .where(inArray(moviesSchema.csfdGenres.name, csfdData.genres))
 
-    await db.insert(schema.csfdToGenres).values(
+    await db.insert(moviesSchema.csfdToGenres).values(
       genreIds.map(genre => ({
         csfdId: csfdDataId[0].id,
         genreId: genre.id,
@@ -130,5 +131,5 @@ async function fetchCsfdData(csfdId: string): Promise<CsfdData> {
 }
 
 async function seedCsfdGenres(): Promise<void> {
-  await db.insert(schema.csfdGenres).values(genres).onConflictDoNothing()
+  await db.insert(moviesSchema.csfdGenres).values(genres).onConflictDoNothing()
 }

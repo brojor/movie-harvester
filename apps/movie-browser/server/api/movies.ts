@@ -1,8 +1,8 @@
 import type { SearchParams } from '../../types'
-import { db, schema } from '@repo/database'
+import { db, moviesSchema } from '@repo/database'
 import { asc, desc, eq } from 'drizzle-orm'
 
-const { moviesSource, tmdbData, rtData, csfdData, tmdbToGenres, tmdbGenres, csfdToGenres, csfdGenres } = schema
+const { moviesSource, tmdbData, rtData, csfdData, tmdbToGenres, tmdbGenres, csfdToGenres, csfdGenres } = moviesSchema
 
 const ratingColumns = {
   csfd: csfdData.voteAverage,
