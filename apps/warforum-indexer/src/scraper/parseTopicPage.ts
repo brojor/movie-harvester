@@ -1,14 +1,14 @@
 import type { Cheerio, CheerioAPI } from 'cheerio'
 import type { Element as DomElement } from 'domhandler'
-import type { MovieWithTopicId, ParseResult, TopicKey } from '../types/domain.js'
+import type { CoreMetaWithSourceTopic, ParseTopicResult, TopicType } from '../types/domain.js'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
-import { extractTopicId, parseTopicName } from '../utils/parsing.js'
+import { extractTopicId, parseMovieCoreMeta } from '../utils/parsing.js'
 
-export function parseTopicPage(html: string, topicType: TopicKey, createdAfter?: Date): ParseResult {
+export function parseTopicPage(html: string, topicType: TopicType, cutoffDate: Date): ParseTopicResult {
   const $ = cheerio.load(html)
 
-  const movies: MovieWithTopicId[] = []
+  const mediaItems: CoreMetaWithSourceTopic[] = []
   let lastRowDate: Date = new Date()
 
   const rows = extractMovieRows($)
@@ -25,19 +25,17 @@ export function parseTopicPage(html: string, topicType: TopicKey, createdAfter?:
     const date = parseDate(dateString)
     lastRowDate = date
 
-    if (isOld(date, createdAfter))
+    if (isOld(date, cutoffDate))
       return
 
-    const movie = parseMovieRow(row, topicType, $)
-    if (movie)
-      movies.push(movie)
+    const coreMetaWithSourceTopic = parseCoreMetaWithSourceTopic(row, topicType, $)
+    if (coreMetaWithSourceTopic)
+      mediaItems.push(coreMetaWithSourceTopic)
   })
 
-  const nextPage = !isOld(lastRowDate, createdAfter)
-    ? $('a:contains("Další")').first().attr('href') ?? null
-    : null
+  const reachedCutoff = isOld(lastRowDate, cutoffDate)
 
-  return { movies, nextPage }
+  return { mediaItems, reachedCutoff }
 }
 
 function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {
@@ -54,23 +52,26 @@ function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {
   return rows
 }
 
-function parseMovieRow(
+function parseCoreMetaWithSourceTopic(
   row: DomElement,
-  topicType: TopicKey,
+  topicType: TopicType,
   $: CheerioAPI,
-): MovieWithTopicId | null {
+): CoreMetaWithSourceTopic | null {
   const title = $(row).find('a.topictitle').text().trim()
   const href = $(row).find('a.topictitle').attr('href')
   if (!href)
-    return null
+    throw new Error(`Missing href in: "${title}"`)
 
-  const topicNumber = extractTopicId(href)
-  const movieInfo = parseTopicName(title, topicType)
-  if (!movieInfo)
+  const sourceTopic = extractTopicId(href)
+  const dubbedTypes: TopicType[] = ['hdDub', 'uhdDub']
+  const isDubbed = dubbedTypes.includes(topicType)
+
+  const coreMeta = isDubbed ? parseMovieCoreMeta(title, true) : parseMovieCoreMeta(title, false)
+  if (!coreMeta)
     return null
 
   return {
-    ...movieInfo,
-    topicNumber,
+    coreMeta,
+    sourceTopic,
   }
 }

@@ -30,7 +30,12 @@ export async function populateCsfdData(): Promise<void> {
   const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(and(isNull(moviesSchema.csfdMovieData.id), gt(moviesSchema.movieSources.createdAt, latestCsfdData[0].createdAt)))
   const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
-    let csfdId = await getCsfdId(movie.czechTitle, movie.year)
+    let csfdId
+
+    if (movie.czechTitle) {
+      csfdId = await getCsfdId(movie.czechTitle, movie.year)
+    }
+
     if (!csfdId) {
       csfdId = await getCsfdIdFromTopic(movie)
       if (!csfdId) {

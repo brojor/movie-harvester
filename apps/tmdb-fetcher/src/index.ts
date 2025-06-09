@@ -135,7 +135,11 @@ async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
   return null
 }
 
-async function trySearchByTitle(title: string, year: number): Promise<number | null> {
+async function trySearchByTitle(title: string | null, year: number): Promise<number | null> {
+  if (!title) {
+    return null
+  }
+
   const searchResults = await searchMovies(title, year)
   const foundId = getMovieId(searchResults, title, year)
   return foundId

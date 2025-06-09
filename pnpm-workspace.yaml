@@ -13,6 +13,7 @@ catalogs:
     drizzle-kit: ^0.31.1
     tsup: ^8.5.0
     unocss-preset-scrollbar-hide: ^1.0.1
+    vitest: ^3.2.3
   lint:
     '@antfu/eslint-config': ^4.13.2
     '@nuxt/eslint': ^1.4.1

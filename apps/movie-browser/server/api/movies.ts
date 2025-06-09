@@ -1,20 +1,21 @@
 import type { SearchParams } from '../../types'
-import { db, moviesSchema } from '@repo/database'
+import { commonSchema, db, moviesSchema } from '@repo/database'
 import { asc, desc, eq } from 'drizzle-orm'
 
-const { moviesSource, tmdbData, rtData, csfdData, tmdbToGenres, tmdbGenres, csfdToGenres, csfdGenres } = moviesSchema
+const { tmdbGenres } = commonSchema
+const { movieSources, tmdbMovieData, rtMovieData, csfdMovieData, tmdbMoviesToGenres, csfdMoviesToGenres, csfdGenres } = moviesSchema
 
 const ratingColumns = {
-  csfd: csfdData.voteAverage,
-  tmdb: tmdbData.voteAverage,
-  rt: rtData.criticsScore,
+  csfd: csfdMovieData.voteAverage,
+  tmdb: tmdbMovieData.voteAverage,
+  rt: rtMovieData.criticsScore,
 }
 
 const sortByToColumn = {
-  title: tmdbData.title,
-  year: tmdbData.releaseDate,
+  title: tmdbMovieData.title,
+  year: tmdbMovieData.releaseDate,
   rating: ratingColumns,
-  releaseDate: tmdbData.releaseDate,
+  releaseDate: tmdbMovieData.releaseDate,
 }
 
 export default defineEventHandler(async (event) => {
@@ -23,15 +24,15 @@ export default defineEventHandler(async (event) => {
   // 1. Základní dotaz
   const movies = await db
     .select({
-      movie: moviesSource,
-      tmdb: tmdbData,
-      rt: rtData,
-      csfd: csfdData,
+      movie: movieSources,
+      tmdb: tmdbMovieData,
+      rt: rtMovieData,
+      csfd: csfdMovieData,
     })
-    .from(moviesSource)
-    .innerJoin(tmdbData, eq(moviesSource.id, tmdbData.sourceId))
-    .leftJoin(rtData, eq(moviesSource.id, rtData.sourceId))
-    .leftJoin(csfdData, eq(moviesSource.id, csfdData.sourceId))
+    .from(movieSources)
+    .innerJoin(tmdbMovieData, eq(movieSources.id, tmdbMovieData.sourceId))
+    .leftJoin(rtMovieData, eq(movieSources.id, rtMovieData.sourceId))
+    .leftJoin(csfdMovieData, eq(movieSources.id, csfdMovieData.sourceId))
     .orderBy((order === 'desc' ? desc : asc)(
       sortBy === 'rating' ? ratingColumns[ratingSource] : sortByToColumn[sortBy],
     ))
@@ -41,11 +42,11 @@ export default defineEventHandler(async (event) => {
 
   const tmdbGenresJoin = await db
     .select({
-      movieId: tmdbToGenres.movieId,
+      movieId: tmdbMoviesToGenres.movieId,
       genre: tmdbGenres.name,
     })
-    .from(tmdbToGenres)
-    .innerJoin(tmdbGenres, eq(tmdbToGenres.genreId, tmdbGenres.id))
+    .from(tmdbMoviesToGenres)
+    .innerJoin(tmdbGenres, eq(tmdbMoviesToGenres.genreId, tmdbGenres.id))
 
   for (const { movieId, genre } of tmdbGenresJoin) {
     if (!tmdbGenresMap.has(movieId)) {
@@ -59,11 +60,11 @@ export default defineEventHandler(async (event) => {
 
   const csfdGenresJoin = await db
     .select({
-      csfdId: csfdToGenres.csfdId,
+      csfdId: csfdMoviesToGenres.csfdId,
       genre: csfdGenres.name,
     })
-    .from(csfdToGenres)
-    .innerJoin(csfdGenres, eq(csfdToGenres.genreId, csfdGenres.id))
+    .from(csfdMoviesToGenres)
+    .innerJoin(csfdGenres, eq(csfdMoviesToGenres.genreId, csfdGenres.id))
 
   for (const { csfdId, genre } of csfdGenresJoin) {
     if (!csfdGenresMap.has(csfdId)) {

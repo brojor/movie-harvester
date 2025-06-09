@@ -1,31 +1,31 @@
 import type { MovieSource } from '@repo/types'
-import type { MovieWithTopicId, TopicKey } from '../types/domain.js'
+import type { CoreMetaWithSourceTopic, TopicType } from '../types/domain.js'
 import { db, moviesSchema } from '@repo/database'
 import { eq, isNull } from 'drizzle-orm'
-import { TOPIC_META } from '../types/domain.js'
 
 export async function upsertMovie(
-  movie: MovieWithTopicId,
-  topicType: TopicKey,
+  movie: CoreMetaWithSourceTopic,
+  topicType: TopicType,
 ): Promise<void> {
-  const isDub = TOPIC_META[topicType].isDub
+  const isDub = ['hdDub', 'uhdDub'].includes(topicType)
+  const { czechTitle, originalTitle, year } = movie.coreMeta
   try {
     await db
       .insert(moviesSchema.movieSources)
-      .values({ ...movie, [topicType]: movie.topicNumber })
+      .values({ czechTitle, originalTitle, year, [topicType]: movie.sourceTopic })
       .onConflictDoUpdate({
         target: isDub
           ? [moviesSchema.movieSources.czechTitle, moviesSchema.movieSources.year]
           : [moviesSchema.movieSources.originalTitle, moviesSchema.movieSources.year],
         set: {
-          [topicType]: movie.topicNumber,
+          [topicType]: movie.sourceTopic,
           updatedAt: new Date(),
         },
       })
   }
   catch (err) {
     console.error(
-      `Error upserting movie \"${movie.czechTitle}\" / \"${movie.originalTitle}\" (${movie.year})`,
+      `Error upserting movie "${czechTitle}" / "${originalTitle}" (${year})`,
       err,
     )
   }

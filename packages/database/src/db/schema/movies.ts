@@ -14,8 +14,8 @@ export const movieSources = sqliteTable(
   'movie_sources',
   {
     id: int().primaryKey({ autoIncrement: true }),
-    czechTitle: text().notNull(),
-    originalTitle: text().notNull(),
+    czechTitle: text(),
+    originalTitle: text(),
     year: int().notNull(),
     hd: int(),
     uhd: int(),

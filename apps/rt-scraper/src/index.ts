@@ -21,7 +21,12 @@ export async function populateRtData(): Promise<void> {
   const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.rtMovieData, eq(moviesSchema.movieSources.id, moviesSchema.rtMovieData.sourceId)).where(and(isNull(moviesSchema.rtMovieData.id), gt(moviesSchema.movieSources.createdAt, latestRtData[0].createdAt)))
   const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
-    let rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
+    let rtId
+
+    if (movie.originalTitle) {
+      rtId = await getRtId(normalizeTitle(movie.originalTitle), movie.year)
+    }
+
     if (!rtId) {
       const csfdRow = (await db.select().from(moviesSchema.csfdMovieData).where(eq(moviesSchema.csfdMovieData.sourceId, movie.id)).limit(1))[0]
       if (!csfdRow || !csfdRow.originalTitle) {

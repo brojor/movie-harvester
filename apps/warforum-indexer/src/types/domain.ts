@@ -1,33 +1,37 @@
-export enum TopicKey {
-  Hd = 'hd',
-  HdDub = 'hdDub',
-  Uhd = 'uhd',
-  UhdDub = 'uhdDub',
-}
-
-export interface TopicMeta {
+export interface MovieTopicMeta {
   readonly id: number
   readonly isDub: boolean
 }
 
-export const TOPIC_META: Record<TopicKey, TopicMeta> = {
-  [TopicKey.Hd]: { id: 322, isDub: false },
-  [TopicKey.HdDub]: { id: 323, isDub: true },
-  [TopicKey.Uhd]: { id: 374, isDub: false },
-  [TopicKey.UhdDub]: { id: 373, isDub: true },
+export type TopicType = 'hd' | 'uhd' | 'hdDub' | 'uhdDub'
+
+export const movieTopicIdMap = {
+  322: 'hd',
+  323: 'hdDub',
+  374: 'uhd',
+  373: 'uhdDub',
 } as const
 
-export interface Movie {
-  readonly czechTitle: string
+export type MovieTopicId = keyof typeof movieTopicIdMap
+
+export interface NonDubbedMovieCoreMeta {
   readonly originalTitle: string
+  readonly czechTitle?: string
   readonly year: number
 }
 
-export interface MovieWithTopicId extends Movie {
-  readonly topicNumber: number
+export interface DubbedMovieCoreMeta {
+  readonly czechTitle: string
+  readonly originalTitle?: string
+  readonly year: number
 }
 
-export interface ParseResult {
-  movies: MovieWithTopicId[]
-  nextPage: string | null
+export interface CoreMetaWithSourceTopic {
+  coreMeta: NonDubbedMovieCoreMeta | DubbedMovieCoreMeta
+  sourceTopic: number
+}
+
+export interface ParseTopicResult {
+  mediaItems: CoreMetaWithSourceTopic[]
+  reachedCutoff: boolean
 }

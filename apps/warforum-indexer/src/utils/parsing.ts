@@ -1,6 +1,6 @@
 import type { MovieSource } from '@repo/types'
-import type { Movie } from '../types/domain.js'
-import { TOPIC_META, TopicKey } from '../types/domain.js'
+import type { DubbedMovieCoreMeta, NonDubbedMovieCoreMeta } from '../types/domain.js'
+import { movieTopicIdMap } from '../types/domain.js'
 
 export function extractTopicId(url: string): number {
   const match = url.match(/t=(\d+)/)
@@ -10,28 +10,42 @@ export function extractTopicId(url: string): number {
   return Number.parseInt(match[1], 10)
 }
 
-export function parseTopicName(title: string, topicType: TopicKey): Movie | null {
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: false): NonDubbedMovieCoreMeta | null
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: true): DubbedMovieCoreMeta | null
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDubbedMovieCoreMeta | DubbedMovieCoreMeta | null {
   const regex = /^(?:(.*?) \/ )?(.*?) \((\d{4})\)$/
-  const match = title.match(regex)
+  const match = topicTitle.match(regex)
 
   if (!match) {
+    console.error(`Invalid topic title: "${topicTitle}"`)
     return null
   }
 
   const [, first, second, yearStr] = match
+
+  if (!second || !yearStr) {
+    console.error(`Missing required fields in: "${topicTitle}"`)
+    return null
+  }
+
   const year = Number.parseInt(yearStr, 10)
 
-  const isDub = TOPIC_META[topicType].isDub
-
+  if (!isDubbed) {
+    return {
+      originalTitle: (first || second).trim(),
+      czechTitle: first ? second.trim() : undefined,
+      year,
+    }
+  }
   return {
-    czechTitle: isDub ? (first || second).trim() : second.trim(),
-    originalTitle: isDub ? second.trim() : (first || second).trim(),
+    czechTitle: (first || second).trim(),
+    originalTitle: first ? second.trim() : undefined,
     year,
   }
 }
 
 export function getTopicId(movie: MovieSource): number {
-  for (const key of Object.values(TopicKey)) {
+  for (const key of Object.values(movieTopicIdMap)) {
     const value = movie[key]
     if (value) {
       return value
