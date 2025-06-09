@@ -26,8 +26,8 @@ const httpClient = getThrottledClient('https://www.csfd.cz', {
 
 export async function populateCsfdData(): Promise<void> {
   await seedCsfdGenres()
-  const latestCsfdData = await db.select().from(moviesSchema.csfdMovieData).orderBy(desc(moviesSchema.csfdMovieData.createdAt)).limit(1)
-  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(and(isNull(moviesSchema.csfdMovieData.id), gt(moviesSchema.movieSources.createdAt, latestCsfdData[0].createdAt)))
+  const lastRecordDate = (await db.select().from(moviesSchema.csfdMovieData).orderBy(desc(moviesSchema.csfdMovieData.createdAt)).limit(1))?.[0]?.createdAt || new Date(0)
+  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(and(isNull(moviesSchema.csfdMovieData.id), gt(moviesSchema.movieSources.createdAt, lastRecordDate)))
   const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
     let csfdId

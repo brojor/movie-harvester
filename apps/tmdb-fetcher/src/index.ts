@@ -18,8 +18,8 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
 
 export async function populateTmdbData(): Promise<void> {
   await seedTmdbGenres()
-  const latestTmdbData = await db.select().from(moviesSchema.tmdbMovieData).orderBy(desc(moviesSchema.tmdbMovieData.createdAt)).limit(1)
-  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.tmdbMovieData, eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId)).where(and(isNull(moviesSchema.tmdbMovieData.id), gt(moviesSchema.movieSources.createdAt, latestTmdbData[0].createdAt)))
+  const lastRecordDate = (await db.select().from(moviesSchema.tmdbMovieData).orderBy(desc(moviesSchema.tmdbMovieData.createdAt)).limit(1))?.[0]?.createdAt || new Date(0)
+  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.tmdbMovieData, eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId)).where(and(isNull(moviesSchema.tmdbMovieData.id), gt(moviesSchema.movieSources.createdAt, lastRecordDate)))
   const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
     const movieId = await findMovieIdForMovie(movie)

@@ -17,8 +17,8 @@ const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
 })
 
 export async function populateRtData(): Promise<void> {
-  const latestRtData = await db.select().from(moviesSchema.rtMovieData).orderBy(desc(moviesSchema.rtMovieData.createdAt)).limit(1)
-  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.rtMovieData, eq(moviesSchema.movieSources.id, moviesSchema.rtMovieData.sourceId)).where(and(isNull(moviesSchema.rtMovieData.id), gt(moviesSchema.movieSources.createdAt, latestRtData[0].createdAt)))
+  const lastRecordDate = (await db.select().from(moviesSchema.rtMovieData).orderBy(desc(moviesSchema.rtMovieData.createdAt)).limit(1))?.[0]?.createdAt || new Date(0)
+  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.rtMovieData, eq(moviesSchema.movieSources.id, moviesSchema.rtMovieData.sourceId)).where(and(isNull(moviesSchema.rtMovieData.id), gt(moviesSchema.movieSources.createdAt, lastRecordDate)))
   const movies = res.map(m => m.movie_sources)
   for (const movie of movies) {
     let rtId
