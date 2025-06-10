@@ -63,11 +63,12 @@ function normalizeTitle(input: string): string {
 }
 
 function getMovieId(searchResults: MovieSearchResult[], title: string, year: number): number | null {
-  const normalizedTitle = normalizeTitle(title)
-  const acceptableYears = [year, year - 1, year + 1]
+  const normalizedTitle = normalizeTitle(title).toLowerCase()
+  const acceptableYears = [year - 1, year, year + 1]
 
   return searchResults.find((result) => {
-    const titleMatch = result.original_title.toLowerCase() === normalizedTitle.toLowerCase() || result.title.toLowerCase() === normalizedTitle.toLowerCase()
+    const resultTitles = [result.original_title, result.title].map(t => t.toLowerCase())
+    const titleMatch = resultTitles.includes(normalizedTitle)
     const yearMatch = acceptableYears.includes(Number(result.release_date.split('-')[0]))
 
     return titleMatch && yearMatch
