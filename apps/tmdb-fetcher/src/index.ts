@@ -75,14 +75,16 @@ function getMovieId(searchResults: MovieSearchResult[], title: string, year: num
 }
 
 async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
-  const idFromOriginal = await trySearchByTitle(movie.originalTitle, movie.year)
-  if (idFromOriginal) {
-    return idFromOriginal
-  }
+  const titlesToSearch = [
+    { title: movie.originalTitle, year: movie.year },
+    { title: movie.czechTitle, year: movie.year },
+  ]
 
-  const idFromCzech = await trySearchByTitle(movie.czechTitle, movie.year)
-  if (idFromCzech) {
-    return idFromCzech
+  for (const { title, year } of titlesToSearch) {
+    const id = await trySearchByTitle(title, year)
+    if (id) {
+      return id
+    }
   }
 
   const csfdRow = await getCsfdMovieData(movie.id)
@@ -90,17 +92,15 @@ async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
     return null
   }
 
-  if (csfdRow.originalTitle) {
-    const idFromCsfdOriginal = await trySearchByTitle(csfdRow.originalTitle, movie.year)
-    if (idFromCsfdOriginal) {
-      return idFromCsfdOriginal
-    }
-  }
+  const csfdTitlesToSearch = [
+    { title: csfdRow.originalTitle, year: movie.year },
+    { title: csfdRow.title, year: movie.year },
+  ]
 
-  if (csfdRow.title) {
-    const idFromCsfdTitle = await trySearchByTitle(csfdRow.title, movie.year)
-    if (idFromCsfdTitle) {
-      return idFromCsfdTitle
+  for (const { title, year } of csfdTitlesToSearch) {
+    const id = await trySearchByTitle(title, year)
+    if (id) {
+      return id
     }
   }
 
