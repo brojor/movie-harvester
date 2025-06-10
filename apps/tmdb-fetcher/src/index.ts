@@ -1,10 +1,7 @@
 import type { MovieSource } from '@repo/types'
 import type { MovieDetailsResponse, MovieSearchResult } from './types.js'
-import { commonSchema, db, moviesSchema } from '@repo/database'
 import { env, getThrottledClient } from '@repo/shared'
-
-import { and, desc, eq, gt, isNull } from 'drizzle-orm'
-import genres from './genres.json' with { type: 'json' }
+import { getCsfdMovieData, getUnprocessedMovies, saveTmdbMovieData, seedTmdbGenres } from './infra/database.js'
 
 // Rate limit is 50 requests per second range
 const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
@@ -22,36 +19,6 @@ export async function populateTmdbMoviesData(): Promise<void> {
   await processMovies(movies)
 }
 
-async function getUnprocessedMovies(): Promise<MovieSource[]> {
-  const lastRecordDate = await getLastProcessedDate()
-
-  const res = await db
-    .select()
-    .from(moviesSchema.movieSources)
-    .leftJoin(
-      moviesSchema.tmdbMovieData,
-      eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId),
-    )
-    .where(
-      and(
-        isNull(moviesSchema.tmdbMovieData.id),
-        gt(moviesSchema.movieSources.createdAt, lastRecordDate),
-      ),
-    )
-
-  return res.map(m => m.movie_sources)
-}
-
-async function getLastProcessedDate(): Promise<Date> {
-  const lastRecord = await db
-    .select()
-    .from(moviesSchema.tmdbMovieData)
-    .orderBy(desc(moviesSchema.tmdbMovieData.createdAt))
-    .limit(1)
-
-  return lastRecord?.[0]?.createdAt || new Date(0)
-}
-
 async function processMovies(movies: MovieSource[]): Promise<void> {
   for (const movie of movies) {
     await processMovie(movie)
@@ -65,40 +32,7 @@ async function processMovie(movie: MovieSource): Promise<void> {
   }
 
   const movieDetails = await getMovieDetails(movieId)
-  await saveMovieData(movieDetails, movie.id)
-}
-
-async function saveMovieData(movieDetails: MovieDetailsResponse, sourceId: number): Promise<void> {
-  await saveMovieDetails(movieDetails, sourceId)
-  await saveMovieGenres(movieDetails)
-}
-
-async function saveMovieDetails(movieDetails: MovieDetailsResponse, sourceId: number): Promise<void> {
-  await db.insert(moviesSchema.tmdbMovieData).values({
-    id: movieDetails.id,
-    sourceId,
-    imdbId: movieDetails.imdb_id,
-    title: movieDetails.title,
-    originalTitle: movieDetails.original_title,
-    originalLanguage: movieDetails.original_language,
-    posterPath: movieDetails.poster_path,
-    backdropPath: movieDetails.backdrop_path,
-    releaseDate: movieDetails.release_date,
-    runtime: movieDetails.runtime,
-    voteAverage: movieDetails.vote_average,
-    voteCount: movieDetails.vote_count,
-    tagline: movieDetails.tagline,
-    overview: movieDetails.overview,
-  }).onConflictDoNothing()
-}
-
-async function saveMovieGenres(movieDetails: MovieDetailsResponse): Promise<void> {
-  await db.insert(moviesSchema.tmdbMoviesToGenres).values(
-    movieDetails.genres.map(genre => ({
-      movieId: movieDetails.id,
-      genreId: genre.id,
-    })),
-  ).onConflictDoNothing()
+  await saveTmdbMovieData(movieDetails, movie.id)
 }
 
 async function searchMovies(title: string, year: number): Promise<MovieSearchResult[]> {
@@ -119,10 +53,6 @@ async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
     language: 'cs',
   })
   return httpClient.get(`${url}?${query}`)
-}
-
-async function seedTmdbGenres(): Promise<void> {
-  await db.insert(commonSchema.tmdbGenres).values(genres).onConflictDoNothing()
 }
 
 function normalizeTitle(input: string): string {
@@ -155,14 +85,7 @@ async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
     return idFromCzech
   }
 
-  const csfdRow = (
-    await db
-      .select()
-      .from(moviesSchema.csfdMovieData)
-      .where(eq(moviesSchema.csfdMovieData.sourceId, movie.id))
-      .limit(1)
-  )[0]
-
+  const csfdRow = await getCsfdMovieData(movie.id)
   if (!csfdRow) {
     return null
   }
