@@ -1,5 +1,5 @@
 import type { MovieSource } from '@repo/types'
-import type { MovieDetailsResponse, SearchResult } from './types.js'
+import type { MovieDetailsResponse, MovieSearchResult } from './types.js'
 import { commonSchema, db, moviesSchema } from '@repo/database'
 import { env, getThrottledClient } from '@repo/shared'
 
@@ -16,43 +16,92 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
   },
 })
 
-export async function populateTmdbData(): Promise<void> {
+export async function populateTmdbMoviesData(): Promise<void> {
   await seedTmdbGenres()
-  const lastRecordDate = (await db.select().from(moviesSchema.tmdbMovieData).orderBy(desc(moviesSchema.tmdbMovieData.createdAt)).limit(1))?.[0]?.createdAt || new Date(0)
-  const res = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.tmdbMovieData, eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId)).where(and(isNull(moviesSchema.tmdbMovieData.id), gt(moviesSchema.movieSources.createdAt, lastRecordDate)))
-  const movies = res.map(m => m.movie_sources)
+  const movies = await getUnprocessedMovies()
+  await processMovies(movies)
+}
+
+async function getUnprocessedMovies(): Promise<MovieSource[]> {
+  const lastRecordDate = await getLastProcessedDate()
+
+  const res = await db
+    .select()
+    .from(moviesSchema.movieSources)
+    .leftJoin(
+      moviesSchema.tmdbMovieData,
+      eq(moviesSchema.movieSources.id, moviesSchema.tmdbMovieData.sourceId),
+    )
+    .where(
+      and(
+        isNull(moviesSchema.tmdbMovieData.id),
+        gt(moviesSchema.movieSources.createdAt, lastRecordDate),
+      ),
+    )
+
+  return res.map(m => m.movie_sources)
+}
+
+async function getLastProcessedDate(): Promise<Date> {
+  const lastRecord = await db
+    .select()
+    .from(moviesSchema.tmdbMovieData)
+    .orderBy(desc(moviesSchema.tmdbMovieData.createdAt))
+    .limit(1)
+
+  return lastRecord?.[0]?.createdAt || new Date(0)
+}
+
+async function processMovies(movies: MovieSource[]): Promise<void> {
   for (const movie of movies) {
-    const movieId = await findMovieIdForMovie(movie)
-    if (!movieId) {
-      continue
-    }
-
-    const movieDetails = await getMovieDetails(movieId)
-    await db.insert(moviesSchema.tmdbMovieData).values({
-      id: movieDetails.id,
-      sourceId: movie.id,
-      imdbId: movieDetails.imdb_id,
-      title: movieDetails.title,
-      originalTitle: movieDetails.original_title,
-      originalLanguage: movieDetails.original_language,
-      posterPath: movieDetails.poster_path,
-      backdropPath: movieDetails.backdrop_path,
-      releaseDate: movieDetails.release_date,
-      runtime: movieDetails.runtime,
-      voteAverage: movieDetails.vote_average,
-      voteCount: movieDetails.vote_count,
-      tagline: movieDetails.tagline,
-      overview: movieDetails.overview,
-    }).onConflictDoNothing()
-
-    await db.insert(moviesSchema.tmdbMoviesToGenres).values(movieDetails.genres.map(genre => ({
-      movieId: movieDetails.id,
-      genreId: genre.id,
-    }))).onConflictDoNothing()
+    await processMovie(movie)
   }
 }
 
-async function searchMovies(title: string, year: number): Promise<SearchResult[]> {
+async function processMovie(movie: MovieSource): Promise<void> {
+  const movieId = await findMovieIdForMovie(movie)
+  if (!movieId) {
+    return
+  }
+
+  const movieDetails = await getMovieDetails(movieId)
+  await saveMovieData(movieDetails, movie.id)
+}
+
+async function saveMovieData(movieDetails: MovieDetailsResponse, sourceId: number): Promise<void> {
+  await saveMovieDetails(movieDetails, sourceId)
+  await saveMovieGenres(movieDetails)
+}
+
+async function saveMovieDetails(movieDetails: MovieDetailsResponse, sourceId: number): Promise<void> {
+  await db.insert(moviesSchema.tmdbMovieData).values({
+    id: movieDetails.id,
+    sourceId,
+    imdbId: movieDetails.imdb_id,
+    title: movieDetails.title,
+    originalTitle: movieDetails.original_title,
+    originalLanguage: movieDetails.original_language,
+    posterPath: movieDetails.poster_path,
+    backdropPath: movieDetails.backdrop_path,
+    releaseDate: movieDetails.release_date,
+    runtime: movieDetails.runtime,
+    voteAverage: movieDetails.vote_average,
+    voteCount: movieDetails.vote_count,
+    tagline: movieDetails.tagline,
+    overview: movieDetails.overview,
+  }).onConflictDoNothing()
+}
+
+async function saveMovieGenres(movieDetails: MovieDetailsResponse): Promise<void> {
+  await db.insert(moviesSchema.tmdbMoviesToGenres).values(
+    movieDetails.genres.map(genre => ({
+      movieId: movieDetails.id,
+      genreId: genre.id,
+    })),
+  ).onConflictDoNothing()
+}
+
+async function searchMovies(title: string, year: number): Promise<MovieSearchResult[]> {
   const url = '/search/movie'
   const query = new URLSearchParams({
     query: normalizeTitle(title),
@@ -83,7 +132,7 @@ function normalizeTitle(input: string): string {
   return input
 }
 
-function getMovieId(searchResults: SearchResult[], title: string, year: number): number | null {
+function getMovieId(searchResults: MovieSearchResult[], title: string, year: number): number | null {
   const normalizedTitle = normalizeTitle(title)
   const acceptableYears = [year, year - 1, year + 1]
 
