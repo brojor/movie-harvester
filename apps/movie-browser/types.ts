@@ -11,6 +11,11 @@ export const RATING_SOURCE_OPTIONS = [
   { label: 'Rotten Tomatoes', value: 'rt' },
 ] as const
 
+export const MEDIA_TYPE_OPTIONS = [
+  { label: 'Film', value: 'movie' },
+  { label: 'Seriál', value: 'tv-show' },
+] as const
+
 export const ORDER_OPTIONS = ['asc', 'desc'] as const
 
 type ValueOf<T extends readonly { value: any }[]> = T[number]['value']
@@ -20,3 +25,5 @@ export interface SearchParams {
   ratingSource: ValueOf<typeof RATING_SOURCE_OPTIONS>
   order: typeof ORDER_OPTIONS[number]
 }
+
+export type MediaType = ValueOf<typeof MEDIA_TYPE_OPTIONS>

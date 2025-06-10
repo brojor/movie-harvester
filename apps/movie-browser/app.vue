@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SearchParams } from './types'
+import type { MediaType, SearchParams } from './types'
 import { onKeyStroke, useFullscreen } from '@vueuse/core'
 
 const query = ref<SearchParams>({ sortBy: 'title', ratingSource: 'csfd', order: 'asc' })
@@ -11,6 +11,8 @@ const { toggle: toggleFullscreen } = useFullscreen()
 const currentIndex = ref(0)
 const currentMovie = computed(() => movies.value?.[currentIndex.value])
 const moviesCount = computed(() => movies.value?.length ?? 0)
+
+const mediaType = ref<MediaType>('movie')
 
 onKeyStroke('ArrowDown', (e) => {
   e.preventDefault()
@@ -84,7 +86,7 @@ useHead({
   <div v-if="currentMovie" class="text-white">
     <NuxtImg v-if="currentMovie.tmdb.backdropPath" provider="tmdbBackdrop" :src="currentMovie.tmdb.backdropPath" class="h-screen w-full object-cover" />
     <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex flex-col px-[5vw] justify-center">
-      <ControlPanel v-model:sort-options="query" class="py-4" />
+      <ControlPanel v-model:sort-options="query" v-model:media-type="mediaType" class="py-4" />
       <div class="flex gap-[5vw] my-auto">
         <NuxtImg v-if="currentMovie.tmdb.posterPath" provider="tmdbPoster" :src="currentMovie.tmdb.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">

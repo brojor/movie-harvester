@@ -12,6 +12,6 @@ const modelValue = useVModel(props, 'modelValue', emit)
     <IconSort class="h-6 w-6" />
     <UiSelect v-model="modelValue.sortBy" :options="SORT_BY_OPTIONS" />
     <UiSelect v-if="modelValue.sortBy === 'rating'" v-model="modelValue.ratingSource" :options="RATING_SOURCE_OPTIONS" />
-    <OrderControll v-model="modelValue" />
+    <OrderControl v-model="modelValue" />
   </div>
 </template>

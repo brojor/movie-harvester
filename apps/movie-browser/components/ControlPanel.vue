@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import type { SearchParams } from '~/types'
+import type { MediaType, SearchParams } from '~/types'
 import { useVModels } from '@vueuse/core'
 
-const props = defineProps<{ sortOptions: SearchParams }>()
-const emit = defineEmits(['update:sortOptions'])
-const { sortOptions } = useVModels(props, emit)
+const props = defineProps<{ sortOptions: SearchParams, mediaType: MediaType }>()
+const emit = defineEmits(['update:sortOptions', 'update:mediaType'])
+const { sortOptions, mediaType } = useVModels(props, emit)
 </script>
 
 <template>
   <header class="flex gap-2 items-center">
+    <SourceControl v-model="mediaType" />
     <SortControl v-model="sortOptions" />
   </header>
 </template>
