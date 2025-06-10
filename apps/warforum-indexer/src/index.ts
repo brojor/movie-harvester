@@ -1,5 +1,5 @@
 import type { MovieSource } from 'packages/types/dist/index.js'
-import { db, moviesSchema, tvShowsSchema } from '@repo/database'
+import { db, tvShowsSchema } from '@repo/database'
 import { desc } from 'drizzle-orm'
 import { upsertMovie, upsertTvShow } from './infra/database.js'
 import { fetchCsfdId } from './scraper/fetchCsfdId.js'
@@ -8,7 +8,8 @@ import { movieTopicIdMap, tvShowTopicIdMap } from './types/domain.js'
 import { getTopicId } from './utils/parsing.js'
 
 export async function parseMovieTopics(): Promise<void> {
-  const lastRun = (await db.select().from(moviesSchema.movieSources).orderBy(desc(moviesSchema.movieSources.createdAt)).limit(1))?.[0]?.createdAt
+  // const lastRun = (await db.select().from(moviesSchema.movieSources).orderBy(desc(moviesSchema.movieSources.createdAt)).limit(1))?.[0]?.createdAt
+  const lastRun = new Date('2025-06-09T12:00:00.000Z')
 
   for (const [topicId, topicType] of objectEntries(movieTopicIdMap)) {
     const movies = await indexMediaFromTopic(topicId, lastRun)

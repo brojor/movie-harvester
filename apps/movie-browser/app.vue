@@ -58,6 +58,22 @@ function formatMinutesVerbose(totalMinutes: number): string {
   }
 }
 
+const additionalInfo = computed(() => {
+  const items = []
+
+  if (currentMovie.value?.tmdbGenres.length) {
+    items.push(currentMovie.value.tmdbGenres.join(', '))
+  }
+  if (currentMovie.value?.tmdb.runtime) {
+    items.push(formatMinutesVerbose(currentMovie.value.tmdb.runtime))
+  }
+  return items
+})
+
+const title = computed(() => {
+  return (currentMovie.value?.movie.czechTitle || currentMovie.value?.tmdb.originalTitle)!
+})
+
 useHead({
   link: prefetchLinks,
 })
@@ -68,34 +84,15 @@ useHead({
   <div v-if="currentMovie" class="text-white">
     <NuxtImg v-if="currentMovie.tmdb.backdropPath" provider="tmdbBackdrop" :src="currentMovie.tmdb.backdropPath" class="h-screen w-full object-cover" />
     <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex flex-col px-[5vw] justify-center">
-      <ControlPanel v-model="query" class="py-4" />
+      <ControlPanel v-model:sort-options="query" class="py-4" />
       <div class="flex gap-[5vw] my-auto">
         <NuxtImg v-if="currentMovie.tmdb.posterPath" provider="tmdbPoster" :src="currentMovie.tmdb.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">
-          <div class="font-bold text-lg">
-            <span v-if="currentMovie.csfd?.voteAverage" :class="{ 'text-gray-500': currentMovie.csfd.voteAverage < 40, 'text-blue-500': currentMovie.csfd.voteAverage < 70, 'text-red-500': currentMovie.csfd.voteAverage >= 70 }">ČSFD: {{ currentMovie.csfd.voteAverage }}%</span>
-            <span class="mx-2">/</span>
-            <span v-if="currentMovie.tmdb.voteAverage" :class="{ 'text-gray-500': currentMovie.tmdb.voteAverage * 10 < 40, 'text-blue-500': currentMovie.tmdb.voteAverage * 10 < 70, 'text-red-500': currentMovie.tmdb.voteAverage * 10 >= 70 }">TMDB: {{ (currentMovie.tmdb.voteAverage * 10).toFixed(0) }}%</span>
-            <template v-if="currentMovie.rt?.criticsScore">
-              <span class="mx-2">/</span>
-              <span v-if="currentMovie.rt?.criticsScore" :class="{ 'text-gray-500': currentMovie.rt.criticsScore < 40, 'text-blue-500': currentMovie.rt.criticsScore < 70, 'text-red-500': currentMovie.rt.criticsScore >= 70 }">RT: {{ currentMovie.rt.criticsScore }}%</span>
-            </template>
-          </div>
-          <h1 class="text-[2.5vw] font-bold leading-[0.8] pb-2">
-            {{ `${currentMovie.movie.czechTitle} (${currentMovie.movie.year})` }}
-          </h1>
-          <h2 class="text-[1.25vw] font-bold flex items-center gap-2">
-            <div :class="`i-circle-flags:${currentMovie.tmdb.originalLanguage}`" />
-            <span class="text-[1.25vw]">{{ currentMovie.tmdb.originalTitle }}</span>
-          </h2>
-          <div class="flex items-center gap-2">
-            <span class="text-[1vw]">{{ currentMovie.tmdbGenres.join(', ') }}</span>
-            <span class="text-[1vw]">•</span>
-            <span class="text-[1vw]">{{ formatMinutesVerbose(currentMovie.tmdb.runtime ?? 0) }}</span>
-          </div>
-          <p class="text-[1.3vw] max-w-prose overflow-y-auto scrollbar-hide">
-            {{ currentMovie.tmdb.overview }}
-          </p>
+          <MediaRatings :csfd="currentMovie.csfd?.voteAverage" :tmdb="currentMovie.tmdb.voteAverage" :rt="currentMovie.rt?.criticsScore" />
+          <MainHeader :title="title" :year="currentMovie.movie.year" />
+          <OriginCountry v-if="currentMovie.tmdb.originalLanguage && currentMovie.tmdb.originalTitle" :origin-country="currentMovie.tmdb.originalLanguage" :origin-title="currentMovie.tmdb.originalTitle" />
+          <AdditionalInfo :items="additionalInfo" />
+          <MediaOverview v-if="currentMovie.tmdb.overview" :overview="currentMovie.tmdb.overview" />
         </div>
       </div>
       <div class="h-[72px]" />

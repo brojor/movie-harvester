@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import type { SearchParams } from '../types'
-import { RATING_SOURCE_OPTIONS, SORT_BY_OPTIONS } from '../types'
+import type { SearchParams } from '~/types'
+import { useVModels } from '@vueuse/core'
 
-const props = defineProps<{ modelValue: SearchParams }>()
-const emit = defineEmits(['update:modelValue'])
-const modelValue = useVModel(props, 'modelValue', emit)
+const props = defineProps<{ sortOptions: SearchParams }>()
+const emit = defineEmits(['update:sortOptions'])
+const { sortOptions } = useVModels(props, emit)
 </script>
 
 <template>
   <header class="flex gap-2 items-center">
-    <IconSort class="h-6 w-6" />
-    <UiSelect v-model="modelValue.sortBy" :options="SORT_BY_OPTIONS" />
-    <UiSelect v-if="modelValue.sortBy === 'rating'" v-model="modelValue.ratingSource" :options="RATING_SOURCE_OPTIONS" />
-    <OrderControll v-model="modelValue" />
+    <SortControl v-model="sortOptions" />
   </header>
 </template>
