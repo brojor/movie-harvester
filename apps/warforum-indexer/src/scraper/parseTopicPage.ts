@@ -1,11 +1,11 @@
 import type { Cheerio, CheerioAPI } from 'cheerio'
 import type { Element as DomElement } from 'domhandler'
-import type { MediaMetaWithSource, MovieMetaWithSource, ParseTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
+import type { MediaMetaWithSource, MediaType, MovieMetaWithSource, ParseTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
 import { extractTopicId, parseMediaItem } from '../utils/parsing.js'
 
-export function parseTopicPage<T extends 'movie' | 'tvShow'>(
+export function parseTopicPage<T extends MediaType>(
   html: string,
   topicType: TopicType,
   mediaType: T,
