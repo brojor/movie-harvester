@@ -4,6 +4,7 @@ export interface MovieTopicMeta {
 }
 
 export type TopicType = 'hd' | 'uhd' | 'hdDub' | 'uhdDub'
+export type MediaType = 'movie' | 'tvShow'
 
 export const movieTopicIdMap = {
   322: 'hd',
@@ -55,6 +56,8 @@ export interface TvShowMetaWithSource {
   coreMeta: TvShowCoreMeta
   sourceTopic: number
 }
+
+export type MediaMetaWithSource<T> = T extends MovieTopicId ? MovieMetaWithSource : TvShowMetaWithSource
 
 export interface ParseMovieTopicResult {
   mediaItems: MovieMetaWithSource[]
