@@ -1,5 +1,5 @@
 import type { MovieSource } from '@repo/types'
-import type { MovieDetailsResponse, MovieSearchResult } from './types.js'
+import type { MovieDetailsResponse, MovieSearchResult, SearchCandidate } from './types.js'
 import { env, getThrottledClient } from '@repo/shared'
 import { getCsfdMovieData, getUnprocessedMovies, saveTmdbMovieData, seedTmdbGenres } from './infra/database.js'
 
@@ -13,46 +13,88 @@ const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
   },
 })
 
+function isValidSearchCandidate(candidate: { title: string | null, year: number }): candidate is SearchCandidate {
+  return !!candidate.title
+}
+
 export async function populateTmdbMoviesData(): Promise<void> {
   await seedTmdbGenres()
   const movies = await getUnprocessedMovies()
-  await processMovies(movies)
-}
 
-async function processMovies(movies: MovieSource[]): Promise<void> {
   for (const movie of movies) {
-    await processMovie(movie)
+    const movieId = await findTmdbMovieId(movie)
+    if (movieId) {
+      const movieDetails = await getMovieDetails(movieId)
+      await saveTmdbMovieData(movieDetails, movie.id)
+    }
   }
 }
 
-async function processMovie(movie: MovieSource): Promise<void> {
-  const movieId = await findMovieIdForMovie(movie)
-  if (!movieId) {
-    return
+async function findTmdbMovieId(movie: MovieSource): Promise<number | null> {
+  const basicCandidates: SearchCandidate[] = [
+    { title: movie.originalTitle, year: movie.year },
+    { title: movie.czechTitle, year: movie.year },
+  ].filter(isValidSearchCandidate)
+
+  for (const candidate of basicCandidates) {
+    const movieId = await searchAndMatchMovie(candidate)
+    if (movieId)
+      return movieId
   }
 
-  const movieDetails = await getMovieDetails(movieId)
-  await saveTmdbMovieData(movieDetails, movie.id)
+  const csfdData = await getCsfdMovieData(movie.id)
+  if (!csfdData)
+    return null
+
+  const csfdCandidates: SearchCandidate[] = [
+    { title: csfdData.originalTitle, year: movie.year },
+    { title: csfdData.title, year: movie.year },
+  ].filter(isValidSearchCandidate)
+
+  for (const candidate of csfdCandidates) {
+    const movieId = await searchAndMatchMovie(candidate)
+    if (movieId)
+      return movieId
+  }
+
+  return null
+}
+
+async function searchAndMatchMovie({ title, year }: SearchCandidate): Promise<number | null> {
+  const searchResults = await searchMovies(title, year)
+  return findBestMatch(searchResults, title, year)
 }
 
 async function searchMovies(title: string, year: number): Promise<MovieSearchResult[]> {
-  const url = '/search/movie'
+  const normalizedTitle = normalizeTitle(title)
   const query = new URLSearchParams({
-    query: normalizeTitle(title),
+    query: normalizedTitle,
     year: year.toString(),
     language: 'cs',
   })
 
-  const response = await httpClient.get(`${url}?${query}`)
+  const response = await httpClient.get(`/search/movie?${query}`)
   return response.results
 }
 
-async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
-  const url = `/movie/${id}`
-  const query = new URLSearchParams({
-    language: 'cs',
+function findBestMatch(searchResults: MovieSearchResult[], title: string, year: number): number | null {
+  const normalizedTitle = normalizeTitle(title).toLowerCase()
+  const acceptableYears = [year - 1, year, year + 1]
+
+  const match = searchResults.find((result) => {
+    const resultTitles = [result.original_title, result.title].map(t => t.toLowerCase())
+    const titleMatch = resultTitles.includes(normalizedTitle)
+    const yearMatch = acceptableYears.includes(Number(result.release_date.split('-')[0]))
+
+    return titleMatch && yearMatch
   })
-  return httpClient.get(`${url}?${query}`)
+
+  return match?.id ?? null
+}
+
+async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
+  const query = new URLSearchParams({ language: 'cs' })
+  return httpClient.get(`/movie/${id}?${query}`)
 }
 
 function normalizeTitle(input: string): string {
@@ -60,60 +102,4 @@ function normalizeTitle(input: string): string {
     return `The ${input.slice(0, -5)}`
   }
   return input
-}
-
-function getMovieId(searchResults: MovieSearchResult[], title: string, year: number): number | null {
-  const normalizedTitle = normalizeTitle(title).toLowerCase()
-  const acceptableYears = [year - 1, year, year + 1]
-
-  return searchResults.find((result) => {
-    const resultTitles = [result.original_title, result.title].map(t => t.toLowerCase())
-    const titleMatch = resultTitles.includes(normalizedTitle)
-    const yearMatch = acceptableYears.includes(Number(result.release_date.split('-')[0]))
-
-    return titleMatch && yearMatch
-  })?.id ?? null
-}
-
-async function findMovieIdForMovie(movie: MovieSource): Promise<number | null> {
-  const titlesToSearch = [
-    { title: movie.originalTitle, year: movie.year },
-    { title: movie.czechTitle, year: movie.year },
-  ]
-
-  for (const { title, year } of titlesToSearch) {
-    const id = await trySearchByTitle(title, year)
-    if (id) {
-      return id
-    }
-  }
-
-  const csfdRow = await getCsfdMovieData(movie.id)
-  if (!csfdRow) {
-    return null
-  }
-
-  const csfdTitlesToSearch = [
-    { title: csfdRow.originalTitle, year: movie.year },
-    { title: csfdRow.title, year: movie.year },
-  ]
-
-  for (const { title, year } of csfdTitlesToSearch) {
-    const id = await trySearchByTitle(title, year)
-    if (id) {
-      return id
-    }
-  }
-
-  return null
-}
-
-async function trySearchByTitle(title: string | null, year: number): Promise<number | null> {
-  if (!title) {
-    return null
-  }
-
-  const searchResults = await searchMovies(title, year)
-  const foundId = getMovieId(searchResults, title, year)
-  return foundId
 }
