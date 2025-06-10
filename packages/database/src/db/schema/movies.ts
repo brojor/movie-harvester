@@ -7,7 +7,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
-import { timestamps, tmdbGenres } from './common.js'
+import { timestamps } from './common.js'
 
 // Movies source
 export const movieSources = sqliteTable(
@@ -50,11 +50,16 @@ export const tmdbMovieData = sqliteTable('tmdb_movie_data', {
   uniqueIndex('unique_tmdb_movie_source').on(table.sourceId),
 ])
 
+export const tmdbMovieGenres = sqliteTable('tmdb_movie_genres', {
+  id: int('id').primaryKey(),
+  name: text('name').notNull(),
+})
+
 export const tmdbMoviesToGenres = sqliteTable(
   'tmdb_movies_to_genres',
   {
     movieId: int().notNull().references(() => tmdbMovieData.id),
-    genreId: int().notNull().references(() => tmdbGenres.id),
+    genreId: int().notNull().references(() => tmdbMovieGenres.id),
   },
   t => [primaryKey({ columns: [t.movieId, t.genreId] })],
 )
@@ -146,7 +151,7 @@ export const rtDataRelations = relations(rtMovieData, ({ one }) => ({
   }),
 }))
 
-export const tmdbGenresRelations = relations(tmdbGenres, ({ many }) => ({
+export const tmdbGenresRelations = relations(tmdbMovieGenres, ({ many }) => ({
   movies: many(tmdbMoviesToGenres),
 }))
 
@@ -159,9 +164,9 @@ export const tmdbToGenresRelations = relations(tmdbMoviesToGenres, ({ one }) => 
     fields: [tmdbMoviesToGenres.movieId],
     references: [tmdbMovieData.id],
   }),
-  genre: one(tmdbGenres, {
+  genre: one(tmdbMovieGenres, {
     fields: [tmdbMoviesToGenres.genreId],
-    references: [tmdbGenres.id],
+    references: [tmdbMovieGenres.id],
   }),
 }))
 

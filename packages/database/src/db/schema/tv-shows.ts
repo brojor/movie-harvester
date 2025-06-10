@@ -7,7 +7,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
-import { timestamps, tmdbGenres } from './common.js'
+import { timestamps } from './common.js'
 
 export const tvShowSources = sqliteTable('tv_shows', {
   id: int().primaryKey({ autoIncrement: true }),
@@ -49,9 +49,14 @@ export const tmdbTvShowsData = sqliteTable('tmdb_tv_shows_data', {
   uniqueIndex('unique_tmdb_tv_show_source').on(table.sourceId),
 ])
 
-export const tvShowGenres = sqliteTable('tv_show_genres', {
+export const tmdbTvShowGenres = sqliteTable('tmdb_tv_show_genres', {
+  id: int('id').primaryKey(),
+  name: text('name').notNull(),
+})
+
+export const tmdbTvShowToGenres = sqliteTable('tmdb_tv_show_to_genres', {
   tvShowId: int().references(() => tmdbTvShowsData.id),
-  genreId: int().references(() => tmdbGenres.id),
+  genreId: int().references(() => tmdbTvShowGenres.id),
 }, t => [primaryKey({ columns: [t.tvShowId, t.genreId] })])
 
 export const networks = sqliteTable('networks', {
@@ -91,25 +96,25 @@ export const tvShowTopicsRelations = relations(tvShowTopics, ({ one }) => ({
 }))
 
 export const tvShowRelations = relations(tmdbTvShowsData, ({ many }) => ({
-  genres: many(tvShowGenres),
+  genres: many(tmdbTvShowToGenres),
   networks: many(tvShowNetworks),
   seasons: many(seasons),
 }))
 
 // Genre Relations
-export const genreRelations = relations(tmdbGenres, ({ many }) => ({
-  tmdbTvShowsData: many(tvShowGenres),
+export const genreRelations = relations(tmdbTvShowGenres, ({ many }) => ({
+  tmdbTvShowsData: many(tmdbTvShowToGenres),
 }))
 
 // TVShowGenres Relations
-export const tvShowGenresRelations = relations(tvShowGenres, ({ one }) => ({
+export const tvShowGenresRelations = relations(tmdbTvShowToGenres, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
-    fields: [tvShowGenres.tvShowId],
+    fields: [tmdbTvShowToGenres.tvShowId],
     references: [tmdbTvShowsData.id],
   }),
-  genre: one(tmdbGenres, {
-    fields: [tvShowGenres.genreId],
-    references: [tmdbGenres.id],
+  genre: one(tmdbTvShowGenres, {
+    fields: [tmdbTvShowToGenres.genreId],
+    references: [tmdbTvShowGenres.id],
   }),
 }))
 
