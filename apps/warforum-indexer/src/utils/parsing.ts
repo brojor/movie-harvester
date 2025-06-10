@@ -1,5 +1,5 @@
 import type { MovieSource } from '@repo/types'
-import type { DubbedMovieCoreMeta, NonDubbedMovieCoreMeta } from '../types/domain.js'
+import type { DubbedMovieCoreMeta, NonDubbedMovieCoreMeta, TvShowCoreMeta } from '../types/domain.js'
 import { movieTopicIdMap } from '../types/domain.js'
 
 export function extractTopicId(url: string): number {
@@ -52,4 +52,26 @@ export function getTopicId(movie: MovieSource): number {
     }
   }
   throw new Error('No topic ID found')
+}
+
+export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
+  const parts = topicTitle.split('/').map(part => part.trim())
+
+  if (parts.length < 2) {
+    throw new Error(`Invalid topic title: "${topicTitle}"`)
+  }
+
+  const languagesPart = parts.pop()
+  const originalTitle = parts.pop()
+  const czechTitle = parts.length > 0 ? parts[0] : undefined
+
+  if (!originalTitle || !languagesPart) {
+    throw new Error(`Invalid topic title: "${topicTitle}"`)
+  }
+
+  return {
+    czechTitle,
+    originalTitle,
+    languages: languagesPart.split(',').map(lang => lang.trim()),
+  }
 }

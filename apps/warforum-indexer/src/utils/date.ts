@@ -9,10 +9,10 @@ export function parseDate(raw: string): Date {
   return parsed
 }
 
-export function isOld(date: Date, createdAfter?: Date): boolean {
+export function isOld(date: Date, cutoffDate?: Date): boolean {
   const sixMonthsAgo = sub(new Date(), { months: 6 })
   const isBeforeSixMonthsAgo = isBefore(date, sixMonthsAgo)
-  const isAfterCreatedAfter = createdAfter ? isAfter(createdAfter, date) : false
+  const isAfterCutoffDate = cutoffDate ? isAfter(cutoffDate, date) : false
 
-  return isBeforeSixMonthsAgo || isAfterCreatedAfter
+  return isBeforeSixMonthsAgo || isAfterCutoffDate
 }

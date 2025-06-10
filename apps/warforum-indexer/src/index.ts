@@ -1,10 +1,10 @@
 import type { MovieSource } from 'packages/types/dist/index.js'
-import { db, moviesSchema } from '@repo/database'
+import { db, moviesSchema, tvShowsSchema } from '@repo/database'
 import { desc } from 'drizzle-orm'
-import { upsertMovie } from './infra/database.js'
+import { upsertMovie, upsertTvShow } from './infra/database.js'
 import { fetchCsfdId } from './scraper/fetchCsfdId.js'
 import { indexMediaFromTopic } from './scraper/indexMediaFromTopic.js'
-import { movieTopicIdMap } from './types/domain.js'
+import { movieTopicIdMap, tvShowTopicIdMap } from './types/domain.js'
 import { getTopicId } from './utils/parsing.js'
 
 export async function parseMovieTopics(): Promise<void> {
@@ -15,6 +15,18 @@ export async function parseMovieTopics(): Promise<void> {
 
     for (const movie of movies) {
       await upsertMovie(movie, topicType)
+    }
+  }
+}
+
+export async function parseTvShowTopics(): Promise<void> {
+  const lastRun = (await db.select().from(tvShowsSchema.tvShowSources).orderBy(desc(tvShowsSchema.tvShowSources.createdAt)).limit(1))?.[0]?.createdAt
+
+  for (const [topicId, topicType] of objectEntries(tvShowTopicIdMap)) {
+    const tvShows = await indexMediaFromTopic(topicId, lastRun)
+
+    for (const tvShow of tvShows) {
+      await upsertTvShow(tvShow, topicType)
     }
   }
 }

@@ -1,12 +1,15 @@
-import type { CoreMetaWithSourceTopic, MovieTopicId } from '../types/domain.js'
+import type { MovieMetaWithSource, MovieTopicId, TvShowMetaWithSource, TvShowTopicId } from '../types/domain.js'
 import { fetchHtml } from '../infra/httpClient.js'
-import { movieTopicIdMap } from '../types/domain.js'
+import { movieTopicIdMap, tvShowTopicIdMap } from '../types/domain.js'
 import { parseTopicPage } from './parseTopicPage.js'
 
-export async function indexMediaFromTopic(topicId: MovieTopicId, cutoffDate: Date): Promise<CoreMetaWithSourceTopic[]> {
-  const coreMetaAcc: CoreMetaWithSourceTopic[] = []
+export async function indexMediaFromTopic(topicId: MovieTopicId, cutoffDate: Date): Promise<MovieMetaWithSource[]>
+export async function indexMediaFromTopic(topicId: TvShowTopicId, cutoffDate: Date): Promise<TvShowMetaWithSource[]>
+export async function indexMediaFromTopic(topicId: MovieTopicId | TvShowTopicId, cutoffDate: Date): Promise<MovieMetaWithSource[] | TvShowMetaWithSource[]> {
+  const movieAcc: MovieMetaWithSource[] = []
+  const tvShowAcc: TvShowMetaWithSource[] = []
   const topicRecordCount = 45
-  const topicType = movieTopicIdMap[topicId]
+  const topicType = topicId in movieTopicIdMap ? movieTopicIdMap[topicId as MovieTopicId] : tvShowTopicIdMap[topicId as TvShowTopicId]
   let recursionDepth = 0
 
   async function traverseTopic(): Promise<void> {
@@ -20,9 +23,20 @@ export async function indexMediaFromTopic(topicId: MovieTopicId, cutoffDate: Dat
 
     const url = `viewforum.php?${searchParams.toString()}`
     const html = await fetchHtml(url)
-    const { mediaItems, reachedCutoff } = parseTopicPage(html, topicType, cutoffDate)
+    const mediaType = topicId in movieTopicIdMap ? 'movie' : 'tvShow'
 
-    coreMetaAcc.push(...mediaItems)
+    let reachedCutoff = false
+
+    if (mediaType === 'movie') {
+      const { mediaItems, reachedCutoff: reachedCutoffMovie } = parseTopicPage(html, topicType, 'movie', cutoffDate)
+      reachedCutoff = reachedCutoffMovie
+      movieAcc.push(...mediaItems)
+    }
+    else {
+      const { mediaItems, reachedCutoff: reachedCutoffTvShow } = parseTopicPage(html, topicType, 'tvShow', cutoffDate)
+      reachedCutoff = reachedCutoffTvShow
+      tvShowAcc.push(...mediaItems)
+    }
 
     if (!reachedCutoff) {
       recursionDepth++
@@ -31,5 +45,5 @@ export async function indexMediaFromTopic(topicId: MovieTopicId, cutoffDate: Dat
   }
 
   await traverseTopic()
-  return coreMetaAcc
+  return topicId in movieTopicIdMap ? movieAcc : tvShowAcc
 }

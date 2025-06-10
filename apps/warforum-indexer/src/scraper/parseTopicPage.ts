@@ -1,17 +1,24 @@
 import type { Cheerio, CheerioAPI } from 'cheerio'
 import type { Element as DomElement } from 'domhandler'
-import type { CoreMetaWithSourceTopic, ParseTopicResult, TopicType } from '../types/domain.js'
+import type { MovieMetaWithSource, ParseMovieTopicResult, ParseTvShowTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
-import { extractTopicId, parseMovieCoreMeta } from '../utils/parsing.js'
+import { extractTopicId, parseMovieCoreMeta, parseTvShowCoreMeta } from '../utils/parsing.js'
 
-export function parseTopicPage(html: string, topicType: TopicType, cutoffDate: Date): ParseTopicResult {
+export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'movie', cutoffDate: Date): ParseMovieTopicResult
+export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'tvShow', cutoffDate: Date): ParseTvShowTopicResult
+export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'movie' | 'tvShow', cutoffDate: Date): ParseMovieTopicResult | ParseTvShowTopicResult {
   const $ = cheerio.load(html)
 
-  const mediaItems: CoreMetaWithSourceTopic[] = []
+  const movieItems: MovieMetaWithSource[] = []
+  const tvShowItems: TvShowMetaWithSource[] = []
   let lastRowDate: Date = new Date()
 
   const rows = extractMovieRows($)
+
+  if (rows.length === 0) {
+    throw new Error('No rows found, is SID valid?')
+  }
 
   rows.each((_, row) => {
     const dateString = $(row)
@@ -28,14 +35,46 @@ export function parseTopicPage(html: string, topicType: TopicType, cutoffDate: D
     if (isOld(date, cutoffDate))
       return
 
-    const coreMetaWithSourceTopic = parseCoreMetaWithSourceTopic(row, topicType, $)
-    if (coreMetaWithSourceTopic)
-      mediaItems.push(coreMetaWithSourceTopic)
+    const title = parseMediaTitle(row, $)
+    const sourceTopic = parseSourceTopicId(row, $)
+
+    if (mediaType === 'movie') {
+      const isDubbed = topicType.endsWith('Dub')
+
+      const coreMeta = isDubbed ? parseMovieCoreMeta(title, true) : parseMovieCoreMeta(title, false)
+      if (!coreMeta)
+        return
+
+      movieItems.push({
+        coreMeta,
+        sourceTopic,
+      })
+    }
+    else {
+      const coreMeta = parseTvShowCoreMeta(title)
+      if (!coreMeta)
+        return
+
+      tvShowItems.push({
+        coreMeta,
+        sourceTopic,
+      })
+    }
   })
 
   const reachedCutoff = isOld(lastRowDate, cutoffDate)
 
-  return { mediaItems, reachedCutoff }
+  if (mediaType === 'movie') {
+    return {
+      mediaItems: movieItems,
+      reachedCutoff,
+    } satisfies ParseMovieTopicResult
+  }
+
+  return {
+    mediaItems: tvShowItems,
+    reachedCutoff,
+  } satisfies ParseTvShowTopicResult
 }
 
 function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {
@@ -52,26 +91,18 @@ function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {
   return rows
 }
 
-function parseCoreMetaWithSourceTopic(
-  row: DomElement,
-  topicType: TopicType,
-  $: CheerioAPI,
-): CoreMetaWithSourceTopic | null {
+function parseMediaTitle(row: DomElement, $: CheerioAPI): string {
   const title = $(row).find('a.topictitle').text().trim()
+  if (!title)
+    throw new Error(`Missing title in: "${row}"`)
+
+  return title
+}
+
+function parseSourceTopicId(row: DomElement, $: CheerioAPI): number {
   const href = $(row).find('a.topictitle').attr('href')
   if (!href)
-    throw new Error(`Missing href in: "${title}"`)
+    throw new Error(`Missing href in: "${row}"`)
 
-  const sourceTopic = extractTopicId(href)
-  const dubbedTypes: TopicType[] = ['hdDub', 'uhdDub']
-  const isDubbed = dubbedTypes.includes(topicType)
-
-  const coreMeta = isDubbed ? parseMovieCoreMeta(title, true) : parseMovieCoreMeta(title, false)
-  if (!coreMeta)
-    return null
-
-  return {
-    coreMeta,
-    sourceTopic,
-  }
+  return extractTopicId(href)
 }

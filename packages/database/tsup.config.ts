@@ -7,5 +7,6 @@ export default defineConfig({
     'index': './src/index.ts',
     'db/schema/common': './src/db/schema/common.ts',
     'db/schema/movies': './src/db/schema/movies.ts',
+    'db/schema/tv-shows': './src/db/schema/tv-shows.ts',
   },
 })
