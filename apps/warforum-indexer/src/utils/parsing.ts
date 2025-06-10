@@ -1,5 +1,5 @@
 import type { MovieSource } from '@repo/types'
-import type { DubbedMovieCoreMeta, NonDubbedMovieCoreMeta, TvShowCoreMeta } from '../types/domain.js'
+import type { DubbedMovieCoreMeta, MediaType, MovieMetaWithSource, NonDubbedMovieCoreMeta, TopicType, TvShowCoreMeta, TvShowMetaWithSource } from '../types/domain.js'
 import { movieTopicIdMap } from '../types/domain.js'
 
 export function extractTopicId(url: string): number {
@@ -73,5 +73,25 @@ export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
     czechTitle,
     originalTitle,
     languages: languagesPart.split(',').map(lang => lang.trim()),
+  }
+}
+
+export function parseMediaItem(
+  title: string,
+  sourceTopic: number,
+  mediaType: MediaType,
+  topicType: TopicType,
+): MovieMetaWithSource | TvShowMetaWithSource | null {
+  if (mediaType === 'movie') {
+    const coreMeta = topicType.endsWith('Dub')
+      ? parseMovieCoreMeta(title, true)
+      : parseMovieCoreMeta(title, false)
+
+    return coreMeta ? { coreMeta, sourceTopic } : null
+  }
+  else {
+    const coreMeta = parseTvShowCoreMeta(title)
+
+    return coreMeta ? { coreMeta, sourceTopic } : null
   }
 }

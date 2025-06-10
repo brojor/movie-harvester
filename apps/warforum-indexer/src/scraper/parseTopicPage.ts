@@ -1,17 +1,18 @@
 import type { Cheerio, CheerioAPI } from 'cheerio'
 import type { Element as DomElement } from 'domhandler'
-import type { MovieMetaWithSource, ParseMovieTopicResult, ParseTvShowTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
+import type { MediaMetaWithSource, MovieMetaWithSource, ParseTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
-import { extractTopicId, parseMovieCoreMeta, parseTvShowCoreMeta } from '../utils/parsing.js'
+import { extractTopicId, parseMediaItem } from '../utils/parsing.js'
 
-export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'movie', cutoffDate: Date): ParseMovieTopicResult
-export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'tvShow', cutoffDate: Date): ParseTvShowTopicResult
-export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'movie' | 'tvShow', cutoffDate: Date): ParseMovieTopicResult | ParseTvShowTopicResult {
+export function parseTopicPage<T extends 'movie' | 'tvShow'>(
+  html: string,
+  topicType: TopicType,
+  mediaType: T,
+  cutoffDate: Date,
+): ParseTopicResult<MediaMetaWithSource<T>> {
   const $ = cheerio.load(html)
-
-  const movieItems: MovieMetaWithSource[] = []
-  const tvShowItems: TvShowMetaWithSource[] = []
+  const mediaItems: (MovieMetaWithSource | TvShowMetaWithSource)[] = []
   let lastRowDate: Date = new Date()
 
   const rows = extractMovieRows($)
@@ -38,43 +39,18 @@ export function parseTopicPage(html: string, topicType: TopicType, mediaType: 'm
     const title = parseMediaTitle(row, $)
     const sourceTopic = parseSourceTopicId(row, $)
 
-    if (mediaType === 'movie') {
-      const isDubbed = topicType.endsWith('Dub')
-
-      const coreMeta = isDubbed ? parseMovieCoreMeta(title, true) : parseMovieCoreMeta(title, false)
-      if (!coreMeta)
-        return
-
-      movieItems.push({
-        coreMeta,
-        sourceTopic,
-      })
-    }
-    else {
-      const coreMeta = parseTvShowCoreMeta(title)
-      if (!coreMeta)
-        return
-
-      tvShowItems.push({
-        coreMeta,
-        sourceTopic,
-      })
+    const parsedItem = parseMediaItem(title, sourceTopic, mediaType, topicType)
+    if (parsedItem) {
+      mediaItems.push(parsedItem)
     }
   })
 
   const reachedCutoff = isOld(lastRowDate, cutoffDate)
 
-  if (mediaType === 'movie') {
-    return {
-      mediaItems: movieItems,
-      reachedCutoff,
-    } satisfies ParseMovieTopicResult
-  }
-
   return {
-    mediaItems: tvShowItems,
+    mediaItems: mediaItems as MediaMetaWithSource<T>[],
     reachedCutoff,
-  } satisfies ParseTvShowTopicResult
+  }
 }
 
 function extractMovieRows($: CheerioAPI): Cheerio<DomElement> {

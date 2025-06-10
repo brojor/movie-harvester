@@ -59,12 +59,7 @@ export interface TvShowMetaWithSource {
 
 export type MediaMetaWithSource<T> = T extends MovieTopicId ? MovieMetaWithSource : TvShowMetaWithSource
 
-export interface ParseMovieTopicResult {
-  mediaItems: MovieMetaWithSource[]
-  reachedCutoff: boolean
-}
-
-export interface ParseTvShowTopicResult {
-  mediaItems: TvShowMetaWithSource[]
+export interface ParseTopicResult<T> {
+  mediaItems: T[]
   reachedCutoff: boolean
 }
