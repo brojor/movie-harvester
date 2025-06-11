@@ -79,6 +79,7 @@ export async function saveTmdbMovieData(movieDetails: MovieDetailsResponse, sour
     title: movieDetails.title,
     originalTitle: movieDetails.original_title,
     originalLanguage: movieDetails.original_language,
+    originCountry: JSON.stringify(movieDetails.origin_country),
     posterPath: movieDetails.poster_path,
     backdropPath: movieDetails.backdrop_path,
     releaseDate: movieDetails.release_date,

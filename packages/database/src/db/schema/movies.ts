@@ -37,6 +37,7 @@ export const tmdbMovieData = sqliteTable('tmdb_movie_data', {
   title: text(),
   originalTitle: text(),
   originalLanguage: text(),
+  originCountry: text(),
   posterPath: text(),
   backdropPath: text(),
   releaseDate: text(),
