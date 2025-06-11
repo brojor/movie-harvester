@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import {
   int,
   primaryKey,
@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/sqlite-core'
 import { timestamps } from './common.js'
 
-export const tvShowSources = sqliteTable('tv_shows', {
+export const tvShowSources = sqliteTable('tv_show_sources', {
   id: int().primaryKey({ autoIncrement: true }),
   czechTitle: text(),
   originalTitle: text().notNull().unique(),
@@ -22,7 +22,7 @@ export const tvShowTopics = sqliteTable('tv_show_topics', {
   topicId: int().notNull(),
   topicType: text().notNull(),
   languages: text().notNull(),
-  createdAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  ...timestamps,
 })
 
 export const tmdbTvShowsData = sqliteTable('tmdb_tv_shows_data', {
@@ -50,28 +50,28 @@ export const tmdbTvShowsData = sqliteTable('tmdb_tv_shows_data', {
 ])
 
 export const tmdbTvShowGenres = sqliteTable('tmdb_tv_show_genres', {
-  id: int('id').primaryKey(),
-  name: text('name').notNull(),
+  id: int().primaryKey(),
+  name: text().notNull(),
 })
 
-export const tmdbTvShowToGenres = sqliteTable('tmdb_tv_show_to_genres', {
+export const tmdbTvShowsToGenres = sqliteTable('tmdb_tv_shows_to_genres', {
   tvShowId: int().references(() => tmdbTvShowsData.id),
   genreId: int().references(() => tmdbTvShowGenres.id),
 }, t => [primaryKey({ columns: [t.tvShowId, t.genreId] })])
 
-export const networks = sqliteTable('networks', {
+export const tmdbNetworks = sqliteTable('tmdb_networks', {
   id: int().primaryKey(),
   name: text().notNull(),
   logoPath: text(),
   originCountry: text(),
 })
 
-export const tvShowNetworks = sqliteTable('tv_show_networks', {
+export const tmdbTvShowToNetworks = sqliteTable('tmdb_tv_show_to_networks', {
   tvShowId: int().references(() => tmdbTvShowsData.id),
-  networkId: int().references(() => networks.id),
+  networkId: int().references(() => tmdbNetworks.id),
 })
 
-export const seasons = sqliteTable('seasons', {
+export const tmdbSeasons = sqliteTable('tmdb_seasons', {
   id: int().primaryKey(),
   tvShowId: int().references(() => tmdbTvShowsData.id),
   name: text().notNull(),
@@ -95,50 +95,50 @@ export const tvShowTopicsRelations = relations(tvShowTopics, ({ one }) => ({
   }),
 }))
 
-export const tvShowRelations = relations(tmdbTvShowsData, ({ many }) => ({
-  genres: many(tmdbTvShowToGenres),
-  networks: many(tvShowNetworks),
-  seasons: many(seasons),
+export const tmdbTvShowsDataRelations = relations(tmdbTvShowsData, ({ many }) => ({
+  genres: many(tmdbTvShowsToGenres),
+  networks: many(tmdbTvShowToNetworks),
+  seasons: many(tmdbSeasons),
 }))
 
 // Genre Relations
-export const genreRelations = relations(tmdbTvShowGenres, ({ many }) => ({
-  tmdbTvShowsData: many(tmdbTvShowToGenres),
+export const tmdbTvShowGenresRelations = relations(tmdbTvShowGenres, ({ many }) => ({
+  tmdbTvShowsData: many(tmdbTvShowsToGenres),
 }))
 
 // TVShowGenres Relations
-export const tvShowGenresRelations = relations(tmdbTvShowToGenres, ({ one }) => ({
+export const tmdbTvShowsToGenresRelations = relations(tmdbTvShowsToGenres, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
-    fields: [tmdbTvShowToGenres.tvShowId],
+    fields: [tmdbTvShowsToGenres.tvShowId],
     references: [tmdbTvShowsData.id],
   }),
   genre: one(tmdbTvShowGenres, {
-    fields: [tmdbTvShowToGenres.genreId],
+    fields: [tmdbTvShowsToGenres.genreId],
     references: [tmdbTvShowGenres.id],
   }),
 }))
 
 // Network Relations
-export const networkRelations = relations(networks, ({ many }) => ({
-  tmdbTvShowsData: many(tvShowNetworks),
+export const tmdbNetworksRelations = relations(tmdbNetworks, ({ many }) => ({
+  tmdbTvShowsData: many(tmdbTvShowToNetworks),
 }))
 
 // TVShowNetworks Relations
-export const tvShowNetworksRelations = relations(tvShowNetworks, ({ one }) => ({
+export const tmdbTvShowToNetworksRelations = relations(tmdbTvShowToNetworks, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
-    fields: [tvShowNetworks.tvShowId],
+    fields: [tmdbTvShowToNetworks.tvShowId],
     references: [tmdbTvShowsData.id],
   }),
-  network: one(networks, {
-    fields: [tvShowNetworks.networkId],
-    references: [networks.id],
+  network: one(tmdbNetworks, {
+    fields: [tmdbTvShowToNetworks.networkId],
+    references: [tmdbNetworks.id],
   }),
 }))
 
 // Season Relations
-export const seasonRelations = relations(seasons, ({ one }) => ({
+export const tmdbSeasonsRelations = relations(tmdbSeasons, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
-    fields: [seasons.tvShowId],
+    fields: [tmdbSeasons.tvShowId],
     references: [tmdbTvShowsData.id],
   }),
 }))
