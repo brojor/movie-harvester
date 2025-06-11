@@ -12,7 +12,8 @@
     "generate": "drizzle-kit generate",
     "push": "pnpm build && drizzle-kit push",
     "migrate": "drizzle-kit migrate",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@libsql/client": "catalog:prod",

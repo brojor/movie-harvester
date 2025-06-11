@@ -1,9 +1,9 @@
-import type { TvShowNetwork, TvShowSeason } from '@repo/types'
+import type { TmdbNetwork, TmdbSeason } from '@repo/types'
 import type { SearchParams } from '../../types'
 import { db, tvShowsSchema } from '@repo/database'
 import { asc, desc, eq } from 'drizzle-orm'
 
-const { tvShowSources, tmdbTvShowsData, tmdbTvShowToGenres, tmdbTvShowGenres, networks, tvShowNetworks, seasons } = tvShowsSchema
+const { tvShowSources, tmdbTvShowsData, tmdbTvShowsToGenres, tmdbTvShowGenres, tmdbNetworks, tmdbTvShowToNetworks, tmdbSeasons } = tvShowsSchema
 
 const sortByToColumn = {
   title: tmdbTvShowsData.name,
@@ -32,11 +32,11 @@ export default defineEventHandler(async (event) => {
 
   const tmdbGenresJoin = await db
     .select({
-      tvShowId: tmdbTvShowToGenres.tvShowId,
+      tvShowId: tmdbTvShowsToGenres.tvShowId,
       genre: tmdbTvShowGenres.name,
     })
-    .from(tmdbTvShowToGenres)
-    .innerJoin(tmdbTvShowGenres, eq(tmdbTvShowToGenres.genreId, tmdbTvShowGenres.id))
+    .from(tmdbTvShowsToGenres)
+    .innerJoin(tmdbTvShowGenres, eq(tmdbTvShowsToGenres.genreId, tmdbTvShowGenres.id))
 
   for (const { tvShowId, genre } of tmdbGenresJoin) {
     if (tvShowId !== null) {
@@ -48,15 +48,15 @@ export default defineEventHandler(async (event) => {
   }
 
   // 3. Načtení networks
-  const networksMap = new Map<number, TvShowNetwork[]>()
+  const networksMap = new Map<number, TmdbNetwork[]>()
 
   const networksJoin = await db
     .select({
-      tvShowId: tvShowNetworks.tvShowId,
-      network: networks,
+      tvShowId: tmdbTvShowToNetworks.tvShowId,
+      network: tmdbNetworks,
     })
-    .from(tvShowNetworks)
-    .innerJoin(networks, eq(tvShowNetworks.networkId, networks.id))
+    .from(tmdbTvShowToNetworks)
+    .innerJoin(tmdbNetworks, eq(tmdbTvShowToNetworks.networkId, tmdbNetworks.id))
 
   for (const { tvShowId, network } of networksJoin) {
     if (tvShowId !== null) {
@@ -68,11 +68,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Načtení seasons
-  const seasonsMap = new Map<number, TvShowSeason[]>()
+  const seasonsMap = new Map<number, TmdbSeason[]>()
 
   const seasonsData = await db
     .select()
-    .from(seasons)
+    .from(tmdbSeasons)
 
   for (const season of seasonsData) {
     if (season.tvShowId !== null) {

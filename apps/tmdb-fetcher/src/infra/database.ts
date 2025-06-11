@@ -58,7 +58,7 @@ export async function getUnprocessedTvShows(cutoffDate: Date): Promise<TvShowSou
       ),
     )
 
-  return res.map(m => m.tv_shows)
+  return res.map(m => m.tv_show_sources)
 }
 
 export async function getCsfdMovieData(sourceId: number): Promise<CsfdMovieData | null> {
@@ -120,7 +120,7 @@ export async function saveTmdbTvShowData(tvShowDetails: TvShowDetailsResponse, s
     voteCount: tvShowDetails.vote_count,
   }).onConflictDoNothing()
 
-  await db.insert(tvShowsSchema.tmdbTvShowToGenres).values(
+  await db.insert(tvShowsSchema.tmdbTvShowsToGenres).values(
     tvShowDetails.genres.map(genre => ({
       tvShowId: tvShowDetails.id,
       genreId: genre.id,
@@ -128,20 +128,20 @@ export async function saveTmdbTvShowData(tvShowDetails: TvShowDetailsResponse, s
   ).onConflictDoNothing()
 
   for (const network of tvShowDetails.networks) {
-    await db.insert(tvShowsSchema.networks).values({
+    await db.insert(tvShowsSchema.tmdbNetworks).values({
       id: network.id,
       name: network.name,
       logoPath: network.logo_path,
       originCountry: network.origin_country,
     }).onConflictDoNothing()
 
-    await db.insert(tvShowsSchema.tvShowNetworks).values({
+    await db.insert(tvShowsSchema.tmdbTvShowToNetworks).values({
       tvShowId: tvShowDetails.id,
       networkId: network.id,
     }).onConflictDoNothing()
   }
 
-  await db.insert(tvShowsSchema.seasons).values(
+  await db.insert(tvShowsSchema.tmdbSeasons).values(
     tvShowDetails.seasons.map(season => ({
       id: season.id,
       tvShowId: tvShowDetails.id,
