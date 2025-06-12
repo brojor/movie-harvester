@@ -1,6 +1,6 @@
 import type { MovieSource, TvShowSource } from '@repo/types'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from './types.js'
-import { env, getThrottledClient } from '@repo/shared'
+import { env, getThrottledClient, normalizeTitle } from '@repo/shared'
 import { getCsfdMovieData, getLastTmdbMovieProcessedDate, getLastTmdbTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveTmdbMovieData, saveTmdbTvShowData, seedTmdbMovieGenres, seedTmdbTvShowGenres } from './infra/database.js'
 
 // Rate limit is 50 requests per second range
@@ -51,7 +51,7 @@ export async function populateTmdbTvShowsData({ force = false }: { force?: boole
 
 async function findTmdbMovieId(movie: MovieSource): Promise<number | null> {
   const basicCandidates: SearchMovieCandidate[] = [
-    { title: movie.originalTitle, year: movie.year },
+    { title: normalizeTitle(movie.originalTitle), year: movie.year },
     { title: movie.czechTitle, year: movie.year },
   ].filter(isValidMovieSearchCandidate)
 
@@ -105,9 +105,8 @@ async function searchAndMatchTvShow({ title }: SearchTvShowCandidate): Promise<n
 }
 
 async function searchMovies(title: string, year: number): Promise<MovieSearchResult[]> {
-  const normalizedTitle = normalizeTitle(title)
   const query = new URLSearchParams({
-    query: normalizedTitle,
+    query: title,
     year: year.toString(),
     language: 'cs',
   })
@@ -117,9 +116,8 @@ async function searchMovies(title: string, year: number): Promise<MovieSearchRes
 }
 
 async function searchTvShows(title: string): Promise<TvShowSearchResult[]> {
-  const normalizedTitle = normalizeTitle(title)
   const query = new URLSearchParams({
-    query: normalizedTitle,
+    query: title,
     language: 'cs',
   })
 
@@ -128,7 +126,7 @@ async function searchTvShows(title: string): Promise<TvShowSearchResult[]> {
 }
 
 function findBestMovieMatch(searchResults: MovieSearchResult[], title: string, year: number): number | null {
-  const normalizedTitle = normalizeTitle(title).toLowerCase()
+  const normalizedTitle = title.toLowerCase()
   const acceptableYears = [year - 1, year, year + 1]
 
   const match = searchResults.find((result) => {
@@ -143,7 +141,7 @@ function findBestMovieMatch(searchResults: MovieSearchResult[], title: string, y
 }
 
 function findBestTvShowMatch(searchResults: TvShowSearchResult[], title: string): number | null {
-  const normalizedTitle = normalizeTitle(title).toLowerCase()
+  const normalizedTitle = title.toLowerCase()
   const match = searchResults.find((result) => {
     const resultTitles = [result.original_name, result.name].map(t => t.toLowerCase())
     return resultTitles.includes(normalizedTitle)
@@ -160,11 +158,4 @@ async function getMovieDetails(id: number): Promise<MovieDetailsResponse> {
 async function getTvShowDetails(id: number): Promise<TvShowDetailsResponse> {
   const query = new URLSearchParams({ language: 'cs' })
   return httpClient.get(`/tv/${id}?${query}`)
-}
-
-function normalizeTitle(input: string): string {
-  if (input.endsWith(', The')) {
-    return `The ${input.slice(0, -5)}`
-  }
-  return input
 }

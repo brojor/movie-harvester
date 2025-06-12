@@ -1,7 +1,7 @@
 import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { CsfdMovieDetails } from './types.js'
 import { URLSearchParams } from 'node:url'
-import { getThrottledClient } from '@repo/shared'
+import { getThrottledClient, normalizeTitle } from '@repo/shared'
 import { getCsfdMovieIdFromTopic, getCsfdTvShowIdFromTopic } from 'apps/warforum-indexer/dist/index.js'
 import * as cheerio from 'cheerio'
 import { getCsfdTvShowDetails, getLastCsfdMovieProcessedDate, getLastCsfdTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveCsfdMovieDetails, saveCsfdTvShowDetails, seedCsfdGenres } from './infra/database.js'
@@ -71,7 +71,8 @@ async function searchCsfdTvShow(title: string): Promise<string> {
 }
 
 async function findCsfdMovieSlug(movie: MovieSource): Promise<string | null> {
-  const { czechTitle, originalTitle, year } = movie
+  const { czechTitle, year } = movie
+  const originalTitle = normalizeTitle(movie.originalTitle)
 
   let csfdSlug: string | null = null
   if (czechTitle) {
@@ -95,7 +96,8 @@ async function findCsfdMovieSlug(movie: MovieSource): Promise<string | null> {
 }
 
 async function findCsfdTvShowSlug(tvShow: TvShowSource): Promise<string | null> {
-  const { czechTitle, originalTitle } = tvShow
+  const { czechTitle } = tvShow
+  const originalTitle = normalizeTitle(tvShow.originalTitle)
 
   let csfdSlug: string | null
   csfdSlug = await getCsfdTvShowIdFromTopic(tvShow)
