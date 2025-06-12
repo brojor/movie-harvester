@@ -105,7 +105,7 @@ export const rtMovieData = sqliteTable('rt_movie_data', {
   ...timestamps,
 }, table => [
   uniqueIndex('unique_rt_movie_source').on(table.sourceId),
-  uniqueIndex('unique_rt_id').on(table.rtId),
+  uniqueIndex('unique_rt_movie_id').on(table.rtId),
 ])
 
 // Relations

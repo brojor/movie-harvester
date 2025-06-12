@@ -111,6 +111,21 @@ export const csfdTvShowsToGenres = sqliteTable(
   t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
 )
 
+// RT
+export const rtTvShowData = sqliteTable('rt_tv_show_data', {
+  id: int().primaryKey({ autoIncrement: true }),
+  rtId: text().notNull(),
+  sourceId: int().references(() => tvShowSources.id),
+  criticsScore: int(),
+  criticsReviews: int(),
+  audienceScore: int(),
+  audienceReviews: int(),
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_rt_tv_show_source').on(table.sourceId),
+  uniqueIndex('unique_rt_tv_show_id').on(table.rtId),
+])
+
 // TV Show Relations
 export const tvShowSourcesRelations = relations(tvShowSources, ({ many }) => ({
   topics: many(tvShowTopics),
