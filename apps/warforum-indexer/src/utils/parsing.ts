@@ -44,7 +44,7 @@ export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDu
   }
 }
 
-export function getTopicId(movie: MovieSource): number {
+export function getMovieTopicId(movie: MovieSource): number {
   for (const key of Object.values(movieTopicIdMap)) {
     const value = movie[key]
     if (value) {
@@ -55,7 +55,7 @@ export function getTopicId(movie: MovieSource): number {
 }
 
 export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
-  const parts = topicTitle.split('/').map(part => part.trim())
+  const parts = removeParentheses(topicTitle).split('/').map(part => part.trim())
 
   if (parts.length < 2) {
     throw new Error(`Invalid topic title: "${topicTitle}"`)
@@ -94,4 +94,8 @@ export function parseMediaItem(
 
     return coreMeta ? { coreMeta, sourceTopic } : null
   }
+}
+
+function removeParentheses(text: string): string {
+  return text.replace(/\([^)]*\)/g, '')
 }

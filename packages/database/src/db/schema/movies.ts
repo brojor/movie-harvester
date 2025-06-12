@@ -7,7 +7,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
-import { timestamps } from './common.js'
+import { csfdGenres, timestamps } from './common.js'
 
 // Movies source
 export const movieSources = sqliteTable(
@@ -81,13 +81,8 @@ export const csfdMovieData = sqliteTable('csfd_movie_data', {
   ...timestamps,
 }, table => [
   uniqueIndex('unique_csfd_movie_source').on(table.sourceId),
-  uniqueIndex('unique_csfd_id').on(table.csfdId),
+  uniqueIndex('unique_csfd_movie_id').on(table.csfdId),
 ])
-
-export const csfdGenres = sqliteTable('csfd_genres', {
-  id: int('id').primaryKey(),
-  name: text('name').notNull(),
-})
 
 export const csfdMoviesToGenres = sqliteTable(
   'csfd_movies_to_genres',

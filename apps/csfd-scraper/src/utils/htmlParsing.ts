@@ -48,17 +48,27 @@ export function getGenres($: CheerioAPI): string[] {
   return $('.genres').text().split('/').map(genre => genre.trim()).filter(Boolean)
 }
 
-export async function findCsfdIdByCzechTitle(html: string, title: string, year: number): Promise<string | null> {
+export async function findCsfdMovieSlugByCzechTitle(html: string, title: string, year: number): Promise<string | null> {
   const $ = cheerio.load(html)
   const url = $('#snippet--containerFilms .film-title-nooverflow').filter(function () {
     const czechTitleWithYear = $(this).text().trim()
     return czechTitleWithYear.toLowerCase() === `${title} (${year})`.toLowerCase()
   }).find('a').attr('href')
 
-  return extractIdFromUrl(url)
+  return extractCsfdSlugFromUrl(url)
 }
 
-export async function findCsfdIdByOriginalTitle(html: string, title: string, year: number): Promise<string | null> {
+export async function findCsfdTvShowSlugByCzechTitle(html: string, title: string): Promise<string | null> {
+  const $ = cheerio.load(html)
+  const url = $('#snippet--containerFilms .film-title-nooverflow').filter(function () {
+    const czechTitle = $(this).find('a').text().trim()
+    return czechTitle.toLowerCase() === title.toLowerCase()
+  }).find('a').attr('href')
+
+  return extractCsfdSlugFromUrl(url)
+}
+
+export async function findCsfdMovieSlugByOriginalTitle(html: string, title: string, year: number): Promise<string | null> {
   const $ = cheerio.load(html)
   const url = $('#snippet--containerFilms .article-header').filter(function () {
     const originalTitle = $(this).find('p.search-name').text().replace(/[()]/g, '').trim()
@@ -67,7 +77,17 @@ export async function findCsfdIdByOriginalTitle(html: string, title: string, yea
     return originalTitle.toLowerCase() === title.toLowerCase() && releaseYear === year.toString()
   }).find('a').attr('href')
 
-  return extractIdFromUrl(url)
+  return extractCsfdSlugFromUrl(url)
+}
+
+export async function findCsfdTvShowSlugByOriginalTitle(html: string, title: string): Promise<string | null> {
+  const $ = cheerio.load(html)
+  const url = $('#snippet--containerFilms .article-header').filter(function () {
+    const originalTitle = $(this).find('p.search-name').text().replace(/[()]/g, '').trim()
+    return originalTitle.toLowerCase() === title.toLowerCase()
+  }).find('a').attr('href')
+
+  return extractCsfdSlugFromUrl(url)
 }
 
 function getOriginalTitle($: CheerioAPI, countries: string): string {
@@ -86,7 +106,7 @@ function getOriginalTitle($: CheerioAPI, countries: string): string {
     .trim()
 }
 
-function extractIdFromUrl(url: string | undefined): string | null {
+function extractCsfdSlugFromUrl(url: string | undefined): string | null {
   if (!url)
     return null
 

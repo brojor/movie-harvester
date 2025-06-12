@@ -1,4 +1,4 @@
-import type { MovieSource } from '@repo/types'
+import type { MovieSource, TvShowSource } from '@repo/types'
 import type { MovieMetaWithSource, TopicType, TvShowMetaWithSource } from '../types/domain.js'
 import { db, moviesSchema, tvShowsSchema } from '@repo/database'
 import { and, eq, isNull } from 'drizzle-orm'
@@ -75,4 +75,13 @@ export async function upsertTvShow(tvShow: TvShowMetaWithSource, topicType: Topi
 export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
   const result = await db.select().from(moviesSchema.movieSources).leftJoin(moviesSchema.csfdMovieData, eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId)).where(isNull(moviesSchema.csfdMovieData.id))
   return result.map(m => m.movie_sources)
+}
+
+export async function getTvShowTopicId(tvShow: TvShowSource): Promise<number> {
+  const tvShowTopic = await db.select().from(tvShowsSchema.tvShowTopics).where(eq(tvShowsSchema.tvShowTopics.tvShowId, tvShow.id)).limit(1)
+  if (!tvShowTopic.length && !tvShowTopic[0].topicId) {
+    throw new Error('No topic ID found')
+  }
+
+  return tvShowTopic[0].topicId
 }

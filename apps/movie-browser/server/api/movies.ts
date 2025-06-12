@@ -1,8 +1,8 @@
 import type { SearchParams } from '../../types'
-import { db, moviesSchema } from '@repo/database'
+import { commonSchema, db, moviesSchema } from '@repo/database'
 import { asc, desc, eq } from 'drizzle-orm'
 
-const { movieSources, tmdbMovieData, rtMovieData, csfdMovieData, tmdbMoviesToGenres, csfdMoviesToGenres, csfdGenres, tmdbMovieGenres } = moviesSchema
+const { movieSources, tmdbMovieData, rtMovieData, csfdMovieData, tmdbMoviesToGenres, csfdMoviesToGenres, tmdbMovieGenres } = moviesSchema
 
 const ratingColumns = {
   csfd: csfdMovieData.voteAverage,
@@ -60,10 +60,10 @@ export default defineEventHandler(async (event) => {
   const csfdGenresJoin = await db
     .select({
       csfdId: csfdMoviesToGenres.csfdId,
-      genre: csfdGenres.name,
+      genre: commonSchema.csfdGenres.name,
     })
     .from(csfdMoviesToGenres)
-    .innerJoin(csfdGenres, eq(csfdMoviesToGenres.genreId, csfdGenres.id))
+    .innerJoin(commonSchema.csfdGenres, eq(csfdMoviesToGenres.genreId, commonSchema.csfdGenres.id))
 
   for (const { csfdId, genre } of csfdGenresJoin) {
     if (!csfdGenresMap.has(csfdId)) {

@@ -7,7 +7,7 @@ import {
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core'
-import { timestamps } from './common.js'
+import { csfdGenres, timestamps } from './common.js'
 
 export const tvShowSources = sqliteTable('tv_show_sources', {
   id: int().primaryKey({ autoIncrement: true }),
@@ -82,6 +82,34 @@ export const tmdbSeasons = sqliteTable('tmdb_seasons', {
   episodeCount: int(),
   airDate: text(),
 })
+
+// CSFD
+export const csfdTvShowData = sqliteTable('csfd_tv_show_data', {
+  id: int().primaryKey({ autoIncrement: true }),
+  csfdId: text().notNull(),
+  sourceId: int().references(() => tvShowSources.id),
+  title: text(),
+  originalTitle: text(),
+  releaseYear: int(),
+  runtime: int(),
+  voteAverage: int(),
+  voteCount: int(),
+  posterPath: text(),
+  overview: text(),
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_csfd_tv_show_source').on(table.sourceId),
+  uniqueIndex('unique_csfd_tv_show_id').on(table.csfdId),
+])
+
+export const csfdTvShowsToGenres = sqliteTable(
+  'csfd_tv_shows_to_genres',
+  {
+    csfdId: int().notNull().references(() => csfdTvShowData.id),
+    genreId: int().notNull().references(() => csfdGenres.id),
+  },
+  t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
+)
 
 // TV Show Relations
 export const tvShowSourcesRelations = relations(tvShowSources, ({ many }) => ({

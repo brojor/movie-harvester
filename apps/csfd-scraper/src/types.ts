@@ -10,3 +10,5 @@ export interface CsfdMovieDetails {
   genres: string[]
   csfdId: string
 }
+
+export type CsfdTvShowDetails = Omit<CsfdMovieDetails, 'runtime' | 'originalTitle' | 'releaseYear'>
