@@ -69,7 +69,7 @@ export const tmdbNetworks = sqliteTable('tmdb_networks', {
 export const tmdbTvShowToNetworks = sqliteTable('tmdb_tv_show_to_networks', {
   tvShowId: int().references(() => tmdbTvShowsData.id),
   networkId: int().references(() => tmdbNetworks.id),
-})
+}, t => [primaryKey({ columns: [t.tvShowId, t.networkId] })])
 
 export const tmdbSeasons = sqliteTable('tmdb_seasons', {
   id: int().primaryKey(),
