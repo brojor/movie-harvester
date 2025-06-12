@@ -21,7 +21,7 @@ function isValidTvShowSearchCandidate(candidate: { title: string | null }): cand
   return !!candidate.title
 }
 
-export async function populateTmdbMoviesData({ force = false }: { force?: boolean }): Promise<void> {
+export async function populateTmdbMoviesData({ force = false }: { force?: boolean } = {}): Promise<void> {
   const lastRun = force ? new Date(0) : await getLastTmdbMovieProcessedDate()
   await seedTmdbMovieGenres()
   const movies = await getUnprocessedMovies(lastRun)
@@ -35,7 +35,7 @@ export async function populateTmdbMoviesData({ force = false }: { force?: boolea
   }
 }
 
-export async function populateTmdbTvShowsData({ force = false }: { force?: boolean }): Promise<void> {
+export async function populateTmdbTvShowsData({ force = false }: { force?: boolean } = {}): Promise<void> {
   const lastRun = force ? new Date(0) : await getLastTmdbTvShowProcessedDate()
   await seedTmdbTvShowGenres()
   const tvShows = await getUnprocessedTvShows(lastRun)
