@@ -1,5 +1,5 @@
 import { createClient } from '@libsql/client'
-import { env } from '@repo/shared/env'
+import { env } from '@repo/shared'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as commonSchema from './db/schema/common.js'
 import * as moviesSchema from './db/schema/movies.js'
