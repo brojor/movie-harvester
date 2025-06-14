@@ -30,7 +30,13 @@ jobs:
         run: pnpm run build
 
       - name: Archive build artifacts
-        run: tar czf orchestrator-build.tar.gz dist ecosystem.config.js
+        run: |
+          if [ -f ecosystem.config.js ]; then
+            tar czf orchestrator-build.tar.gz dist ecosystem.config.js
+          else
+            echo "Warning: ecosystem.config.js not found, archiving only dist/"
+            tar czf orchestrator-build.tar.gz dist
+          fi
 
       - name: Set release variables
         run: |
@@ -58,7 +64,12 @@ jobs:
             rm orchestrator-build.tar.gz && \
             ln -sfn $RELEASE_DIR /var/www/movie-harvester/current && \
             cd /var/www/movie-harvester/current && \
-            pm2 startOrRestart ecosystem.config.js
+            if [ -f ecosystem.config.js ]; then \
+              pm2 startOrRestart ecosystem.config.js; \
+            else \
+              echo 'ecosystem.config.js not found, starting PM2 with default settings'; \
+              pm2 start dist/index.js --name orchestrator; \
+            fi
           "
 
       - name: Cleanup old releases
