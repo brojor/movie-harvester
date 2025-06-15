@@ -1,4 +1,4 @@
-import { env } from '@repo/shared/env'
+import { env } from '@repo/shared'
 import { defineConfig } from 'drizzle-kit'
 
 export default defineConfig({
