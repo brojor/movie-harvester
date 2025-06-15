@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import dotenv from 'dotenv'
+import * as dotenv from 'dotenv'
 import { z } from 'zod'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
