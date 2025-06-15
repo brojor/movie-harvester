@@ -10,7 +10,7 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "build": "esbuild orchestrator.ts --bundle --platform=node --outfile=dist/orchestrator.js --format=cjs --log-level=info",
+    "build": "esbuild orchestrator.ts --bundle --platform=node --outfile=dist/orchestrator.js --format=cjs --external:fs",
     "lint": "eslint --cache .",
     "lint:fix": "pnpm run lint --fix",
     "orchestrate": "tsx orchestrator.ts",
