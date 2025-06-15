@@ -1,10 +1,8 @@
-import { dirname, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
 import * as dotenv from 'dotenv'
 import { z } from 'zod'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
 const path = resolve(__dirname, '../.env')
 dotenv.config({ path })
 
