@@ -10,7 +10,7 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "esbuild orchestrator.ts --bundle --platform=node --outfile=dist/orchestrator.js --format=cjs --log-level=info",
     "lint": "eslint --cache .",
     "lint:fix": "pnpm run lint --fix",
     "orchestrate": "tsx orchestrator.ts",
@@ -19,6 +19,7 @@
     "db:push": "pnpm --filter @repo/database run push"
   },
   "dependencies": {
+    "esbuild": "catalog:dev",
     "tsx": "catalog:prod"
   },
   "devDependencies": {

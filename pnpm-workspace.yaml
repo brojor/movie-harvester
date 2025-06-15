@@ -11,6 +11,7 @@ catalogs:
     '@unocss/preset-icons': ^66.1.2
     domhandler: ^5.0.3
     drizzle-kit: ^0.31.1
+    esbuild: ^0.25.5
     tsup: ^8.5.0
     unocss-preset-scrollbar-hide: ^1.0.1
     vitest: ^3.2.3
