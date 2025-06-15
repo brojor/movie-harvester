@@ -8,11 +8,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    env:
-      RELEASE_BASE_DIR: /var/www/movie-harvester/releases
-      RELEASE_NAME: '$(date +%Y%m%d-%H%M%S)'
-      RELEASE_DIR: '/var/www/movie-harvester/releases/$(date +%Y%m%d-%H%M%S)'
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,37 +20,37 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies and build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
 
-      - name: Build orchestrator
-        run: pnpm run build
-
-      - name: Archive build artifacts
+      - name: Create deployment archive
         run: tar czf orchestrator-build.tar.gz dist ecosystem.config.js
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          tags: tag:github-ci
 
-      - name: Create release directory and upload artifacts
+      - name: Deploy to production
         run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          RELEASE_DIR="/var/www/movie-harvester/releases/$TIMESTAMP"
+
           ssh -o StrictHostKeyChecking=no deploy@prod-01 "mkdir -p $RELEASE_DIR"
           scp -o StrictHostKeyChecking=no orchestrator-build.tar.gz deploy@prod-01:$RELEASE_DIR/
 
-      - name: Extract artifacts, update symlink, restart app
-        run: |
           ssh -o StrictHostKeyChecking=no deploy@prod-01 "
             cd $RELEASE_DIR && \
             tar xzf orchestrator-build.tar.gz && \
-            ln -sfn $RELEASE_DIR /var/www/movie-harvester/current && \
-            pm2 startOrRestart /var/www/movie-harvester/current/ecosystem.config.js
-          "
-
-      - name: Cleanup old releases
-        run: |
-          ssh -o StrictHostKeyChecking=no deploy@prod-01 "
+            rm orchestrator-build.tar.gz && \
+            rm -rf /var/www/movie-harvester/current && \
+            ln -sf $RELEASE_DIR /var/www/movie-harvester/current && \
+            cd /var/www/movie-harvester/current && \
+            pm2 startOrRestart ecosystem.config.js && \
             cd /var/www/movie-harvester/releases && \
             ls -1tr | head -n -5 | xargs -d '\n' rm -rf --
           "
