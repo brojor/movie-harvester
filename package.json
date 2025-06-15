@@ -10,7 +10,7 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "pnpm -r build",
     "lint": "eslint --cache .",
     "lint:fix": "pnpm run lint --fix",
     "orchestrate": "tsx orchestrator.ts",

@@ -1,0 +1,20 @@
+{
+  "name": "@repo/orchestrator",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@repo/csfd-scraper": "workspace:*",
+    "@repo/rt-scraper": "workspace:*",
+    "@repo/tmdb-fetcher": "workspace:*",
+    "@repo/warforum-indexer": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "catalog:dev",
+    "tsx": "catalog:prod"
+  }
+}
