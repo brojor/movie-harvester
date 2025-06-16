@@ -1,7 +1,7 @@
 import type { HttpClient, HttpClientOpts } from './types.js'
-import https from 'node:https'
 import axios from 'axios'
 import pLimit from 'p-limit'
+import { makeAgents } from './agents.js'
 import { env } from './env.js'
 import { getDelayMs, wait } from './utils/http-utils.js'
 import { createRetryInterceptor, logOutgoingRequest } from './utils/interceptors.js'
@@ -17,13 +17,7 @@ export async function makeHttpClient(baseURL: string, opts: HttpClientOpts = {})
     responseType,
   } = opts
 
-  const httpsAgent = new https.Agent({
-    timeout: 8000, // kill hung socket
-    keepAlive: true,
-    maxSockets: concurrency + 1,
-    maxFreeSockets: 1,
-    keepAliveMsecs: 5000,
-  })
+  const { httpAgent, httpsAgent } = await makeAgents(concurrency)
 
   const headers: Record<string, string> = {
     'User-Agent': env.USER_AGENT,
@@ -35,6 +29,7 @@ export async function makeHttpClient(baseURL: string, opts: HttpClientOpts = {})
 
   const client = axios.create({
     baseURL,
+    httpAgent,
     httpsAgent,
     withCredentials: true, // needed for cookies
     headers,

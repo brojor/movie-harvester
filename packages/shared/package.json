@@ -13,7 +13,10 @@
   "dependencies": {
     "axios": "catalog:prod",
     "dotenv": "catalog:prod",
+    "http-cookie-agent": "catalog:prod",
     "p-limit": "catalog:prod",
+    "php-serialize": "catalog:prod",
+    "tough-cookie": "catalog:prod",
     "zod": "catalog:prod"
   }
 }
