@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url'
 import * as dotenv from 'dotenv'
 import { z } from 'zod'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-dotenv.config({ path: resolve(__dirname, '../../../.env') })
+const envPath = process.env.ENV_FILE || resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env')
+dotenv.config({ path: envPath })
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
