@@ -1,16 +1,12 @@
 import type { MovieSource, TvShowSource } from '@repo/types'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from './types.js'
-import { env, getThrottledClient, normalizeTitle } from '@repo/shared'
+import { env, makeHttpClient, normalizeTitle } from '@repo/shared'
 import { getCsfdMovieData, getLastTmdbMovieProcessedDate, getLastTmdbTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveTmdbMovieData, saveTmdbTvShowData, seedTmdbMovieGenres, seedTmdbTvShowGenres } from './infra/database.js'
 
-// Rate limit is 50 requests per second range
-const httpClient = getThrottledClient(env.TMDB_BASE_URL, {
-  maxSockets: 20,
-  throttleConcurrency: 40,
-  delayMs: 100,
-  headers: {
-    Authorization: `Bearer ${env.TMDB_API_KEY}`,
-  },
+// Rate limit is ~50 requests per second
+const httpClient = makeHttpClient(env.TMDB_BASE_URL, {
+  delayBetween: 1000 / 40, // 40 requests per second
+  bearerToken: env.TMDB_API_KEY,
 })
 
 function isValidMovieSearchCandidate(candidate: { title: string | null, year: number }): candidate is SearchMovieCandidate {

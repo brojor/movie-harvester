@@ -8,7 +8,7 @@ import { createRetryInterceptor, logOutgoingRequest } from './utils/interceptors
 
 const TIMEOUT_MS = 10_000
 
-export async function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): Promise<HttpClient> {
+export function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): HttpClient {
   const {
     concurrency = 1,
     delayBetween = [800, 3000],
@@ -17,7 +17,7 @@ export async function makeHttpClient(baseURL: string, opts: HttpClientOpts = {})
     responseType,
   } = opts
 
-  const { httpAgent, httpsAgent } = await makeAgents(concurrency)
+  const { httpAgent, httpsAgent } = makeAgents(concurrency)
 
   const headers: Record<string, string> = {
     'User-Agent': env.USER_AGENT,

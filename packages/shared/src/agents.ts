@@ -5,10 +5,10 @@ import { serialize } from 'php-serialize'
 import { CookieJar } from 'tough-cookie'
 import { env } from './env.js'
 
-export async function makeAgents(concurrency: number): Promise<{
+export function makeAgents(concurrency: number): {
   httpAgent: HttpAgent
   httpsAgent: HttpsAgent
-}> {
+} {
   const warforumData = buildWarforumData(env.WARFORUM_USER_ID, env.WARFORUM_AUTO_LOGIN_ID)
   const cookie = `warforum_data=${warforumData};`
   const jar = new CookieJar()

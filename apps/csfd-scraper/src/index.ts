@@ -1,15 +1,13 @@
 import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { CsfdMovieDetails } from './types.js'
 import { URLSearchParams } from 'node:url'
-import { getThrottledClient, normalizeTitle } from '@repo/shared'
+import { makeHttpClient, normalizeTitle } from '@repo/shared'
 import { getCsfdMovieIdFromTopic, getCsfdTvShowIdFromTopic } from '@repo/warforum-indexer'
 import * as cheerio from 'cheerio'
 import { getCsfdTvShowDetails, getLastCsfdMovieProcessedDate, getLastCsfdTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveCsfdMovieDetails, saveCsfdTvShowDetails, seedCsfdGenres } from './infra/database.js'
 import { findCsfdMovieSlugByCzechTitle, findCsfdMovieSlugByOriginalTitle, findCsfdTvShowSlugByCzechTitle, findCsfdTvShowSlugByOriginalTitle, getCzechTitle, getGenres, getOrigin, getOverview, getPosterPath, getVoteAverage, getVoteCount } from './utils/htmlParsing.js'
 
-const httpClient = getThrottledClient('https://www.csfd.cz', {
-  delayMs: [1000, 5000],
-})
+const httpClient = makeHttpClient('https://www.csfd.cz')
 
 export async function populateCsfdMoviesData({ force = true }: { force?: boolean } = {}): Promise<void> {
   const lastRun = force ? new Date(0) : await getLastCsfdMovieProcessedDate()

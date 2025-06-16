@@ -1,13 +1,11 @@
 import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { RtDetails } from './types.js'
 import { URLSearchParams } from 'node:url'
-import { getThrottledClient, normalizeTitle } from '@repo/shared'
+import { makeHttpClient, normalizeTitle } from '@repo/shared'
 import * as cheerio from 'cheerio'
 import { getLastRtMovieProcessedDate, getLastRtTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveRtMovieDetails, saveRtTvShowDetails } from './infra/database.js'
 
-const httpClient = getThrottledClient('https://www.rottentomatoes.com', {
-  delayMs: [1000, 5000],
-})
+const httpClient = makeHttpClient('https://www.rottentomatoes.com')
 
 export async function populateRtMoviesData({ force = true }: { force?: boolean } = {}): Promise<void> {
   const lastRun = force ? new Date(0) : await getLastRtMovieProcessedDate()
