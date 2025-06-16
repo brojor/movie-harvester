@@ -1,10 +1,8 @@
-import { createClient } from '@libsql/client'
 import { env } from '@repo/shared'
-import { drizzle } from 'drizzle-orm/libsql'
+import { drizzle } from 'drizzle-orm/node-postgres'
 import * as commonSchema from './db/schema/common.js'
 import * as moviesSchema from './db/schema/movies.js'
 import * as tvShowsSchema from './db/schema/tv-shows.js'
 
-const client = createClient({ url: env.DATABASE_URL })
-export const db = drizzle(client, { schema: { ...commonSchema, ...moviesSchema, ...tvShowsSchema } })
+export const db = drizzle(env.DATABASE_URL!, { schema: { ...commonSchema, ...moviesSchema, ...tvShowsSchema } })
 export { commonSchema, moviesSchema, tvShowsSchema }

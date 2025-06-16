@@ -1,99 +1,99 @@
 import { relations } from 'drizzle-orm'
 import {
-  int,
+  integer,
+  pgTable,
   primaryKey,
   real,
-  sqliteTable,
   text,
   uniqueIndex,
-} from 'drizzle-orm/sqlite-core'
+} from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-export const tvShowSources = sqliteTable('tv_show_sources', {
-  id: int().primaryKey({ autoIncrement: true }),
+export const tvShowSources = pgTable('tv_show_sources', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   czechTitle: text(),
   originalTitle: text().notNull().unique(),
   ...timestamps,
 })
 
-export const tvShowTopics = sqliteTable('tv_show_topics', {
-  id: int().primaryKey({ autoIncrement: true }),
-  tvShowId: int().notNull().references(() => tvShowSources.id),
-  topicId: int().notNull(),
-  topicType: text().notNull(),
-  languages: text().notNull(),
+export const tvShowTopics = pgTable('tv_show_topics', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  tvShowId: integer('tv_show_id').notNull().references(() => tvShowSources.id),
+  topicId: integer('topic_id').notNull(),
+  topicType: text('topic_type').notNull(),
+  languages: text('languages').notNull(),
   ...timestamps,
 })
 
-export const tmdbTvShowsData = sqliteTable('tmdb_tv_shows_data', {
-  id: int().primaryKey({ autoIncrement: true }),
-  sourceId: int().references(() => tvShowSources.id),
-  name: text().notNull(),
-  originalName: text().notNull(),
-  originalLanguage: text().notNull(),
+export const tmdbTvShowsData = pgTable('tmdb_tv_shows_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  sourceId: integer('source_id').references(() => tvShowSources.id),
+  name: text('name').notNull(),
+  originalName: text('original_name').notNull(),
+  originalLanguage: text('original_language').notNull(),
   overview: text(),
   posterPath: text(),
   backdropPath: text(),
   firstAirDate: text(),
-  episodeRunTime: text().notNull(),
-  numberOfEpisodes: int(),
-  numberOfSeasons: int(),
-  originCountry: text().notNull(),
-  languages: text().notNull(),
+  episodeRunTime: text('episode_run_time').notNull(),
+  numberOfEpisodes: integer('number_of_episodes'),
+  numberOfSeasons: integer('number_of_seasons'),
+  originCountry: text('origin_country').notNull(),
+  languages: text('languages').notNull(),
   type: text(),
-  popularity: real(),
-  voteAverage: real(),
-  voteCount: int(),
+  popularity: real('popularity'),
+  voteAverage: real('vote_average'),
+  voteCount: integer('vote_count'),
   ...timestamps,
 }, table => [
   uniqueIndex('unique_tmdb_tv_show_source').on(table.sourceId),
 ])
 
-export const tmdbTvShowGenres = sqliteTable('tmdb_tv_show_genres', {
-  id: int().primaryKey(),
-  name: text().notNull(),
+export const tmdbTvShowGenres = pgTable('tmdb_tv_show_genres', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull(),
 })
 
-export const tmdbTvShowsToGenres = sqliteTable('tmdb_tv_shows_to_genres', {
-  tvShowId: int().references(() => tmdbTvShowsData.id),
-  genreId: int().references(() => tmdbTvShowGenres.id),
+export const tmdbTvShowsToGenres = pgTable('tmdb_tv_shows_to_genres', {
+  tvShowId: integer('tv_show_id').references(() => tmdbTvShowsData.id),
+  genreId: integer('genre_id').references(() => tmdbTvShowGenres.id),
 }, t => [primaryKey({ columns: [t.tvShowId, t.genreId] })])
 
-export const tmdbNetworks = sqliteTable('tmdb_networks', {
-  id: int().primaryKey(),
-  name: text().notNull(),
+export const tmdbNetworks = pgTable('tmdb_networks', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull(),
   logoPath: text(),
-  originCountry: text(),
+  originCountry: text('origin_country'),
 })
 
-export const tmdbTvShowToNetworks = sqliteTable('tmdb_tv_show_to_networks', {
-  tvShowId: int().references(() => tmdbTvShowsData.id),
-  networkId: int().references(() => tmdbNetworks.id),
+export const tmdbTvShowToNetworks = pgTable('tmdb_tv_show_to_networks', {
+  tvShowId: integer('tv_show_id').references(() => tmdbTvShowsData.id),
+  networkId: integer('network_id').references(() => tmdbNetworks.id),
 }, t => [primaryKey({ columns: [t.tvShowId, t.networkId] })])
 
-export const tmdbSeasons = sqliteTable('tmdb_seasons', {
-  id: int().primaryKey(),
-  tvShowId: int().references(() => tmdbTvShowsData.id),
-  name: text().notNull(),
+export const tmdbSeasons = pgTable('tmdb_seasons', {
+  id: integer('id').primaryKey(),
+  tvShowId: integer('tv_show_id').references(() => tmdbTvShowsData.id),
+  name: text('name').notNull(),
   overview: text(),
   posterPath: text(),
-  seasonNumber: int().notNull(),
-  voteAverage: real(),
-  episodeCount: int(),
+  seasonNumber: integer('season_number').notNull(),
+  voteAverage: real('vote_average'),
+  episodeCount: integer('episode_count'),
   airDate: text(),
 })
 
 // CSFD
-export const csfdTvShowData = sqliteTable('csfd_tv_show_data', {
-  id: int().primaryKey({ autoIncrement: true }),
-  csfdId: text().notNull(),
-  sourceId: int().references(() => tvShowSources.id),
+export const csfdTvShowData = pgTable('csfd_tv_show_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  csfdId: text('csfd_id').notNull(),
+  sourceId: integer('source_id').references(() => tvShowSources.id),
   title: text(),
   originalTitle: text(),
-  releaseYear: int(),
-  runtime: int(),
-  voteAverage: int(),
-  voteCount: int(),
+  releaseYear: integer('release_year'),
+  runtime: integer(),
+  voteAverage: integer(),
+  voteCount: integer(),
   posterPath: text(),
   overview: text(),
   ...timestamps,
@@ -102,24 +102,24 @@ export const csfdTvShowData = sqliteTable('csfd_tv_show_data', {
   uniqueIndex('unique_csfd_tv_show_id').on(table.csfdId),
 ])
 
-export const csfdTvShowsToGenres = sqliteTable(
+export const csfdTvShowsToGenres = pgTable(
   'csfd_tv_shows_to_genres',
   {
-    csfdId: int().notNull().references(() => csfdTvShowData.id),
-    genreId: int().notNull().references(() => csfdGenres.id),
+    csfdId: integer('csfd_id').notNull().references(() => csfdTvShowData.id),
+    genreId: integer('genre_id').notNull().references(() => csfdGenres.id),
   },
   t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
 )
 
 // RT
-export const rtTvShowData = sqliteTable('rt_tv_show_data', {
-  id: int().primaryKey({ autoIncrement: true }),
-  rtId: text().notNull(),
-  sourceId: int().references(() => tvShowSources.id),
-  criticsScore: int(),
-  criticsReviews: int(),
-  audienceScore: int(),
-  audienceReviews: int(),
+export const rtTvShowData = pgTable('rt_tv_show_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  rtId: text('rt_id').notNull(),
+  sourceId: integer('source_id').references(() => tvShowSources.id),
+  criticsScore: integer(),
+  criticsReviews: integer(),
+  audienceScore: integer(),
+  audienceReviews: integer(),
   ...timestamps,
 }, table => [
   uniqueIndex('unique_rt_tv_show_source').on(table.sourceId),

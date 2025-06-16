@@ -1,26 +1,26 @@
 import { relations } from 'drizzle-orm'
 import {
-  int,
+  integer,
+  pgTable,
   primaryKey,
   real,
-  sqliteTable,
   text,
   uniqueIndex,
-} from 'drizzle-orm/sqlite-core'
+} from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
 // Movies source
-export const movieSources = sqliteTable(
+export const movieSources = pgTable(
   'movie_sources',
   {
-    id: int().primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
     czechTitle: text(),
     originalTitle: text(),
-    year: int().notNull(),
-    hd: int(),
-    uhd: int(),
-    hdDub: int(),
-    uhdDub: int(),
+    year: integer().notNull(),
+    hd: integer(),
+    uhd: integer(),
+    hdDub: integer(),
+    uhdDub: integer(),
     ...timestamps,
   },
   table => [
@@ -30,9 +30,9 @@ export const movieSources = sqliteTable(
 )
 
 // TMDB
-export const tmdbMovieData = sqliteTable('tmdb_movie_data', {
-  id: int().primaryKey({ autoIncrement: true }),
-  sourceId: int().references(() => movieSources.id),
+export const tmdbMovieData = pgTable('tmdb_movie_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  sourceId: integer().references(() => movieSources.id),
   imdbId: text(),
   title: text(),
   originalTitle: text(),
@@ -41,9 +41,9 @@ export const tmdbMovieData = sqliteTable('tmdb_movie_data', {
   posterPath: text(),
   backdropPath: text(),
   releaseDate: text(),
-  runtime: int(),
+  runtime: integer(),
   voteAverage: real(),
-  voteCount: int(),
+  voteCount: integer(),
   tagline: text(),
   overview: text(),
   ...timestamps,
@@ -51,31 +51,31 @@ export const tmdbMovieData = sqliteTable('tmdb_movie_data', {
   uniqueIndex('unique_tmdb_movie_source').on(table.sourceId),
 ])
 
-export const tmdbMovieGenres = sqliteTable('tmdb_movie_genres', {
-  id: int('id').primaryKey(),
+export const tmdbMovieGenres = pgTable('tmdb_movie_genres', {
+  id: integer('id').primaryKey(),
   name: text('name').notNull(),
 })
 
-export const tmdbMoviesToGenres = sqliteTable(
+export const tmdbMoviesToGenres = pgTable(
   'tmdb_movies_to_genres',
   {
-    movieId: int().notNull().references(() => tmdbMovieData.id),
-    genreId: int().notNull().references(() => tmdbMovieGenres.id),
+    movieId: integer().notNull().references(() => tmdbMovieData.id),
+    genreId: integer().notNull().references(() => tmdbMovieGenres.id),
   },
   t => [primaryKey({ columns: [t.movieId, t.genreId] })],
 )
 
 // CSFD
-export const csfdMovieData = sqliteTable('csfd_movie_data', {
-  id: int().primaryKey({ autoIncrement: true }),
+export const csfdMovieData = pgTable('csfd_movie_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   csfdId: text().notNull(),
-  sourceId: int().references(() => movieSources.id),
+  sourceId: integer().references(() => movieSources.id),
   title: text(),
   originalTitle: text(),
-  releaseYear: int(),
-  runtime: int(),
-  voteAverage: int(),
-  voteCount: int(),
+  releaseYear: integer(),
+  runtime: integer(),
+  voteAverage: integer(),
+  voteCount: integer(),
   posterPath: text(),
   overview: text(),
   ...timestamps,
@@ -84,24 +84,24 @@ export const csfdMovieData = sqliteTable('csfd_movie_data', {
   uniqueIndex('unique_csfd_movie_id').on(table.csfdId),
 ])
 
-export const csfdMoviesToGenres = sqliteTable(
+export const csfdMoviesToGenres = pgTable(
   'csfd_movies_to_genres',
   {
-    csfdId: int().notNull().references(() => csfdMovieData.id),
-    genreId: int().notNull().references(() => csfdGenres.id),
+    csfdId: integer().notNull().references(() => csfdMovieData.id),
+    genreId: integer().notNull().references(() => csfdGenres.id),
   },
   t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
 )
 
 // RT
-export const rtMovieData = sqliteTable('rt_movie_data', {
-  id: int().primaryKey({ autoIncrement: true }),
+export const rtMovieData = pgTable('rt_movie_data', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
   rtId: text().notNull(),
-  sourceId: int().references(() => movieSources.id),
-  criticsScore: int(),
-  criticsReviews: int(),
-  audienceScore: int(),
-  audienceReviews: int(),
+  sourceId: integer().references(() => movieSources.id),
+  criticsScore: integer(),
+  criticsReviews: integer(),
+  audienceScore: integer(),
+  audienceReviews: integer(),
   ...timestamps,
 }, table => [
   uniqueIndex('unique_rt_movie_source').on(table.sourceId),

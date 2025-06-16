@@ -1,12 +1,12 @@
-import { sql } from 'drizzle-orm'
-import { int, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+// no sql import needed after migration
+import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const timestamps = {
-  createdAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
-  updatedAt: int({ mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
 }
 
-export const csfdGenres = sqliteTable('csfd_genres', {
-  id: int('id').primaryKey(),
+export const csfdGenres = pgTable('csfd_genres', {
+  id: integer('id').primaryKey(),
   name: text('name').notNull(),
 })

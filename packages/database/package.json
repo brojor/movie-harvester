@@ -16,10 +16,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@libsql/client": "catalog:prod",
     "@repo/shared": "workspace:*",
+    "@types/pg": "catalog:dev",
     "dotenv": "catalog:prod",
     "drizzle-kit": "catalog:dev",
-    "drizzle-orm": "catalog:prod"
+    "drizzle-orm": "catalog:prod",
+    "node-postgres": "catalog:prod",
+    "pg": "catalog:prod"
   }
 }

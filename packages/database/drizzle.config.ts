@@ -4,7 +4,7 @@ import { env } from '../shared/dist/index.js'
 
 export default defineConfig({
   schema: './dist/db/schema/*.js',
-  dialect: 'sqlite',
+  dialect: 'postgresql',
   dbCredentials: {
     url: env.DATABASE_URL,
   },
