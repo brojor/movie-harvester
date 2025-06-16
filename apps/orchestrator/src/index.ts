@@ -1,14 +1,20 @@
 import process from 'node:process'
-import { populateCsfdMoviesData } from '@repo/csfd-scraper'
-import { populateRtMoviesData } from '@repo/rt-scraper'
-import { populateTmdbMoviesData } from '@repo/tmdb-fetcher'
-import { parseMovieTopics } from '@repo/warforum-indexer'
+import { populateCsfdMoviesData, populateCsfdTvShowsData } from '@repo/csfd-scraper'
+import { populateRtMoviesData, populateRtTvShowsData } from '@repo/rt-scraper'
+import { populateTmdbMoviesData, populateTmdbTvShowsData } from '@repo/tmdb-fetcher'
+
+import { parseMovieTopics, parseTvShowTopics } from '@repo/warforum-indexer'
 
 async function main(): Promise<void> {
   await parseMovieTopics()
+  await parseTvShowTopics()
   await populateCsfdMoviesData()
   await populateRtMoviesData()
-  await populateTmdbMoviesData({})
+  await populateTmdbMoviesData()
+  await populateCsfdTvShowsData()
+  await populateRtTvShowsData()
+  await populateTmdbTvShowsData()
+
   console.log('✅ Done!')
 }
 
