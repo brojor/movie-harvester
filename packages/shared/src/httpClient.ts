@@ -1,119 +1,57 @@
-import type { AxiosError } from 'axios'
+import type { HttpClient, HttpClientOpts } from './types.js'
 import https from 'node:https'
 import axios from 'axios'
 import pLimit from 'p-limit'
+import { env } from './env.js'
+import { getDelayMs, wait } from './utils/http-utils.js'
+import { createRetryInterceptor, logOutgoingRequest } from './utils/interceptors.js'
 
-function delay(ms: number): Promise<void> {
-  return new Promise(res => setTimeout(res, ms))
-}
+const TIMEOUT_MS = 10_000
 
-function randomIntBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-export interface HttpClientOptions {
-  maxSockets?: number
-  maxRetries?: number
-  throttleConcurrency?: number
-  userAgent?: string
-  delayMs?: [number, number] | number
-  cookie?: string
-  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream'
-  headers?: Record<string, string>
-}
-
-export function getThrottledClient(baseURL: string, options: HttpClientOptions = {}): {
-  get: (url: string) => Promise<any>
-} {
+export async function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): Promise<HttpClient> {
   const {
-    maxSockets = 3,
-    maxRetries = 5,
-    throttleConcurrency = 2,
-    userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
-    delayMs,
-    cookie,
+    concurrency = 1,
+    delayBetween = [800, 3000],
+    retries = 3,
+    bearerToken,
     responseType,
-    headers: headersFromOptions,
-  } = options
+  } = opts
 
-  let httpsAgent = new https.Agent({
+  const httpsAgent = new https.Agent({
+    timeout: 8000, // kill hung socket
     keepAlive: true,
-    maxSockets,
-    keepAliveMsecs: 15_000,
-    timeout: 10_000,
-  })
-
-  httpsAgent.on('error', (err) => {
-    console.error('HTTPS agent error', err.message)
-    httpsAgent = new https.Agent({
-      keepAlive: true,
-      maxSockets,
-      keepAliveMsecs: 15_000,
-      timeout: 10_000,
-    })
+    maxSockets: concurrency + 1,
+    maxFreeSockets: 1,
+    keepAliveMsecs: 5000,
   })
 
   const headers: Record<string, string> = {
-    'User-Agent': userAgent,
-    ...headersFromOptions,
+    'User-Agent': env.USER_AGENT,
   }
 
-  if (cookie) {
-    headers.Cookie = cookie
+  if (bearerToken) {
+    headers.Authorization = `Bearer ${bearerToken}`
   }
 
   const client = axios.create({
     baseURL,
     httpsAgent,
+    withCredentials: true, // needed for cookies
     headers,
+    timeout: TIMEOUT_MS,
     responseType,
-    timeout: 10_000,
   })
 
-  const onRejected = async (error: AxiosError): Promise<void> => {
-    const config: any = error.config
+  client.interceptors.request.use(logOutgoingRequest)
+  client.interceptors.response.use(undefined, createRetryInterceptor(retries, client))
 
-    if (!config || !config.retryCount) {
-      config.retryCount = 0
-    }
+  const gate = pLimit(concurrency)
 
-    const status = error.response?.status
-
-    const errorCodes = ['ECONNRESET', 'ETIMEDOUT', 'ECONNABORTED', 'ECONNREFUSED']
-    if ((status === 429 || status === 503 || errorCodes.includes(error.code ?? '')) && config.retryCount < maxRetries) {
-      config.retryCount++
-
-      const wait = 2 ** config.retryCount * 1000
-      console.warn(
-        `🔁 Retry #${config.retryCount} for ${config.url} – waiting ${Math.round(wait)}ms`,
-      )
-
-      await delay(wait)
-      return client(config)
-    }
-
-    return Promise.reject(error)
-  }
-
-  client.interceptors.request.use((config) => {
-    const now = new Date().toISOString()
-    console.log(`[${now}] Requesting ${config.url}`)
-    return config
-  })
-
-  client.interceptors.response.use(undefined, onRejected)
-
-  const limit = pLimit(throttleConcurrency)
-
-  async function get(url: string): Promise<any> {
-    return limit(async () => {
-      if (delayMs) {
-        const wait = Array.isArray(delayMs) ? randomIntBetween(...delayMs) : delayMs
-        await delay(wait)
-      }
-
-      const response = await client.get(url)
-      return response.data
+  async function get<T = any>(path: string): Promise<T> {
+    return gate(async () => {
+      await wait(getDelayMs(delayBetween))
+      const { data } = await client.get(path)
+      return data
     })
   }
 
