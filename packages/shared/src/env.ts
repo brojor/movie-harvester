@@ -13,7 +13,8 @@ const envSchema = z.object({
   TMDB_BASE_URL: z.string().url(),
   TMDB_API_KEY: z.string(),
   USER_AGENT: z.string(),
-  WARFORUM_USER_ID: z.number(),
+  WARFORUM_SID: z.string(),
+  WARFORUM_USER_ID: z.coerce.number(),
   WARFORUM_AUTO_LOGIN_ID: z.string(),
 })
 

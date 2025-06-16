@@ -10,9 +10,11 @@ export function makeAgents(concurrency: number): {
   httpsAgent: HttpsAgent
 } {
   const warforumData = buildWarforumData(env.WARFORUM_USER_ID, env.WARFORUM_AUTO_LOGIN_ID)
-  const cookie = `warforum_data=${warforumData};`
+  const dataCookie = `warforum_data=${warforumData}; Path=/; Domain=.www.warforum.xyz; Max-Age=${60 * 60 * 24 * 365}`
+  const sidCookie = `warforum_sid=${env.WARFORUM_SID}; Path=/; Domain=.www.warforum.xyz; Max-Age=Session`
   const jar = new CookieJar()
-  jar.setCookie(cookie, 'https://warforum.xyz')
+  jar.setCookie(dataCookie, env.WARFORUM_BASE_URL)
+  jar.setCookie(sidCookie, env.WARFORUM_BASE_URL)
 
   const common = {
     timeout: 8000, // kill hung socket
@@ -31,6 +33,6 @@ export function makeAgents(concurrency: number): {
 }
 
 export function buildWarforumData(userId: number, autoLoginId: string): string {
-  const payload = { autologinid: autoLoginId, userid: String(userId) }
+  const payload = { autologinid: autoLoginId, userid: userId }
   return encodeURIComponent(serialize(payload))
 }
