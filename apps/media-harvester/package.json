@@ -1,5 +1,5 @@
 {
-  "name": "@repo/orchestrator",
+  "name": "@repo/media-harvester",
   "type": "module",
   "private": true,
   "main": "dist/index.js",

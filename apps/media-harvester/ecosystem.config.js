@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'scraper',
+      name: 'media-harvester',
       script: 'dist/orchestrator.js',
       interpreter: 'node',
       env: {
