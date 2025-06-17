@@ -6,7 +6,7 @@ module.exports = {
       interpreter: 'node',
       env: {
         NODE_ENV: 'production',
-        ENV_FILE: '/var/www/movie-harvester/config/.env',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
   ],

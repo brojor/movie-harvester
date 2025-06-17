@@ -20,11 +20,18 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Install dependencies and build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter "./packages/*" run build
+
+      - name: Build libraries
+        run: pnpm --filter "./libs/*" run build
+
+      - name: Build media-harvester
         working-directory: apps/media-harvester
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm run build
+        run: pnpm run build
 
       - name: Create deployment archive
         working-directory: apps/media-harvester
