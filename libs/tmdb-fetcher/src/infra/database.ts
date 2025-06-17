@@ -1,28 +1,16 @@
 import type { CsfdMovieData, MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { MovieDetailsResponse, TvShowDetailsResponse } from '../types.js'
-import { db, moviesSchema, tvShowsSchema } from '@repo/database'
-import { and, desc, eq, gt, isNull } from 'drizzle-orm'
+import { db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
+import { and, eq, gt, isNull } from 'drizzle-orm'
 import genres from '../movie-genres.json' with { type: 'json' }
 import tvShowGenres from '../tv-show-genres.json' with { type: 'json' }
 
 export async function getLastTmdbMovieProcessedDate(): Promise<Date> {
-  const lastRecord = await db
-    .select()
-    .from(moviesSchema.tmdbMovieData)
-    .orderBy(desc(moviesSchema.tmdbMovieData.createdAt))
-    .limit(1)
-
-  return lastRecord?.[0]?.createdAt || new Date(0)
+  return getLastProcessedDate(moviesSchema.tmdbMovieData)
 }
 
 export async function getLastTmdbTvShowProcessedDate(): Promise<Date> {
-  const lastRecord = await db
-    .select()
-    .from(tvShowsSchema.tmdbTvShowsData)
-    .orderBy(desc(tvShowsSchema.tmdbTvShowsData.createdAt))
-    .limit(1)
-
-  return lastRecord?.[0]?.createdAt || new Date(0)
+  return getLastProcessedDate(tvShowsSchema.tmdbTvShowsData)
 }
 
 export async function getUnprocessedMovies(cutoffDate: Date): Promise<MovieSource[]> {

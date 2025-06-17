@@ -1,27 +1,15 @@
 import type { CsfdTvShowData, MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { CsfdMovieDetails, CsfdTvShowDetails } from '../types.js'
-import { commonSchema, db, moviesSchema, tvShowsSchema } from '@repo/database'
-import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
+import { commonSchema, db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
+import { and, eq, gt, inArray, isNull } from 'drizzle-orm'
 import genres from '../genres.json' with { type: 'json' }
 
 export async function getLastCsfdMovieProcessedDate(): Promise<Date> {
-  const lastRecord = await db
-    .select()
-    .from(moviesSchema.csfdMovieData)
-    .orderBy(desc(moviesSchema.csfdMovieData.createdAt))
-    .limit(1)
-
-  return lastRecord?.[0]?.createdAt || new Date(0)
+  return getLastProcessedDate(moviesSchema.csfdMovieData)
 }
 
 export async function getLastCsfdTvShowProcessedDate(): Promise<Date> {
-  const lastRecord = await db
-    .select()
-    .from(tvShowsSchema.csfdTvShowData)
-    .orderBy(desc(tvShowsSchema.csfdTvShowData.createdAt))
-    .limit(1)
-
-  return lastRecord?.[0]?.createdAt || new Date(0)
+  return getLastProcessedDate(tvShowsSchema.csfdTvShowData)
 }
 
 export async function seedCsfdGenres(): Promise<void> {

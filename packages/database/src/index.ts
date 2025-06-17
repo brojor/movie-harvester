@@ -6,3 +6,4 @@ import * as tvShowsSchema from './db/schema/tv-shows.js'
 
 export const db = drizzle(env.DATABASE_URL!, { schema: { ...commonSchema, ...moviesSchema, ...tvShowsSchema } })
 export { commonSchema, moviesSchema, tvShowsSchema }
+export { getLastProcessedDate } from './utils.js'

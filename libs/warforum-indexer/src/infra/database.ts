@@ -1,7 +1,15 @@
 import type { MovieSource, TvShowSource } from '@repo/types'
 import type { MovieMetaWithSource, TopicType, TvShowMetaWithSource } from '../types/domain.js'
-import { db, moviesSchema, tvShowsSchema } from '@repo/database'
+import { db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
 import { and, eq, isNull } from 'drizzle-orm'
+
+export async function getLastProcessedMovieDate(): Promise<Date> {
+  return getLastProcessedDate(moviesSchema.movieSources)
+}
+
+export async function getLastProcessedTvShowDate(): Promise<Date> {
+  return getLastProcessedDate(tvShowsSchema.tvShowSources)
+}
 
 export async function upsertMovie(
   movie: MovieMetaWithSource,

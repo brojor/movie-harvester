@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
+    "@repo/types": "workspace:*",
     "@types/pg": "catalog:dev",
     "dotenv": "catalog:prod",
     "drizzle-kit": "catalog:dev",

@@ -357,6 +357,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
       '@types/pg':
         specifier: catalog:dev
         version: 8.15.4
