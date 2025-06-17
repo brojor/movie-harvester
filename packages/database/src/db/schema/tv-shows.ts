@@ -26,7 +26,7 @@ export const tvShowTopics = pgTable('tv_show_topics', {
 })
 
 export const tmdbTvShowsData = pgTable('tmdb_tv_shows_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  id: integer().primaryKey(),
   sourceId: integer('source_id').references(() => tvShowSources.id),
   name: text('name').notNull(),
   originalName: text('original_name').notNull(),

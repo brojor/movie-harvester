@@ -31,7 +31,7 @@ export const movieSources = pgTable(
 
 // TMDB
 export const tmdbMovieData = pgTable('tmdb_movie_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  id: integer().primaryKey(),
   sourceId: integer().references(() => movieSources.id),
   imdbId: text(),
   title: text(),
