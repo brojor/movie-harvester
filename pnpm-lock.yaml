@@ -171,25 +171,29 @@ importers:
         specifier: catalog:dev
         version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
 
-  apps/csfd-scraper:
+  apps/link-checker: {}
+
+  apps/media-harvester:
     dependencies:
-      '@repo/database':
+      '@repo/csfd-scraper':
         specifier: workspace:*
-        version: link:../../packages/database
-      '@repo/shared':
+        version: link:../../libs/csfd-scraper
+      '@repo/rt-scraper':
         specifier: workspace:*
-        version: link:../../packages/shared
+        version: link:../../libs/rt-scraper
+      '@repo/tmdb-fetcher':
+        specifier: workspace:*
+        version: link:../../libs/tmdb-fetcher
       '@repo/warforum-indexer':
         specifier: workspace:*
-        version: link:../warforum-indexer
-      cheerio:
+        version: link:../../libs/warforum-indexer
+    devDependencies:
+      tsup:
+        specifier: catalog:dev
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
+      tsx:
         specifier: catalog:prod
-        version: 1.1.0
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.0)
-
-  apps/link-checker: {}
+        version: 4.20.3
 
   apps/metadata-fetcher: {}
 
@@ -263,29 +267,29 @@ importers:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.0)
 
-  apps/orchestrator:
+  apps/warforum-extractor: {}
+
+  apps/webshare-downloader: {}
+
+  libs/csfd-scraper:
     dependencies:
-      '@repo/csfd-scraper':
+      '@repo/database':
         specifier: workspace:*
-        version: link:../csfd-scraper
-      '@repo/rt-scraper':
+        version: link:../../packages/database
+      '@repo/shared':
         specifier: workspace:*
-        version: link:../rt-scraper
-      '@repo/tmdb-fetcher':
-        specifier: workspace:*
-        version: link:../tmdb-fetcher
+        version: link:../../packages/shared
       '@repo/warforum-indexer':
         specifier: workspace:*
         version: link:../warforum-indexer
-    devDependencies:
-      tsup:
-        specifier: catalog:dev
-        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
-      tsx:
+      cheerio:
         specifier: catalog:prod
-        version: 4.20.3
+        version: 1.1.0
+      drizzle-orm:
+        specifier: catalog:prod
+        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.0)
 
-  apps/rt-scraper:
+  libs/rt-scraper:
     dependencies:
       '@repo/database':
         specifier: workspace:*
@@ -300,7 +304,7 @@ importers:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.0)
 
-  apps/tmdb-fetcher:
+  libs/tmdb-fetcher:
     dependencies:
       '@repo/database':
         specifier: workspace:*
@@ -316,9 +320,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/types
 
-  apps/warforum-extractor: {}
-
-  apps/warforum-indexer:
+  libs/warforum-indexer:
     dependencies:
       '@repo/database':
         specifier: workspace:*
@@ -354,8 +356,6 @@ importers:
       vitest:
         specifier: catalog:dev
         version: 3.2.3(@types/debug@4.1.12)(@types/node@24.0.3)(jiti@2.4.2)(terser@5.42.0)(tsx@4.20.3)(yaml@2.8.0)
-
-  apps/webshare-downloader: {}
 
   packages/database:
     dependencies:

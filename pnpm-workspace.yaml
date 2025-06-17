@@ -1,6 +1,7 @@
 packages:
-  - packages/*
   - apps/*
+  - libs/*
+  - packages/*
 catalogs:
   dev:
     '@antfu/nip': ^0.1.0

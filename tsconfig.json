@@ -4,13 +4,6 @@
     "baseUrl": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "paths": {
-      "@repo/database": ["./packages/database/src"],
-      "@repo/shared": ["./packages/shared/src"],
-      "@repo/types": ["./packages/types/src"],
-      "@repo/warforum-indexer": ["./apps/warforum-indexer/src"],
-      "@repo/csfd-scraper": ["./apps/csfd-scraper/src"]
-    },
     "strict": true,
     "skipLibCheck": true
   }
