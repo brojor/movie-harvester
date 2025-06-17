@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Indexes movies from Warforum discussions",
+  "exports": "./dist/index.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./dist/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
     "build": "tsup",

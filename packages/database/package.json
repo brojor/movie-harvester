@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "SQLite database layer with Drizzle ORM for movie data",
+  "exports": "./dist/index.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
