@@ -17,6 +17,8 @@ const envSchema = z.object({
   WARFORUM_USER_ID: z.coerce.number(),
   WARFORUM_AUTO_LOGIN_ID: z.string(),
   WARFORUM_INDEXER_DEPRECATED_DATE: z.string().date(),
+  HTTP_CLIENT_DELAY_MIN: z.coerce.number().default(800),
+  HTTP_CLIENT_DELAY_MAX: z.coerce.number().default(3000),
 })
 
 export const env = envSchema.parse(process.env)
