@@ -1,4 +1,4 @@
-import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
+import type { MovieSource, TvShowSource } from '@repo/database'
 import { getLastProcessedMovieDate, getLastProcessedTvShowDate, getTvShowTopicId, upsertMovie, upsertTvShow } from './infra/database.js'
 import { fetchCsfdId } from './scraper/fetchCsfdId.js'
 import { indexMediaFromTopic } from './scraper/indexMediaFromTopic.js'

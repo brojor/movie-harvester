@@ -1,4 +1,4 @@
-import type { MovieSource, TvShowSource } from '@repo/types'
+import type { MovieSource, TvShowSource } from '@repo/database'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from './types.js'
 import { env, makeHttpClient, normalizeTitle } from '@repo/shared'
 import { getCsfdMovieData, getLastTmdbMovieProcessedDate, getLastTmdbTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveTmdbMovieData, saveTmdbTvShowData, seedTmdbMovieGenres, seedTmdbTvShowGenres } from './infra/database.js'

@@ -1,4 +1,4 @@
-import type { MovieSource, TvShowSource } from '@repo/types'
+import type { MovieSource, TvShowSource } from '@repo/database'
 import type { MovieMetaWithSource, TopicType, TvShowMetaWithSource } from '../types/domain.js'
 import { db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
 import { and, eq, isNull } from 'drizzle-orm'

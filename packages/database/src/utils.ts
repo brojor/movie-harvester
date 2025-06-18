@@ -14,7 +14,7 @@ import type {
   UnprocessedSources,
   UnprocessedTmdbMovies,
   UnprocessedTmdbTvShows,
-} from '@repo/types'
+} from './types.js'
 import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 import { db, moviesSchema } from './index.js'
 

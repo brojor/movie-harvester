@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@antfu/nip": "catalog:dev",
-    "@repo/types": "workspace:*",
     "drizzle-orm": "catalog:prod"
   }
 }

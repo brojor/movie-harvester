@@ -1,4 +1,4 @@
-import type { MovieSource, TvShowSource } from '@repo/types'
+import type { MovieSource, TvShowSource } from '@repo/database'
 import type { RtDetails } from './types.js'
 import { URLSearchParams } from 'node:url'
 import { makeHttpClient, normalizeTitle } from '@repo/shared'

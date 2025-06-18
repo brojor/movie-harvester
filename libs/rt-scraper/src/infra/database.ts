@@ -1,4 +1,4 @@
-import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
+import type { MovieSource, TvShowSource } from '@repo/database'
 import type { RtDetails } from '../types.js'
 import { db, getLastProcessedDate, getUnprocessedSources, moviesSchema, tvShowsSchema } from '@repo/database'
 

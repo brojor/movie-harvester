@@ -1,4 +1,4 @@
-import type { MovieSource } from '@repo/types'
+import type { MovieSource } from '@repo/database'
 import type { DubbedMovieCoreMeta, MediaType, MovieMetaWithSource, NonDubbedMovieCoreMeta, TopicType, TvShowCoreMeta, TvShowMetaWithSource } from '../types/domain.js'
 import { movieTopicIdMap } from '../types/domain.js'
 

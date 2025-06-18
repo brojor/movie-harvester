@@ -1,4 +1,4 @@
-import type { CsfdMovieData, MovieSource, TvShowSource } from 'packages/types/dist/index.js'
+import type { CsfdMovieData, MovieSource, TvShowSource } from '@repo/database'
 import type { MovieDetailsResponse, TvShowDetailsResponse } from '../types.js'
 import { db, getLastProcessedDate, getUnprocessedSources, moviesSchema, tvShowsSchema } from '@repo/database'
 import { eq } from 'drizzle-orm'

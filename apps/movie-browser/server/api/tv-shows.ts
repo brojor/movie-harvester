@@ -1,4 +1,4 @@
-import type { TmdbNetwork, TmdbSeason } from '@repo/types'
+import type { TmdbNetwork, TmdbSeason } from '@repo/database'
 import type { SearchParams } from '../../types'
 import { db, tvShowsSchema } from '@repo/database'
 import { asc, desc, eq } from 'drizzle-orm'

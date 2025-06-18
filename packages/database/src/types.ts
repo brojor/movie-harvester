@@ -1,5 +1,7 @@
-import type { moviesSchema, tvShowsSchema } from '@repo/database'
+import type * as moviesSchema from './db/schema/movies.js'
+import type * as tvShowsSchema from './db/schema/tv-shows.js'
 
+// Export types derived from schemas
 export type MovieSource = typeof moviesSchema.movieSources.$inferSelect
 export type TvShowSource = typeof tvShowsSchema.tvShowSources.$inferSelect
 

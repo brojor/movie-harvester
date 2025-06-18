@@ -16,8 +16,5 @@
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
     "drizzle-orm": "catalog:prod"
-  },
-  "devDependencies": {
-    "@repo/types": "workspace:*"
   }
 }

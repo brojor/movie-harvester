@@ -24,7 +24,6 @@
     "iconv-lite": "catalog:prod"
   },
   "devDependencies": {
-    "@repo/types": "workspace:*",
     "domhandler": "catalog:dev",
     "vitest": "catalog:dev"
   }
