@@ -1,7 +1,6 @@
 import type { MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { RtDetails } from '../types.js'
-import { db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
-import { and, eq, gt, isNull } from 'drizzle-orm'
+import { db, getLastProcessedDate, getUnprocessedSources, moviesSchema, tvShowsSchema } from '@repo/database'
 
 export async function getLastRtMovieProcessedDate(): Promise<Date> {
   return getLastProcessedDate(moviesSchema.rtMovieData)
@@ -12,37 +11,13 @@ export async function getLastRtTvShowProcessedDate(): Promise<Date> {
 }
 
 export async function getUnprocessedMovies(cutoffDate: Date): Promise<MovieSource[]> {
-  const res = await db
-    .select()
-    .from(moviesSchema.movieSources)
-    .leftJoin(
-      moviesSchema.rtMovieData,
-      eq(moviesSchema.movieSources.id, moviesSchema.rtMovieData.sourceId),
-    )
-    .where(
-      and(
-        isNull(moviesSchema.rtMovieData.id),
-        gt(moviesSchema.movieSources.createdAt, cutoffDate),
-      ),
-    )
+  const res = await getUnprocessedSources(moviesSchema.rtMovieData, cutoffDate)
 
   return res.map(m => m.movie_sources)
 }
 
 export async function getUnprocessedTvShows(cutoffDate: Date): Promise<TvShowSource[]> {
-  const res = await db
-    .select()
-    .from(tvShowsSchema.tvShowSources)
-    .leftJoin(
-      tvShowsSchema.rtTvShowData,
-      eq(tvShowsSchema.tvShowSources.id, tvShowsSchema.rtTvShowData.sourceId),
-    )
-    .where(
-      and(
-        isNull(tvShowsSchema.rtTvShowData.id),
-        gt(tvShowsSchema.tvShowSources.createdAt, cutoffDate),
-      ),
-    )
+  const res = await getUnprocessedSources(tvShowsSchema.rtTvShowData, cutoffDate)
 
   return res.map(m => m.tv_show_sources)
 }

@@ -1,7 +1,7 @@
 import type { CsfdTvShowData, MovieSource, TvShowSource } from 'packages/types/dist/index.js'
 import type { CsfdMovieDetails, CsfdTvShowDetails } from '../types.js'
-import { commonSchema, db, getLastProcessedDate, moviesSchema, tvShowsSchema } from '@repo/database'
-import { and, eq, gt, inArray, isNull } from 'drizzle-orm'
+import { commonSchema, db, getLastProcessedDate, getUnprocessedSources, moviesSchema, tvShowsSchema } from '@repo/database'
+import { eq, inArray } from 'drizzle-orm'
 import genres from '../genres.json' with { type: 'json' }
 
 export async function getLastCsfdMovieProcessedDate(): Promise<Date> {
@@ -17,37 +17,13 @@ export async function seedCsfdGenres(): Promise<void> {
 }
 
 export async function getUnprocessedMovies(cutoffDate: Date): Promise<MovieSource[]> {
-  const res = await db
-    .select()
-    .from(moviesSchema.movieSources)
-    .leftJoin(
-      moviesSchema.csfdMovieData,
-      eq(moviesSchema.movieSources.id, moviesSchema.csfdMovieData.sourceId),
-    )
-    .where(
-      and(
-        isNull(moviesSchema.csfdMovieData.id),
-        gt(moviesSchema.movieSources.createdAt, cutoffDate),
-      ),
-    )
+  const res = await getUnprocessedSources(moviesSchema.csfdMovieData, cutoffDate)
 
   return res.map(m => m.movie_sources)
 }
 
 export async function getUnprocessedTvShows(cutoffDate: Date): Promise<TvShowSource[]> {
-  const res = await db
-    .select()
-    .from(tvShowsSchema.tvShowSources)
-    .leftJoin(
-      tvShowsSchema.csfdTvShowData,
-      eq(tvShowsSchema.tvShowSources.id, tvShowsSchema.csfdTvShowData.sourceId),
-    )
-    .where(
-      and(
-        isNull(tvShowsSchema.csfdTvShowData.id),
-        gt(tvShowsSchema.tvShowSources.createdAt, cutoffDate),
-      ),
-    )
+  const res = await getUnprocessedSources(tvShowsSchema.csfdTvShowData, cutoffDate)
 
   return res.map(m => m.tv_show_sources)
 }
