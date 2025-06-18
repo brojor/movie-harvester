@@ -2,10 +2,11 @@ import { env } from '@repo/shared'
 import { isBefore, isValid, parse } from 'date-fns'
 import { cs } from 'date-fns/locale'
 
-export function parseDate(raw: string): Date {
+export function parseDate(raw: string): Date | null {
   const parsed = parse(raw.trim(), 'dd MMMM yyyy, HH:mm', new Date(), { locale: cs })
   if (!isValid(parsed)) {
-    throw new Error(`Invalid date string: "${raw}"`)
+    console.error(`Invalid date string: "${raw}"`)
+    return null
   }
   return parsed
 }

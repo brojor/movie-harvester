@@ -31,11 +31,17 @@ export async function parseTvShowTopics(): Promise<void> {
 
 export async function getCsfdMovieIdFromTopic(movie: MovieSource): Promise<string | null> {
   const topicId = getMovieTopicId(movie)
+  if (!topicId)
+    return null
+
   return fetchCsfdId(topicId)
 }
 
 export async function getCsfdTvShowIdFromTopic(tvShow: TvShowSource): Promise<string | null> {
   const topicId = await getTvShowTopicId(tvShow)
+  if (!topicId)
+    return null
+
   return fetchCsfdId(topicId)
 }
 

@@ -85,10 +85,11 @@ export async function getMoviesMissingCsfdId(): Promise<MovieSource[]> {
   return result.map(m => m.movie_sources)
 }
 
-export async function getTvShowTopicId(tvShow: TvShowSource): Promise<number> {
+export async function getTvShowTopicId(tvShow: TvShowSource): Promise<number | null> {
   const tvShowTopic = await db.select().from(tvShowsSchema.tvShowTopics).where(eq(tvShowsSchema.tvShowTopics.tvShowId, tvShow.id)).limit(1)
   if (!tvShowTopic.length && !tvShowTopic[0].topicId) {
-    throw new Error('No topic ID found')
+    console.error(`No topic ID found for TV show: "${tvShow.id}"`)
+    return null
   }
 
   return tvShowTopic[0].topicId

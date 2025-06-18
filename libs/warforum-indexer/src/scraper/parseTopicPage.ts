@@ -1,4 +1,5 @@
 import type { MediaMetaWithSource, MediaType, MovieMetaWithSource, ParseTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
+import process from 'node:process'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
 import { extractTopicRows, parseTopicId, parseTopicTitle } from '../utils/htmlParsing.js'
@@ -17,7 +18,8 @@ export function parseTopicPage<T extends MediaType>(
   const rows = extractTopicRows($)
 
   if (rows.length === 0) {
-    throw new Error('No rows found, is SID valid?')
+    console.error('No rows found, is SID valid?')
+    process.exit(1)
   }
 
   rows.each((_, row) => {
@@ -30,6 +32,9 @@ export function parseTopicPage<T extends MediaType>(
       .text()
 
     const date = parseDate(dateString)
+    if (!date)
+      return
+
     lastRowDate = date
 
     if (isOld(date, cutoffDate))
@@ -37,6 +42,11 @@ export function parseTopicPage<T extends MediaType>(
 
     const title = parseTopicTitle(row, $)
     const sourceTopic = parseTopicId(row, $)
+
+    if (!title || !sourceTopic) {
+      console.error('Missing title or sourceTopic, skipping row')
+      return
+    }
 
     const parsedItem = parseMediaItem(title, sourceTopic, mediaType, topicType)
     if (parsedItem) {

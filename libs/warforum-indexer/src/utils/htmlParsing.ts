@@ -16,18 +16,18 @@ export function extractTopicRows($: CheerioAPI): Cheerio<DomElement> {
   return rows
 }
 
-export function parseTopicTitle(row: DomElement, $: CheerioAPI): string {
+export function parseTopicTitle(row: DomElement, $: CheerioAPI): string | null {
   const title = $(row).find('a.topictitle').text().trim()
   if (!title)
-    throw new Error(`Missing title in: "${row}"`)
+    return null
 
   return title
 }
 
-export function parseTopicId(row: DomElement, $: CheerioAPI): number {
+export function parseTopicId(row: DomElement, $: CheerioAPI): number | null {
   const href = $(row).find('a.topictitle').attr('href')
   if (!href)
-    throw new Error(`Missing href in: "${row}"`)
+    return null
 
   return extractTopicId(href)
 }

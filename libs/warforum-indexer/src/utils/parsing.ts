@@ -2,10 +2,11 @@ import type { MovieSource } from '@repo/database'
 import type { DubbedMovieCoreMeta, MediaType, MovieMetaWithSource, NonDubbedMovieCoreMeta, TopicType, TvShowCoreMeta, TvShowMetaWithSource } from '../types/domain.js'
 import { movieTopicIdMap } from '../types/domain.js'
 
-export function extractTopicId(url: string): number {
+export function extractTopicId(url: string): number | null {
   const match = url.match(/t=(\d+)/)
   if (!match) {
-    throw new Error('Invalid topic URL')
+    console.error(`Invalid topic URL: "${url}"`)
+    return null
   }
   return Number.parseInt(match[1], 10)
 }
@@ -44,21 +45,23 @@ export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDu
   }
 }
 
-export function getMovieTopicId(movie: MovieSource): number {
+export function getMovieTopicId(movie: MovieSource): number | null {
   for (const key of Object.values(movieTopicIdMap)) {
     const value = movie[key]
     if (value) {
       return value
     }
   }
-  throw new Error('No topic ID found')
+  console.error(`No topic ID found for movie: "${movie.id}"`)
+  return null
 }
 
 export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
   const parts = removeParentheses(topicTitle).split('/').map(part => part.trim())
 
   if (parts.length < 2) {
-    throw new Error(`Invalid topic title: "${topicTitle}"`)
+    console.error(`Invalid topic title: "${topicTitle}"`)
+    return null
   }
 
   const languagesPart = parts.pop()
@@ -66,7 +69,8 @@ export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
   const czechTitle = parts.length > 0 ? parts[0] : undefined
 
   if (!originalTitle || !languagesPart) {
-    throw new Error(`Invalid topic title: "${topicTitle}"`)
+    console.error(`Invalid topic title: "${topicTitle}"`)
+    return null
   }
 
   return {
