@@ -12,7 +12,7 @@ export function parseDate(raw: string): Date {
 
 export function isOld(date: Date, cutoffDate?: Date): boolean {
   const isDeprecated = isBefore(date, new Date(env.WARFORUM_INDEXER_DEPRECATED_DATE))
-  const isBeforeCutoffDate = cutoffDate ? isBefore(cutoffDate, date) : false
+  const isBeforeCutoffDate = cutoffDate ? isBefore(date, cutoffDate) : false
 
   return isDeprecated || isBeforeCutoffDate
 }

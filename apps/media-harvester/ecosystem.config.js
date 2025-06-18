@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'media-harvester',
-      script: 'dist/orchestrator.js',
+      script: 'dist/index.js',
       interpreter: 'node',
       env: {
         NODE_ENV: 'production',
