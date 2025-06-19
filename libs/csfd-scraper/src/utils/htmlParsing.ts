@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio'
 interface Origin {
   originalTitle: string
   releaseYear: number
-  runtime: number
+  runtime: number | null
 }
 
 export function getCzechTitle($: CheerioAPI): string {
@@ -18,7 +18,7 @@ export function getOrigin($: CheerioAPI): Origin {
   return {
     originalTitle,
     releaseYear: Number.parseInt(releaseYear),
-    runtime: Number.parseInt(runtimeString),
+    runtime: Number.parseInt(runtimeString) || null,
   }
 }
 
