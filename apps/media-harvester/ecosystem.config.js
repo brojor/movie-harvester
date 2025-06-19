@@ -8,6 +8,7 @@ module.exports = {
         NODE_ENV: 'production',
         ENV_FILE: '/var/www/media-harvester/config/.env',
       },
+      autorestart: false,
     },
   ],
 }
