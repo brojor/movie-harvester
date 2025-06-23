@@ -1,44 +1,17 @@
-import type { MovieSource, TvShowSource } from '@repo/database'
+import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { RtDetails } from './types.js'
 import { URLSearchParams } from 'node:url'
 import { makeHttpClient, normalizeTitle } from '@repo/shared'
 import * as cheerio from 'cheerio'
-import { getLastRtMovieProcessedDate, getLastRtTvShowProcessedDate, getUnprocessedMovies, getUnprocessedTvShows, saveRtMovieDetails, saveRtTvShowDetails } from './infra/database.js'
 
 const httpClient = makeHttpClient('https://www.rottentomatoes.com')
-
-export async function populateRtMoviesData({ force = true }: { force?: boolean } = {}): Promise<void> {
-  const lastRun = force ? new Date(0) : await getLastRtMovieProcessedDate()
-  const movies = await getUnprocessedMovies(lastRun)
-
-  for (const movie of movies) {
-    const movieId = await findRtMovieSlug(movie)
-    if (movieId) {
-      const movieDetails = await getMovieDetails(movieId)
-      await saveRtMovieDetails(movieDetails, movie.id)
-    }
-  }
-}
-
-export async function populateRtTvShowsData({ force = true }: { force?: boolean } = {}): Promise<void> {
-  const lastRun = force ? new Date(0) : await getLastRtTvShowProcessedDate()
-  const movies = await getUnprocessedTvShows(lastRun)
-
-  for (const movie of movies) {
-    const movieId = await findRtTvShowSlug(movie)
-    if (movieId) {
-      const tvShowDetails = await getTvShowDetails(movieId)
-      await saveRtTvShowDetails(tvShowDetails, movie.id)
-    }
-  }
-}
 
 function parseNullableInt(value: string): number | null {
   const parsed = Number.parseInt(value)
   return Number.isNaN(parsed) ? null : parsed
 }
 
-async function findRtMovieSlug(movie: MovieSource): Promise<string | null> {
+export async function findRtMovieId(movie: MovieRecord): Promise<string | null> {
   const { year } = movie
   const originalTitle = normalizeTitle(movie.originalTitle)
 
@@ -62,7 +35,7 @@ async function findRtMovieSlug(movie: MovieSource): Promise<string | null> {
   return id ?? null
 }
 
-async function findRtTvShowSlug(tvShow: TvShowSource): Promise<string | null> {
+export async function findRtTvShowId(tvShow: TvShowRecord): Promise<string | null> {
   const originalTitle = normalizeTitle(tvShow.originalTitle)
 
   if (!originalTitle) {
@@ -84,8 +57,8 @@ async function findRtTvShowSlug(tvShow: TvShowSource): Promise<string | null> {
   return id ?? null
 }
 
-async function getMovieDetails(rtSlug: string): Promise<RtDetails> {
-  const html = await httpClient.get(`/m/${rtSlug}`)
+export async function getMovieDetails(rtId: string): Promise<RtDetails> {
+  const html = await httpClient.get(`/m/${rtId}`)
   const $ = cheerio.load(html)
 
   const criticsScore = $('media-scorecard rt-text[slot="criticsScore"]').text().trim()
@@ -94,16 +67,16 @@ async function getMovieDetails(rtSlug: string): Promise<RtDetails> {
   const audienceReviews = $('media-scorecard rt-link[slot="audienceReviews"]').text().trim().replace(/\D/g, '')
 
   return {
+    id: rtId,
     criticsScore: parseNullableInt(criticsScore),
     audienceScore: parseNullableInt(audienceScore),
     criticsReviews: parseNullableInt(criticsReviews),
     audienceReviews: parseNullableInt(audienceReviews),
-    rtId: rtSlug,
   }
 }
 
-async function getTvShowDetails(rtSlug: string): Promise<RtDetails> {
-  const html = await httpClient.get(`/tv/${rtSlug}`)
+export async function getTvShowDetails(rtId: string): Promise<RtDetails> {
+  const html = await httpClient.get(`/tv/${rtId}`)
   const $ = cheerio.load(html)
 
   const criticsScore = $('media-scorecard rt-text[slot="criticsScore"]').text().trim()
@@ -112,10 +85,12 @@ async function getTvShowDetails(rtSlug: string): Promise<RtDetails> {
   const audienceReviews = $('media-scorecard rt-link[slot="audienceReviews"]').text().trim().replace(/\D/g, '')
 
   return {
+    id: rtId,
     criticsScore: parseNullableInt(criticsScore),
     audienceScore: parseNullableInt(audienceScore),
     criticsReviews: parseNullableInt(criticsReviews),
     audienceReviews: parseNullableInt(audienceReviews),
-    rtId: rtSlug,
   }
 }
+
+export * from './types.js'

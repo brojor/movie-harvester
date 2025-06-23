@@ -24,7 +24,7 @@ export class MovieRepo implements MovieRepository {
     await this.db.update(movies).set({ tmdbId }).where(eq(movies.id, movieId))
   }
 
-  async setRtId(movieId: number, rtId: number): Promise<void> {
+  async setRtId(movieId: number, rtId: string): Promise<void> {
     await this.db.update(movies).set({ rtId }).where(eq(movies.id, movieId))
   }
 }

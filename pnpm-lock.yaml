@@ -327,6 +327,24 @@ importers:
         specifier: catalog:prod
         version: 5.55.0
 
+  apps/workers/rt:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../../packages/database
+      '@repo/rt-scraper':
+        specifier: workspace:*
+        version: link:../../../libs/rt-scraper
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../../libs/types
+      bullmq:
+        specifier: catalog:prod
+        version: 5.55.0
+
   libs/csfd-scraper:
     dependencies:
       '@repo/database':
@@ -353,6 +371,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
@@ -372,7 +393,11 @@ importers:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
 
-  libs/types: {}
+  libs/types:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
 
   libs/warforum-indexer:
     dependencies:
@@ -413,6 +438,9 @@ importers:
       '@repo/csfd-scraper':
         specifier: workspace:*
         version: link:../../libs/csfd-scraper
+      '@repo/rt-scraper':
+        specifier: workspace:*
+        version: link:../../libs/rt-scraper
       '@repo/shared':
         specifier: workspace:*
         version: link:../shared

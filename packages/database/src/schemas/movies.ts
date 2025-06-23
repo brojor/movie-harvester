@@ -67,16 +67,13 @@ export const csfdMoviesToGenres = pgTable(
 )
 
 export const rtMovieData = pgTable('rt_movie_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  rtId: text().notNull(),
+  id: text().primaryKey(),
   criticsScore: integer(),
   criticsReviews: integer(),
   audienceScore: integer(),
   audienceReviews: integer(),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_rt_movie_id').on(table.rtId),
-])
+})
 
 export const movies = pgTable(
   'movies',
@@ -87,7 +84,7 @@ export const movies = pgTable(
     year: integer().notNull(),
     tmdbId: integer(),
     csfdId: integer(),
-    rtId: integer(),
+    rtId: text(),
     ...timestamps,
   },
   table => [

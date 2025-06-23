@@ -24,7 +24,7 @@ export class TvShowRepo implements TvShowRepository {
     await this.db.update(tvShows).set({ tmdbId }).where(eq(tvShows.id, tvShowId))
   }
 
-  async setRtId(tvShowId: number, rtId: number): Promise<void> {
+  async setRtId(tvShowId: number, rtId: string): Promise<void> {
     await this.db.update(tvShows).set({ rtId }).where(eq(tvShows.id, tvShowId))
   }
 }

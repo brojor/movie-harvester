@@ -1,9 +1,9 @@
 {
-  "name": "@repo/rt-scraper",
+  "name": "@repo/rt-worker",
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Scrapes movie ratings from Rotten Tomatoes",
+  "description": "Rotten Tomatoes worker",
   "exports": "./dist/index.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,9 +14,9 @@
   },
   "dependencies": {
     "@repo/database": "workspace:*",
+    "@repo/rt-scraper": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "cheerio": "catalog:prod",
-    "drizzle-orm": "catalog:prod"
+    "bullmq": "catalog:prod"
   }
 }

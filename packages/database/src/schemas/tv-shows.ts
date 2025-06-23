@@ -5,7 +5,6 @@ import {
   primaryKey,
   real,
   text,
-  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
@@ -87,24 +86,21 @@ export const csfdTvShowsToGenres = pgTable(
 )
 
 export const rtTvShowData = pgTable('rt_tv_show_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  rtId: text('rt_id').notNull(),
+  id: text().primaryKey(),
   criticsScore: integer(),
   criticsReviews: integer(),
   audienceScore: integer(),
   audienceReviews: integer(),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_rt_tv_show_id').on(table.rtId),
-])
+})
 
 export const tvShows = pgTable('tv_shows', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   czechTitle: text(),
   originalTitle: text().notNull().unique(),
-  tmdbId: integer().references(() => tmdbTvShowsData.id),
-  csfdId: integer().references(() => csfdTvShowData.id),
-  rtId: integer().references(() => rtTvShowData.id),
+  tmdbId: integer(),
+  csfdId: integer(),
+  rtId: text(),
   ...timestamps,
 })
 
