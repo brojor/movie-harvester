@@ -184,3 +184,41 @@ export interface Season {
   season_number: number
   vote_average: number
 }
+export interface TmdbMovieDetails {
+  id: number
+  imdbId: string
+  title: string
+  originalTitle: string
+  originalLanguage: string
+  originCountry: string[]
+  posterPath: string
+  backdropPath: string
+  releaseDate: string
+  runtime: number
+  voteAverage: number
+  voteCount: number
+  tagline: string
+  overview: string
+  genres: Genre[]
+}
+
+export interface TmdbTvShowDetails {
+  id: number
+  name: string
+  originalName: string
+  originalLanguage: string
+  overview: string
+  posterPath: string
+  backdropPath: string
+  firstAirDate: string
+  episodeRunTime: number[]
+  numberOfEpisodes: number
+  numberOfSeasons: number
+  originCountry: string[]
+  languages: string[]
+  type: string
+  popularity: number
+  voteAverage: number
+  voteCount: number
+  genres: Genre[]
+}

@@ -18,7 +18,7 @@ export const tmdbMovieData = pgTable('tmdb_movie_data', {
   title: text(),
   originalTitle: text(),
   originalLanguage: text(),
-  originCountry: text(),
+  originCountry: text().array(),
   posterPath: text(),
   backdropPath: text(),
   releaseDate: text(),

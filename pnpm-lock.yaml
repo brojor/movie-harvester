@@ -345,6 +345,24 @@ importers:
         specifier: catalog:prod
         version: 5.55.0
 
+  apps/workers/tmdb:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../../packages/database
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
+      '@repo/tmdb-fetcher':
+        specifier: workspace:*
+        version: link:../../../libs/tmdb-fetcher
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../../libs/types
+      bullmq:
+        specifier: catalog:prod
+        version: 5.55.0
+
   libs/csfd-scraper:
     dependencies:
       '@repo/database':
@@ -444,6 +462,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../shared
+      '@repo/tmdb-fetcher':
+        specifier: workspace:*
+        version: link:../../libs/tmdb-fetcher
       '@repo/types':
         specifier: workspace:*
         version: link:../../libs/types

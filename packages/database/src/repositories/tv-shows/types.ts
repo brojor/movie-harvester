@@ -1,5 +1,6 @@
 import type { CsfdTvShowDetails } from '@repo/csfd-scraper'
 import type { RtDetails } from '@repo/rt-scraper'
+import type { TmdbTvShowDetails } from '@repo/tmdb-fetcher'
 import type { TopicType, TvShow } from '@repo/types'
 
 export interface TvShowRepository {
@@ -19,4 +20,8 @@ export interface CsfdTvShowDataRepository {
 
 export interface RtTvShowDataRepository {
   save: (tvShowDetails: RtDetails) => Promise<string>
+}
+
+export interface TmdbTvShowDataRepository {
+  save: (tvShowDetails: TmdbTvShowDetails) => Promise<number>
 }
