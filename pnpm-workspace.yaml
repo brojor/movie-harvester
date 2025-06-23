@@ -1,10 +1,11 @@
 packages:
-  - apps/*
+  - apps/**/*
   - libs/*
   - packages/*
 catalogs:
   dev:
     '@antfu/nip': ^0.1.0
+    '@hono/node-server': ^1.14.4
     '@iconify-json/circle-flags': ^1.2.6
     '@types/he': ^1.2.3
     '@types/lodash-es': ^4.17.12
@@ -14,6 +15,7 @@ catalogs:
     domhandler: ^5.0.3
     drizzle-kit: ^0.31.1
     tsup: ^8.5.0
+    typescript: ^5.8.3
     unocss-preset-scrollbar-hide: ^1.0.1
     vitest: ^3.2.3
   lint:
@@ -30,13 +32,16 @@ catalogs:
     '@vueuse/core': ^13.2.0
     '@vueuse/nuxt': ^13.2.0
     axios: ^1.9.0
+    bullmq: ^5.54.3
     cheerio: ^1.0.0
     date-fns: ^4.1.0
     dotenv: ^16.5.0
     drizzle-orm: ^0.43.1
     he: ^1.2.0
+    hono: ^4.7.11
     http-cookie-agent: ^7.0.1
     iconv-lite: ^0.6.3
+    ioredis: ^5.6.1
     lodash-es: ^4.17.21
     node-postgres: ^0.6.2
     nuxt: ^3.17.4
@@ -53,6 +58,7 @@ catalogs:
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - esbuild
+  - msgpackr-extract
   - sharp
   - simple-git-hooks
   - unrs-resolver

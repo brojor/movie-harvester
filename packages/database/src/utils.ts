@@ -38,7 +38,7 @@ export async function getUnprocessedSources(table: RtTvShowTable, cutoffDate: Da
 export async function getUnprocessedSources(table: MediaTable, cutoffDate: Date): Promise<UnprocessedSources> {
   return db
     .select()
-    .from(moviesSchema.movieSources)
-    .leftJoin(table, eq(moviesSchema.movieSources.id, table.sourceId))
-    .where(and(isNull(table.id), gt(moviesSchema.movieSources.createdAt, cutoffDate)))
+    .from(moviesSchema.movies)
+    .leftJoin(table, eq(moviesSchema.movies.id, table.sourceId))
+    .where(and(isNull(table.id), gt(moviesSchema.movies.createdAt, cutoffDate)))
 }

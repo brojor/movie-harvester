@@ -1,9 +1,9 @@
-import type * as moviesSchema from './db/schema/movies.js'
-import type * as tvShowsSchema from './db/schema/tv-shows.js'
+import type * as moviesSchema from './schemas/movies.js'
+import type * as tvShowsSchema from './schemas/tv-shows.js'
 
 // Export types derived from schemas
-export type MovieSource = typeof moviesSchema.movieSources.$inferSelect
-export type TvShowSource = typeof tvShowsSchema.tvShowSources.$inferSelect
+export type MovieRecord = typeof moviesSchema.movies.$inferSelect
+export type TvShowRecord = typeof tvShowsSchema.tvShows.$inferSelect
 
 export type CsfdMovieData = typeof moviesSchema.csfdMovieData.$inferSelect
 export type TmdbMovieData = typeof moviesSchema.tmdbMovieData.$inferSelect
@@ -23,14 +23,16 @@ export type CsfdTvShowTable = typeof tvShowsSchema.csfdTvShowData
 export type RtMovieTable = typeof moviesSchema.rtMovieData
 export type RtTvShowTable = typeof tvShowsSchema.rtTvShowData
 
-export type UnprocessedTmdbMovies = { movie_sources: MovieSource, tmdb_movie_data?: TmdbMovieData | null }[]
-export type UnprocessedCsfdMovies = { movie_sources: MovieSource, csfd_movie_data?: CsfdMovieData | null }[]
-export type UnprocessedRtMovies = { movie_sources: MovieSource, rt_movie_data?: RtMovieData | null }[]
-export type UnprocessedTmdbTvShows = { tv_show_sources: TvShowSource, tmdb_tv_show_data?: TmdbTvShowData | null }[]
-export type UnprocessedCsfdTvShows = { tv_show_sources: TvShowSource, csfd_tv_show_data?: CsfdTvShowData | null }[]
-export type UnprocessedRtTvShows = { tv_show_sources: TvShowSource, rt_tv_show_data?: RtTvShowData | null }[]
+export type UnprocessedTmdbMovies = { movie_sources: MovieRecord, tmdb_movie_data?: TmdbMovieData | null }[]
+export type UnprocessedCsfdMovies = { movie_sources: MovieRecord, csfd_movie_data?: CsfdMovieData | null }[]
+export type UnprocessedRtMovies = { movie_sources: MovieRecord, rt_movie_data?: RtMovieData | null }[]
+export type UnprocessedTmdbTvShows = { tv_show_sources: TvShowRecord, tmdb_tv_show_data?: TmdbTvShowData | null }[]
+export type UnprocessedCsfdTvShows = { tv_show_sources: TvShowRecord, csfd_tv_show_data?: CsfdTvShowData | null }[]
+export type UnprocessedRtTvShows = { tv_show_sources: TvShowRecord, rt_tv_show_data?: RtTvShowData | null }[]
 
 export type MediaTable = TmdbMovieTable | CsfdMovieTable | RtMovieTable | TmdbTvShowTable | CsfdTvShowTable | RtTvShowTable
 export type UnprocessedSources = UnprocessedTmdbMovies | UnprocessedCsfdMovies | UnprocessedRtMovies | UnprocessedTmdbTvShows | UnprocessedCsfdTvShows | UnprocessedRtTvShows
 
-export type SourceTable = typeof moviesSchema.movieSources | typeof tvShowsSchema.tvShowSources
+export type SourceTable = typeof moviesSchema.movies | typeof tvShowsSchema.tvShows
+
+export type { Database } from './connection.js'

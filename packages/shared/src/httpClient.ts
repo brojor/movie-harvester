@@ -41,10 +41,15 @@ export function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): Http
   client.interceptors.response.use(undefined, createRetryInterceptor(retries, client))
 
   const gate = pLimit(concurrency)
+  let requestCount = 0
 
   async function get<T = any>(path: string): Promise<T> {
     return gate(async () => {
-      await wait(getDelayMs(delayBetween))
+      if (requestCount > 0) {
+        await wait(getDelayMs(delayBetween))
+      }
+      requestCount++
+
       const { data } = await client.get(path)
       return data
     })

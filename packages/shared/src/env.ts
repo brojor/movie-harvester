@@ -19,6 +19,10 @@ const envSchema = z.object({
   WARFORUM_INDEXER_DEPRECATED_DATE: z.string().date(),
   HTTP_CLIENT_DELAY_MIN: z.coerce.number().default(800),
   HTTP_CLIENT_DELAY_MAX: z.coerce.number().default(3000),
+  REDIS_HOST: z.string().default('127.0.0.1'),
+  REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_PASSWORD: z.string(),
+  META_RESOLVER_PORT: z.coerce.number().default(3000),
 })
 
 export const env = envSchema.parse(process.env)

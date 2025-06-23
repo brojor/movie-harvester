@@ -1,4 +1,5 @@
 import type { CheerioAPI } from 'cheerio'
+import type { CsfdGenre } from '../types.js'
 import * as cheerio from 'cheerio'
 
 interface Origin {
@@ -44,8 +45,36 @@ export function getOverview($: CheerioAPI): string | null {
   return $('.plot-full p').find('em').remove().end().text().trim() || null
 }
 
-export function getGenres($: CheerioAPI): string[] {
-  return $('.genres').text().split('/').map(genre => genre.trim()).filter(Boolean)
+export function getGenres($: CheerioAPI): CsfdGenre[] {
+  return $('.genres a').map((_, el) => {
+    const name = $(el).text().trim()
+
+    if (!name) {
+      throw new Error(`Element ${el.toString()} has no valid name`)
+    }
+
+    const idSlug = $(el).attr('href')?.split('/').filter(Boolean).pop()
+
+    if (!idSlug) {
+      throw new Error(`Element ${el.toString()} has no valid id slug`)
+    }
+
+    const id = Number.parseInt(idSlug)
+
+    if (Number.isNaN(id)) {
+      throw new TypeError(`Genre ${name} has no valid id`)
+    }
+
+    return { name, id }
+  }).get()
+}
+
+export function getCsfdId(csfdSlug: string): number {
+  const id = Number.parseInt(csfdSlug)
+  if (Number.isNaN(id)) {
+    throw new TypeError(`Csfd slug ${csfdSlug} has no valid id`)
+  }
+  return id
 }
 
 export async function findCsfdMovieSlugByCzechTitle(html: string, title: string, year: number): Promise<string | null> {

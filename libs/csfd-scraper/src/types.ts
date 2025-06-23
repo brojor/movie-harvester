@@ -1,4 +1,5 @@
 export interface CsfdMovieDetails {
+  id: number
   title: string
   originalTitle: string
   releaseYear: number
@@ -7,8 +8,12 @@ export interface CsfdMovieDetails {
   voteCount: number | null
   posterPath: string | null
   overview: string | null
-  genres: string[]
-  csfdId: string
+  genres: CsfdGenre[]
 }
 
 export type CsfdTvShowDetails = Omit<CsfdMovieDetails, 'runtime' | 'originalTitle' | 'releaseYear'>
+
+export interface CsfdGenre {
+  name: string
+  id: number
+}

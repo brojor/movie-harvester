@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import {
   integer,
+  pgEnum,
   pgTable,
   primaryKey,
   real,
@@ -9,30 +10,10 @@ import {
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-// Movies source
-export const movieSources = pgTable(
-  'movie_sources',
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    czechTitle: text(),
-    originalTitle: text(),
-    year: integer().notNull(),
-    hd: integer(),
-    uhd: integer(),
-    hdDub: integer(),
-    uhdDub: integer(),
-    ...timestamps,
-  },
-  table => [
-    uniqueIndex('unique_czech_movie_title_year').on(table.czechTitle, table.year),
-    uniqueIndex('unique_original_movie_title_year').on(table.originalTitle, table.year),
-  ],
-)
+export const topicTypeEnum = pgEnum('topic_type', ['hd', 'uhd', 'hdDub', 'uhdDub'])
 
-// TMDB
 export const tmdbMovieData = pgTable('tmdb_movie_data', {
   id: integer().primaryKey(),
-  sourceId: integer().references(() => movieSources.id),
   imdbId: text(),
   title: text(),
   originalTitle: text(),
@@ -47,9 +28,7 @@ export const tmdbMovieData = pgTable('tmdb_movie_data', {
   tagline: text(),
   overview: text(),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_tmdb_movie_source').on(table.sourceId),
-])
+})
 
 export const tmdbMovieGenres = pgTable('tmdb_movie_genres', {
   id: integer('id').primaryKey(),
@@ -65,11 +44,8 @@ export const tmdbMoviesToGenres = pgTable(
   t => [primaryKey({ columns: [t.movieId, t.genreId] })],
 )
 
-// CSFD
 export const csfdMovieData = pgTable('csfd_movie_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  csfdId: text().notNull(),
-  sourceId: integer().references(() => movieSources.id),
+  id: integer().primaryKey(),
   title: text(),
   originalTitle: text(),
   releaseYear: integer(),
@@ -79,10 +55,7 @@ export const csfdMovieData = pgTable('csfd_movie_data', {
   posterPath: text(),
   overview: text(),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_csfd_movie_source').on(table.sourceId),
-  uniqueIndex('unique_csfd_movie_id').on(table.csfdId),
-])
+})
 
 export const csfdMoviesToGenres = pgTable(
   'csfd_movies_to_genres',
@@ -93,57 +66,89 @@ export const csfdMoviesToGenres = pgTable(
   t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
 )
 
-// RT
 export const rtMovieData = pgTable('rt_movie_data', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   rtId: text().notNull(),
-  sourceId: integer().references(() => movieSources.id),
   criticsScore: integer(),
   criticsReviews: integer(),
   audienceScore: integer(),
   audienceReviews: integer(),
   ...timestamps,
 }, table => [
-  uniqueIndex('unique_rt_movie_source').on(table.sourceId),
   uniqueIndex('unique_rt_movie_id').on(table.rtId),
 ])
 
-// Relations
-export const moviesSourceRelations = relations(movieSources, ({ one }) => ({
+export const movies = pgTable(
+  'movies',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    czechTitle: text(),
+    originalTitle: text(),
+    year: integer().notNull(),
+    tmdbId: integer(),
+    csfdId: integer(),
+    rtId: integer(),
+    ...timestamps,
+  },
+  table => [
+    uniqueIndex('unique_czech_movie_title_year').on(table.czechTitle, table.year),
+    uniqueIndex('unique_original_movie_title_year').on(table.originalTitle, table.year),
+  ],
+)
+
+export const movieTopics = pgTable('movie_topics', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  movieId: integer().notNull().references(() => movies.id),
+  topicId: integer().notNull(),
+  sourceType: topicTypeEnum().notNull(),
+  ...timestamps,
+}, table => [
+  uniqueIndex('unique_movie_source_type').on(table.movieId, table.sourceType),
+])
+
+export const moviesRelations = relations(movies, ({ one, many }) => ({
   tmdbData: one(tmdbMovieData, {
-    fields: [movieSources.id],
-    references: [tmdbMovieData.sourceId],
+    fields: [movies.tmdbId],
+    references: [tmdbMovieData.id],
   }),
   csfdData: one(csfdMovieData, {
-    fields: [movieSources.id],
-    references: [csfdMovieData.sourceId],
+    fields: [movies.csfdId],
+    references: [csfdMovieData.id],
   }),
   rtData: one(rtMovieData, {
-    fields: [movieSources.id],
-    references: [rtMovieData.sourceId],
+    fields: [movies.rtId],
+    references: [rtMovieData.id],
+  }),
+  topics: many(movieTopics),
+}))
+
+export const movieTopicsRelations = relations(movieTopics, ({ one }) => ({
+  movie: one(movies, {
+    fields: [movieTopics.movieId],
+    references: [movies.id],
   }),
 }))
 
 export const tmdbDataRelations = relations(tmdbMovieData, ({ one, many }) => ({
-  movieSource: one(movieSources, {
-    fields: [tmdbMovieData.sourceId],
-    references: [movieSources.id],
+  movieSource: one(movies, {
+    fields: [tmdbMovieData.id],
+    references: [movies.tmdbId],
   }),
   genres: many(tmdbMoviesToGenres),
 }))
 
 export const csfdDataRelations = relations(csfdMovieData, ({ one, many }) => ({
-  movieSource: one(movieSources, {
-    fields: [csfdMovieData.sourceId],
-    references: [movieSources.id],
+  movieSource: one(movies, {
+    fields: [csfdMovieData.id],
+    references: [movies.csfdId],
   }),
   genres: many(csfdMoviesToGenres),
 }))
 
 export const rtDataRelations = relations(rtMovieData, ({ one }) => ({
-  movieSource: one(movieSources, {
-    fields: [rtMovieData.sourceId],
-    references: [movieSources.id],
+  movieSource: one(movies, {
+    fields: [rtMovieData.id],
+    references: [movies.rtId],
   }),
 }))
 

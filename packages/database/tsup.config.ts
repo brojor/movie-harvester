@@ -5,8 +5,9 @@ export default defineConfig({
   ...baseConfig,
   entry: {
     'index': './src/index.ts',
-    'db/schema/common': './src/db/schema/common.ts',
-    'db/schema/movies': './src/db/schema/movies.ts',
-    'db/schema/tv-shows': './src/db/schema/tv-shows.ts',
+    'schema/common': './src/schemas/common.ts',
+    'schema/movies': './src/schemas/movies.ts',
+    'schema/tv-shows': './src/schemas/tv-shows.ts',
   },
+  splitting: false,
 })

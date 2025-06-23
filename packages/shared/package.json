@@ -12,9 +12,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/warforum-indexer": "workspace:*",
     "axios": "catalog:prod",
     "dotenv": "catalog:prod",
     "http-cookie-agent": "catalog:prod",
+    "ioredis": "catalog:prod",
     "p-limit": "catalog:prod",
     "php-serialize": "catalog:prod",
     "tough-cookie": "catalog:prod",

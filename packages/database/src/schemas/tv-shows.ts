@@ -9,25 +9,8 @@ import {
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-export const tvShowSources = pgTable('tv_show_sources', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  czechTitle: text(),
-  originalTitle: text().notNull().unique(),
-  ...timestamps,
-})
-
-export const tvShowTopics = pgTable('tv_show_topics', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  tvShowId: integer('tv_show_id').notNull().references(() => tvShowSources.id),
-  topicId: integer('topic_id').notNull(),
-  topicType: text('topic_type').notNull(),
-  languages: text('languages').notNull(),
-  ...timestamps,
-})
-
 export const tmdbTvShowsData = pgTable('tmdb_tv_shows_data', {
   id: integer().primaryKey(),
-  sourceId: integer('source_id').references(() => tvShowSources.id),
   name: text('name').notNull(),
   originalName: text('original_name').notNull(),
   originalLanguage: text('original_language').notNull(),
@@ -45,9 +28,7 @@ export const tmdbTvShowsData = pgTable('tmdb_tv_shows_data', {
   voteAverage: real('vote_average'),
   voteCount: integer('vote_count'),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_tmdb_tv_show_source').on(table.sourceId),
-])
+})
 
 export const tmdbTvShowGenres = pgTable('tmdb_tv_show_genres', {
   id: integer('id').primaryKey(),
@@ -83,11 +64,8 @@ export const tmdbSeasons = pgTable('tmdb_seasons', {
   airDate: text(),
 })
 
-// CSFD
 export const csfdTvShowData = pgTable('csfd_tv_show_data', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  csfdId: text('csfd_id').notNull(),
-  sourceId: integer('source_id').references(() => tvShowSources.id),
+  id: integer().primaryKey(),
   title: text(),
   originalTitle: text(),
   releaseYear: integer('release_year'),
@@ -97,10 +75,7 @@ export const csfdTvShowData = pgTable('csfd_tv_show_data', {
   posterPath: text(),
   overview: text(),
   ...timestamps,
-}, table => [
-  uniqueIndex('unique_csfd_tv_show_source').on(table.sourceId),
-  uniqueIndex('unique_csfd_tv_show_id').on(table.csfdId),
-])
+})
 
 export const csfdTvShowsToGenres = pgTable(
   'csfd_tv_shows_to_genres',
@@ -111,45 +86,93 @@ export const csfdTvShowsToGenres = pgTable(
   t => [primaryKey({ columns: [t.csfdId, t.genreId] })],
 )
 
-// RT
 export const rtTvShowData = pgTable('rt_tv_show_data', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   rtId: text('rt_id').notNull(),
-  sourceId: integer('source_id').references(() => tvShowSources.id),
   criticsScore: integer(),
   criticsReviews: integer(),
   audienceScore: integer(),
   audienceReviews: integer(),
   ...timestamps,
 }, table => [
-  uniqueIndex('unique_rt_tv_show_source').on(table.sourceId),
   uniqueIndex('unique_rt_tv_show_id').on(table.rtId),
 ])
 
-// TV Show Relations
-export const tvShowSourcesRelations = relations(tvShowSources, ({ many }) => ({
-  topics: many(tvShowTopics),
-}))
+export const tvShows = pgTable('tv_shows', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  czechTitle: text(),
+  originalTitle: text().notNull().unique(),
+  tmdbId: integer().references(() => tmdbTvShowsData.id),
+  csfdId: integer().references(() => csfdTvShowData.id),
+  rtId: integer().references(() => rtTvShowData.id),
+  ...timestamps,
+})
 
-export const tvShowTopicsRelations = relations(tvShowTopics, ({ one }) => ({
-  tvShow: one(tvShowSources, {
-    fields: [tvShowTopics.tvShowId],
-    references: [tvShowSources.id],
+export const tvShowTopics = pgTable('tv_show_topics', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  tvShowId: integer('tv_show_id').notNull().references(() => tvShows.id),
+  topicId: integer('topic_id').notNull(),
+  topicType: text('topic_type').notNull(),
+  languages: text('languages').notNull(),
+  ...timestamps,
+})
+
+export const tvShowsRelations = relations(tvShows, ({ one, many }) => ({
+  topics: many(tvShowTopics),
+  tmdbData: one(tmdbTvShowsData, {
+    fields: [tvShows.tmdbId],
+    references: [tmdbTvShowsData.id],
+  }),
+  csfdData: one(csfdTvShowData, {
+    fields: [tvShows.csfdId],
+    references: [csfdTvShowData.id],
+  }),
+  rtData: one(rtTvShowData, {
+    fields: [tvShows.rtId],
+    references: [rtTvShowData.id],
   }),
 }))
 
-export const tmdbTvShowsDataRelations = relations(tmdbTvShowsData, ({ many }) => ({
+export const tvShowTopicsRelations = relations(tvShowTopics, ({ one }) => ({
+  tvShow: one(tvShows, {
+    fields: [tvShowTopics.tvShowId],
+    references: [tvShows.id],
+  }),
+}))
+
+export const tmdbTvShowsDataRelations = relations(tmdbTvShowsData, ({ one, many }) => ({
+  tvShow: one(tvShows, {
+    fields: [tmdbTvShowsData.id],
+    references: [tvShows.tmdbId],
+  }),
   genres: many(tmdbTvShowsToGenres),
   networks: many(tmdbTvShowToNetworks),
   seasons: many(tmdbSeasons),
 }))
 
-// Genre Relations
+export const csfdTvShowDataRelations = relations(csfdTvShowData, ({ one, many }) => ({
+  tvShow: one(tvShows, {
+    fields: [csfdTvShowData.id],
+    references: [tvShows.csfdId],
+  }),
+  genres: many(csfdTvShowsToGenres),
+}))
+
+export const rtTvShowDataRelations = relations(rtTvShowData, ({ one }) => ({
+  tvShow: one(tvShows, {
+    fields: [rtTvShowData.id],
+    references: [tvShows.rtId],
+  }),
+}))
+
 export const tmdbTvShowGenresRelations = relations(tmdbTvShowGenres, ({ many }) => ({
   tmdbTvShowsData: many(tmdbTvShowsToGenres),
 }))
 
-// TVShowGenres Relations
+export const csfdGenresRelations = relations(csfdGenres, ({ many }) => ({
+  tvShows: many(csfdTvShowsToGenres),
+}))
+
 export const tmdbTvShowsToGenresRelations = relations(tmdbTvShowsToGenres, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
     fields: [tmdbTvShowsToGenres.tvShowId],
@@ -161,12 +184,21 @@ export const tmdbTvShowsToGenresRelations = relations(tmdbTvShowsToGenres, ({ on
   }),
 }))
 
-// Network Relations
+export const csfdTvShowsToGenresRelations = relations(csfdTvShowsToGenres, ({ one }) => ({
+  tvShow: one(csfdTvShowData, {
+    fields: [csfdTvShowsToGenres.csfdId],
+    references: [csfdTvShowData.id],
+  }),
+  genre: one(csfdGenres, {
+    fields: [csfdTvShowsToGenres.genreId],
+    references: [csfdGenres.id],
+  }),
+}))
+
 export const tmdbNetworksRelations = relations(tmdbNetworks, ({ many }) => ({
   tmdbTvShowsData: many(tmdbTvShowToNetworks),
 }))
 
-// TVShowNetworks Relations
 export const tmdbTvShowToNetworksRelations = relations(tmdbTvShowToNetworks, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
     fields: [tmdbTvShowToNetworks.tvShowId],
@@ -178,7 +210,6 @@ export const tmdbTvShowToNetworksRelations = relations(tmdbTvShowToNetworks, ({ 
   }),
 }))
 
-// Season Relations
 export const tmdbSeasonsRelations = relations(tmdbSeasons, ({ one }) => ({
   tvShow: one(tmdbTvShowsData, {
     fields: [tmdbSeasons.tvShowId],
