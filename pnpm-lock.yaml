@@ -381,6 +381,15 @@ importers:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
 
+  libs/queues:
+    dependencies:
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      bullmq:
+        specifier: catalog:prod
+        version: 5.55.0
+
   libs/rt-scraper:
     dependencies:
       '@repo/database':
@@ -422,12 +431,21 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/queues':
+        specifier: workspace:*
+        version: link:../queues
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
       '@types/he':
         specifier: catalog:dev
         version: 1.2.3
+      bullmq:
+        specifier: catalog:prod
+        version: 5.55.0
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
@@ -456,6 +474,9 @@ importers:
       '@repo/csfd-scraper':
         specifier: workspace:*
         version: link:../../libs/csfd-scraper
+      '@repo/database':
+        specifier: workspace:*
+        version: 'link:'
       '@repo/rt-scraper':
         specifier: workspace:*
         version: link:../../libs/rt-scraper

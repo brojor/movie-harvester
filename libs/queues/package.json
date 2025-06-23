@@ -1,0 +1,19 @@
+{
+  "name": "@repo/queues",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Queues",
+  "exports": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "build": "tsup",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "bullmq": "catalog:prod"
+  }
+}
