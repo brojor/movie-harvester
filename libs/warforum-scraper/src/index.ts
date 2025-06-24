@@ -1,5 +1,6 @@
 import he from 'he'
 import { fetchHtml } from './infra/httpClient.js'
+import { indexMediaFromTopic } from './scraper/indexMediaFromTopic.js'
 
 export async function findCsfdIdInTopic(topicId: number): Promise<number | null> {
   const html = await fetchHtml(`viewtopic.php?t=${topicId}`)
@@ -11,3 +12,5 @@ export async function findCsfdIdInTopic(topicId: number): Promise<number | null>
 
   return null
 }
+
+export { indexMediaFromTopic }

@@ -1,4 +1,4 @@
-import type { CsfdTvShowDetails } from '@repo/csfd-scraper'
+import type { CsfdTvShowDetails } from '@repo/types'
 import type { Database } from '../../connection.js'
 import type { CsfdTvShowDataRepository } from './types.js'
 import { commonSchema, tvShowsSchema } from '../../index.js'

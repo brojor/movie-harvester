@@ -1,5 +1,4 @@
-import type { MovieRecord, TvShowRecord } from '@repo/database'
-import type { WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
+import type { MovieRecord, TvShowRecord, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import * as csfdScraper from '@repo/csfd-scraper'
 import { createDatabase, CsfdMovieDataRepo, CsfdTvShowDataRepo, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
 import { env } from '@repo/shared'

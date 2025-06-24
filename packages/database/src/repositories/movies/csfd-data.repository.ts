@@ -1,4 +1,4 @@
-import type { CsfdMovieDetails } from '@repo/csfd-scraper'
+import type { CsfdMovieDetails } from '@repo/types'
 import type { Database } from '../../connection.js'
 import type { CsfdMovieDataRepository } from './types.js'
 import { commonSchema, moviesSchema } from '../../index.js'

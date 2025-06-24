@@ -1,5 +1,4 @@
-import type { MovieRecord, TvShowRecord } from '@repo/database'
-import type { CsfdMovieDetails, CsfdTvShowDetails } from './types.js'
+import type { CsfdMovieDetails, CsfdTvShowDetails, MovieRecord, TvShowRecord } from '@repo/types'
 import { URLSearchParams } from 'node:url'
 import { makeHttpClient } from '@repo/shared'
 import * as cheerio from 'cheerio'

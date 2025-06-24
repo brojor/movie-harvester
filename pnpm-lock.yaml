@@ -492,9 +492,6 @@ importers:
 
   packages/database:
     dependencies:
-      '@repo/csfd-scraper':
-        specifier: workspace:*
-        version: link:../../libs/csfd-scraper
       '@repo/database':
         specifier: workspace:*
         version: 'link:'
