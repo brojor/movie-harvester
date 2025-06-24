@@ -3,7 +3,7 @@ import { populateCsfdMoviesData, populateCsfdTvShowsData } from '@repo/csfd-scra
 import { populateRtMoviesData, populateRtTvShowsData } from '@repo/rt-scraper'
 import { populateTmdbMoviesData, populateTmdbTvShowsData } from '@repo/tmdb-fetcher'
 
-import { parseMovieTopics, parseTvShowTopics } from '@repo/warforum-indexer'
+import { parseMovieTopics, parseTvShowTopics } from '@repo/warforum-scraper'
 
 async function main(): Promise<void> {
   await parseMovieTopics()

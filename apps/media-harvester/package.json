@@ -13,7 +13,7 @@
     "@repo/csfd-scraper": "workspace:*",
     "@repo/rt-scraper": "workspace:*",
     "@repo/tmdb-fetcher": "workspace:*",
-    "@repo/warforum-indexer": "workspace:*"
+    "@repo/warforum-scraper": "workspace:*"
   },
   "devDependencies": {
     "tsup": "catalog:dev",

@@ -1,10 +1,11 @@
 import type { CsfdMovieDetails } from '@repo/csfd-scraper'
 import type { RtDetails } from '@repo/rt-scraper'
+import type { TmdbMovieDetails } from '@repo/tmdb-fetcher'
 import type { Movie, TopicType } from '@repo/types'
-import type { TmdbMovieDetails } from 'libs/tmdb-fetcher/dist/index.js'
+import type { MovieRecord } from '../../types.js'
 
 export interface MovieRepository {
-  addMovie: (movie: Movie) => Promise<number>
+  firstOrCreate: (movie: Movie) => Promise<MovieRecord>
   setCsfdId: (movieId: number, csfdId: number) => Promise<void>
   setTmdbId: (movieId: number, tmdbId: number) => Promise<void>
   setRtId: (movieId: number, rtId: string) => Promise<void>

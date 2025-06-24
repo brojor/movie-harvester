@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "private": true,
   "description": "Shared types for movie harvester",
-
+  "exports": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",

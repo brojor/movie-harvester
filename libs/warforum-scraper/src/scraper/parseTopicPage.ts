@@ -1,4 +1,5 @@
-import type { MediaMetaWithSource, MediaType, MovieMetaWithSource, ParseTopicResult, TopicType, TvShowMetaWithSource } from '../types/domain.js'
+import type { MediaType, TopicType } from '@repo/types'
+import type { MediaMetaWithSource, MovieMetaWithSource, ParseTopicResult, TvShowMetaWithSource } from '../types/domain.js'
 import process from 'node:process'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'

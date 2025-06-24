@@ -10,7 +10,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-export const topicTypeEnum = pgEnum('topic_type', ['hd', 'uhd', 'hdDub', 'uhdDub'])
+export const sourceTypeEnum = pgEnum('movie_source_type', ['hd', 'uhd', 'hdDub', 'uhdDub'])
 
 export const tmdbMovieData = pgTable('tmdb_movie_data', {
   id: integer().primaryKey(),
@@ -97,7 +97,7 @@ export const movieTopics = pgTable('movie_topics', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   movieId: integer().notNull().references(() => movies.id),
   topicId: integer().notNull(),
-  sourceType: topicTypeEnum().notNull(),
+  sourceType: sourceTypeEnum().notNull(),
   ...timestamps,
 }, table => [
   uniqueIndex('unique_movie_source_type').on(table.movieId, table.sourceType),

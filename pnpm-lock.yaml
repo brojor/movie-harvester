@@ -197,9 +197,9 @@ importers:
       '@repo/tmdb-fetcher':
         specifier: workspace:*
         version: link:../../libs/tmdb-fetcher
-      '@repo/warforum-indexer':
+      '@repo/warforum-scraper':
         specifier: workspace:*
-        version: link:../../libs/warforum-indexer
+        version: link:../../libs/warforum-scraper
     devDependencies:
       tsup:
         specifier: catalog:dev
@@ -219,9 +219,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@repo/warforum-indexer':
+      '@repo/warforum-scraper':
         specifier: workspace:*
-        version: link:../../libs/warforum-indexer
+        version: link:../../libs/warforum-scraper
       bullmq:
         specifier: catalog:prod
         version: 5.55.0
@@ -308,6 +308,21 @@ importers:
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
+
+  apps/warforum-indexer:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@repo/queues':
+        specifier: workspace:*
+        version: link:../../libs/queues
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../../libs/types
+      '@repo/warforum-scraper':
+        specifier: workspace:*
+        version: link:../../libs/warforum-scraper
 
   apps/workers/csfd:
     dependencies:
@@ -426,7 +441,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/database
 
-  libs/warforum-indexer:
+  libs/warforum-scraper:
     dependencies:
       '@repo/database':
         specifier: workspace:*
@@ -489,9 +504,9 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../../libs/types
-      '@repo/warforum-indexer':
+      '@repo/warforum-scraper':
         specifier: workspace:*
-        version: link:../../libs/warforum-indexer
+        version: link:../../libs/warforum-scraper
       '@types/pg':
         specifier: catalog:dev
         version: 8.15.4
@@ -513,9 +528,9 @@ importers:
 
   packages/shared:
     dependencies:
-      '@repo/warforum-indexer':
+      '@repo/warforum-scraper':
         specifier: workspace:*
-        version: link:../../libs/warforum-indexer
+        version: link:../../libs/warforum-scraper
       axios:
         specifier: catalog:prod
         version: 1.10.0

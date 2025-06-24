@@ -1,6 +1,5 @@
-import type { MovieSource } from '@repo/database'
-import type { DubbedMovieCoreMeta, MediaType, MovieMetaWithSource, NonDubbedMovieCoreMeta, TopicType, TvShowCoreMeta, TvShowMetaWithSource } from '../types/domain.js'
-import { movieTopicIdMap } from '../types/domain.js'
+import type { DubbedMovie, MediaType, NonDubbedMovie, TopicType, TvShow } from '@repo/types'
+import type { MovieMetaWithSource, TvShowMetaWithSource } from '../types/domain.js'
 
 export function extractTopicId(url: string): number | null {
   const match = url.match(/t=(\d+)/)
@@ -11,9 +10,9 @@ export function extractTopicId(url: string): number | null {
   return Number.parseInt(match[1], 10)
 }
 
-export function parseMovieCoreMeta(topicTitle: string, isDubbed: false): NonDubbedMovieCoreMeta | null
-export function parseMovieCoreMeta(topicTitle: string, isDubbed: true): DubbedMovieCoreMeta | null
-export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDubbedMovieCoreMeta | DubbedMovieCoreMeta | null {
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: false): NonDubbedMovie | null
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: true): DubbedMovie | null
+export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDubbedMovie | DubbedMovie | null {
   const regex = /^(?:(.*?) \/ )?(.*?) \((\d{4})\)$/
   const match = topicTitle.match(regex)
 
@@ -45,18 +44,18 @@ export function parseMovieCoreMeta(topicTitle: string, isDubbed: boolean): NonDu
   }
 }
 
-export function getMovieTopicId(movie: MovieSource): number | null {
-  for (const key of Object.values(movieTopicIdMap)) {
-    const value = movie[key]
-    if (value) {
-      return value
-    }
-  }
-  console.error(`No topic ID found for movie: "${movie.id}"`)
-  return null
-}
+// export function getMovieTopicId(movie: Movie): number | null {
+//   for (const key of Object.values(movieTopicIdMap)) {
+//     const value = movie[key]
+//     if (value) {
+//       return value
+//     }
+//   }
+//   console.error(`No topic ID found for movie: "${movie.id}"`)
+//   return null
+// }
 
-export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
+export function parseTvShowCoreMeta(topicTitle: string): TvShow | null {
   const parts = removeParentheses(topicTitle).split('/').map(part => part.trim())
 
   if (parts.length < 2) {

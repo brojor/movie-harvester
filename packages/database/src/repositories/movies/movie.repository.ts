@@ -1,30 +1,53 @@
 import type { Movie } from '@repo/types'
 import type { Database } from '../../connection.js'
+import type { MovieRecord } from '../../types.js'
 import type { MovieRepository } from './types.js'
-import { eq } from 'drizzle-orm'
+import { and, desc, eq, or } from 'drizzle-orm'
 import { movies } from '../../schemas/movies.js'
 
 export class MovieRepo implements MovieRepository {
   constructor(private readonly db: Database) {}
 
-  async addMovie(movie: Movie): Promise<number> {
-    const [result] = await this.db.insert(movies).values(movie).returning({ id: movies.id })
-    if (!result) {
-      throw new Error('Failed to add movie')
+  async firstOrCreate(movie: Movie): Promise<MovieRecord> {
+    const [result] = await this.db.insert(movies).values(movie).onConflictDoNothing().returning()
+
+    if (result)
+      return result
+
+    const conditions = []
+
+    if (movie.czechTitle) {
+      conditions.push(and(eq(movies.czechTitle, movie.czechTitle), eq(movies.year, movie.year)))
     }
 
-    return result.id
+    if (movie.originalTitle) {
+      conditions.push(and(eq(movies.originalTitle, movie.originalTitle), eq(movies.year, movie.year)))
+    }
+
+    if (conditions.length > 0) {
+      const [existing] = await this.db.select().from(movies).where(or(...conditions))
+
+      if (existing)
+        return existing
+    }
+
+    throw new Error(`Failed to add movie: ${JSON.stringify(movie)}`)
   }
 
   async setCsfdId(movieId: number, csfdId: number): Promise<void> {
-    await this.db.update(movies).set({ csfdId }).where(eq(movies.id, movieId))
+    await this.db.update(movies).set({ csfdId, updatedAt: new Date() }).where(eq(movies.id, movieId))
   }
 
   async setTmdbId(movieId: number, tmdbId: number): Promise<void> {
-    await this.db.update(movies).set({ tmdbId }).where(eq(movies.id, movieId))
+    await this.db.update(movies).set({ tmdbId, updatedAt: new Date() }).where(eq(movies.id, movieId))
   }
 
   async setRtId(movieId: number, rtId: string): Promise<void> {
-    await this.db.update(movies).set({ rtId }).where(eq(movies.id, movieId))
+    await this.db.update(movies).set({ rtId, updatedAt: new Date() }).where(eq(movies.id, movieId))
+  }
+
+  async getLastUpdateDate(): Promise<Date> {
+    const [result] = await this.db.select({ updatedAt: movies.updatedAt }).from(movies).orderBy(desc(movies.updatedAt)).limit(1)
+    return result?.updatedAt ?? new Date(0)
   }
 }

@@ -1,9 +1,9 @@
 {
-  "name": "@repo/warforum-indexer",
+  "name": "@repo/warforum-scraper",
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Indexes movies from Warforum discussions",
+  "description": "Scrapes data from W.A.R. forum",
   "exports": "./dist/index.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,8 +15,11 @@
   },
   "dependencies": {
     "@repo/database": "workspace:*",
+    "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@repo/types": "workspace:*",
     "@types/he": "catalog:dev",
+    "bullmq": "catalog:prod",
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
     "drizzle-orm": "catalog:prod",

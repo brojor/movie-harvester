@@ -1,5 +1,5 @@
-import type { MediaType, MovieTopicId, TopicType, TvShowTopicId } from '../types/domain.js'
-import { movieTopicIdMap, tvShowTopicIdMap } from '../types/domain.js'
+import type { MediaType, MovieTopicId, TopicType, TvShowTopicId } from '@repo/types'
+import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/types'
 
 export function getMediaType(topicId: MovieTopicId | TvShowTopicId): MediaType {
   return topicId in movieTopicIdMap ? 'movie' : 'tvShow'

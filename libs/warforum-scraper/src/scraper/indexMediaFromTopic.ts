@@ -1,4 +1,5 @@
-import type { MediaMetaWithSource, MovieMetaWithSource, MovieTopicId, TvShowMetaWithSource, TvShowTopicId } from '../types/domain.js'
+import type { MovieTopicId, TvShowTopicId } from '@repo/types'
+import type { MediaMetaWithSource, MovieMetaWithSource, TvShowMetaWithSource } from '../types/domain.js'
 import { fetchHtml } from '../infra/httpClient.js'
 import { buildTopicUrl, getMediaType, getTopicType } from '../utils/topicHelpers.js'
 import { parseTopicPage } from './parseTopicPage.js'
