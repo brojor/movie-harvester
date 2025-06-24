@@ -108,3 +108,4 @@ export async function getTvShowDetails(csfdId: number): Promise<CsfdTvShowDetail
 }
 
 export * from './types.js'
+export * from './utils/htmlParsing.js'

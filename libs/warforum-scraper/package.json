@@ -14,6 +14,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@repo/csfd-scraper": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",

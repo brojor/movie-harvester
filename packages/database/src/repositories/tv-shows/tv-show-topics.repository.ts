@@ -1,6 +1,7 @@
 import type { TopicType } from '@repo/types'
 import type { Database } from '../../connection.js'
 import type { TvShowTopicsRepository } from './types.js'
+import { eq } from 'drizzle-orm'
 import { tvShowTopics } from '../../schemas/tv-shows.js'
 
 export class TvShowTopicsRepo implements TvShowTopicsRepository {
@@ -22,5 +23,10 @@ export class TvShowTopicsRepo implements TvShowTopicsRepository {
           updatedAt: new Date(),
         },
       })
+  }
+
+  async getTopicsIds(tvShowId: number): Promise<number[]> {
+    const topics = await this.db.select().from(tvShowTopics).where(eq(tvShowTopics.tvShowId, tvShowId))
+    return topics.map(topic => topic.topicId)
   }
 }

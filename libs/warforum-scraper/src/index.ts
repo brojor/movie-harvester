@@ -1,15 +1,13 @@
-// export async function getCsfdMovieIdFromTopic(movie: MovieRecord): Promise<string | null> {
-//   const topicId = getMovieTopicId(movie)
-//   if (!topicId)
-//     return null
+import he from 'he'
+import { fetchHtml } from './infra/httpClient.js'
 
-//   return fetchCsfdId(topicId)
-// }
+export async function findCsfdIdInTopic(topicId: number): Promise<number | null> {
+  const html = await fetchHtml(`viewtopic.php?t=${topicId}`)
+  const decodedHtml = he.decode(html)
+  const match = decodedHtml.match(/(?:www\.)?csfd\.cz\/film\/(\d+)/)
+  if (match) {
+    return Number.parseInt(match[1])
+  }
 
-// export async function getCsfdTvShowIdFromTopic(tvShow: TvShowRecord): Promise<string | null> {
-//   const topicId = await getTvShowTopicId(tvShow)
-//   if (!topicId)
-//     return null
-
-//   return fetchCsfdId(topicId)
-// }
+  return null
+}

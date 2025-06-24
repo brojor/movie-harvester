@@ -338,6 +338,9 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../../../libs/types
+      '@repo/warforum-scraper':
+        specifier: workspace:*
+        version: link:../../../libs/warforum-scraper
       bullmq:
         specifier: catalog:prod
         version: 5.55.0
@@ -443,6 +446,9 @@ importers:
 
   libs/warforum-scraper:
     dependencies:
+      '@repo/csfd-scraper':
+        specifier: workspace:*
+        version: link:../csfd-scraper
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
