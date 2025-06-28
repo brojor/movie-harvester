@@ -45,8 +45,11 @@ export interface DubbedMovie {
 export type Movie = NonDubbedMovie | DubbedMovie
 
 export interface TvShow {
-  readonly czechTitle?: string
+  readonly czechTitle: string
   readonly originalTitle: string
+}
+
+export interface TvShowWithLanguages extends TvShow {
   readonly languages: string[]
 }
 

@@ -9,9 +9,6 @@ catalogs:
     '@antfu/nip':
       specifier: ^0.1.0
       version: 0.1.0
-    '@hono/node-server':
-      specifier: ^1.14.4
-      version: 1.14.4
     '@iconify-json/circle-flags':
       specifier: ^1.2.6
       version: 1.2.6
@@ -39,9 +36,6 @@ catalogs:
     tsup:
       specifier: ^8.5.0
       version: 8.5.0
-    typescript:
-      specifier: ^5.8.3
-      version: 5.8.3
     unocss-preset-scrollbar-hide:
       specifier: ^1.0.1
       version: 1.0.1
@@ -104,9 +98,6 @@ catalogs:
     he:
       specifier: ^1.2.0
       version: 1.2.0
-    hono:
-      specifier: ^4.7.11
-      version: 4.8.2
     http-cookie-agent:
       specifier: ^7.0.1
       version: 7.0.1
@@ -185,62 +176,6 @@ importers:
       tsup:
         specifier: catalog:dev
         version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
-
-  apps/media-harvester:
-    dependencies:
-      '@repo/csfd-scraper':
-        specifier: workspace:*
-        version: link:../../libs/csfd-scraper
-      '@repo/rt-scraper':
-        specifier: workspace:*
-        version: link:../../libs/rt-scraper
-      '@repo/tmdb-fetcher':
-        specifier: workspace:*
-        version: link:../../libs/tmdb-fetcher
-      '@repo/warforum-scraper':
-        specifier: workspace:*
-        version: link:../../libs/warforum-scraper
-    devDependencies:
-      tsup:
-        specifier: catalog:dev
-        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0)
-      tsx:
-        specifier: catalog:prod
-        version: 4.20.3
-
-  apps/meta-resolver:
-    dependencies:
-      '@hono/node-server':
-        specifier: catalog:dev
-        version: 1.14.4(hono@4.8.2)
-      '@repo/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@repo/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      '@repo/warforum-scraper':
-        specifier: workspace:*
-        version: link:../../libs/warforum-scraper
-      bullmq:
-        specifier: catalog:prod
-        version: 5.55.0
-      cheerio:
-        specifier: catalog:prod
-        version: 1.1.0
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
-      hono:
-        specifier: catalog:prod
-        version: 4.8.2
-      typescript:
-        specifier: catalog:dev
-        version: 5.8.3
-    devDependencies:
-      '@antfu/nip':
-        specifier: ^0.1.0
-        version: 0.1.0
 
   apps/movie-browser:
     dependencies:
@@ -437,6 +372,15 @@ importers:
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
+
+  libs/tv-show-service:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
 
   libs/types:
     dependencies:
@@ -1175,12 +1119,6 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       vue: ^3.2.0
-
-  '@hono/node-server@1.14.4':
-    resolution: {integrity: sha512-DnxpshhYewr2q9ZN8ez/M5mmc3sucr8CT1sIgIy1bkeUXut9XWDkqHoFHRhWIQgkYnKpVRxunyhK7WzpJeJ6qQ==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -3908,10 +3846,6 @@ packages:
   he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
-
-  hono@4.8.2:
-    resolution: {integrity: sha512-hM+1RIn9PK1I6SiTNS6/y7O1mvg88awYLFEuEtoiMtRyT3SD2iu9pSFgbBXT3b1Ua4IwzvSTLvwO0SEhDxCi4w==}
-    engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -7091,10 +7025,6 @@ snapshots:
     dependencies:
       '@tanstack/vue-virtual': 3.13.10(vue@3.5.17(typescript@5.8.3))
       vue: 3.5.17(typescript@5.8.3)
-
-  '@hono/node-server@1.14.4(hono@4.8.2)':
-    dependencies:
-      hono: 4.8.2
 
   '@humanfs/core@0.19.1': {}
 
@@ -10337,8 +10267,6 @@ snapshots:
       function-bind: 1.1.2
 
   he@1.2.0: {}
-
-  hono@4.8.2: {}
 
   hookable@5.5.3: {}
 

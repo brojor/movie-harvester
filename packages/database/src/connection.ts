@@ -5,6 +5,8 @@ import * as moviesSchema from './schemas/movies.js'
 import * as tvShowsSchema from './schemas/tv-shows.js'
 
 export type Database = ReturnType<typeof drizzle>
+export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0]
+
 let dbInstance: Database | null = null
 
 export function createDatabase(): Database {

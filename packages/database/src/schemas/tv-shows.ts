@@ -11,9 +11,9 @@ import {
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-const sourceTypeValues = Object.values(tvShowTopicIdMap) as [string, ...string[]]
+const topicTypeValues = Object.values(tvShowTopicIdMap) as [string, ...string[]]
 
-export const sourceTypeEnum = pgEnum('tv_show_source_type', sourceTypeValues)
+export const topicTypeEnum = pgEnum('tv_show_topic_type', topicTypeValues)
 
 export const tmdbTvShowsData = pgTable('tmdb_tv_shows_data', {
   id: integer().primaryKey(),
@@ -115,11 +115,11 @@ export const tvShowTopics = pgTable('tv_show_topics', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   tvShowId: integer('tv_show_id').notNull().references(() => tvShows.id),
   topicId: integer('topic_id').notNull(),
-  sourceType: sourceTypeEnum().notNull(),
-  languages: text('languages').notNull(),
+  topicType: topicTypeEnum().notNull(),
+  languages: text('languages').array().notNull(),
   ...timestamps,
 }, table => [
-  uniqueIndex('unique_tv_show_source_type').on(table.tvShowId, table.sourceType, table.languages),
+  uniqueIndex('unique_tv_show_topic_type').on(table.tvShowId, table.topicType, table.languages),
 ])
 
 export const tvShowsRelations = relations(tvShows, ({ one, many }) => ({

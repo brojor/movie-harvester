@@ -1,5 +1,5 @@
+import type { CsfdGenre } from '@repo/types'
 import type { CheerioAPI } from 'cheerio'
-import type { CsfdGenre } from '../types.js'
 import * as cheerio from 'cheerio'
 
 interface Origin {

@@ -1,12 +1,12 @@
 import type { TvShow } from '@repo/types'
-import type { Database } from '../../connection.js'
+import type { Database, Transaction } from '../../connection.js'
 import type { TvShowRecord } from '../../types.js'
 import type { TvShowRepository } from './types.js'
 import { desc, eq } from 'drizzle-orm'
 import { tvShows } from '../../schemas/tv-shows.js'
 
 export class TvShowRepo implements TvShowRepository {
-  constructor(private readonly db: Database) {}
+  constructor(private readonly db: Database | Transaction) {}
 
   async addTvShow(tvShow: TvShow): Promise<TvShowRecord> {
     const [result] = await this.db.insert(tvShows).values(tvShow).onConflictDoNothing().returning()

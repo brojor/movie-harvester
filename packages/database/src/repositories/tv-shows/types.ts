@@ -12,7 +12,7 @@ export interface TvShowRepository {
 }
 
 export interface TvShowTopicsRepository {
-  setTvShowTopicSource: (tvShowId: number, languages: string[], topicId: number, sourceType: TopicType) => Promise<void>
+  setTvShowTopicSource: (tvShowId: number, languages: string[], topicId: number, topicType: TopicType) => Promise<void>
 }
 
 export interface CsfdTvShowDataRepository {
