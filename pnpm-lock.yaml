@@ -110,9 +110,6 @@ catalogs:
     lodash-es:
       specifier: ^4.17.21
       version: 4.17.21
-    node-postgres:
-      specifier: ^0.6.2
-      version: 0.6.2
     nuxt:
       specifier: ^3.17.4
       version: 3.17.5
@@ -324,9 +321,6 @@ importers:
 
   libs/csfd-scraper:
     dependencies:
-      '@repo/database':
-        specifier: workspace:*
-        version: link:../../packages/database
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -336,9 +330,6 @@ importers:
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
 
   libs/media-service:
     dependencies:
@@ -369,15 +360,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@repo/types':
-        specifier: workspace:*
-        version: link:../types
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
 
   libs/tmdb-fetcher:
     dependencies:
@@ -387,9 +372,6 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
 
   libs/types:
     dependencies:
@@ -399,15 +381,6 @@ importers:
 
   libs/warforum-scraper:
     dependencies:
-      '@repo/csfd-scraper':
-        specifier: workspace:*
-        version: link:../csfd-scraper
-      '@repo/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@repo/queues':
-        specifier: workspace:*
-        version: link:../queues
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -417,18 +390,12 @@ importers:
       '@types/he':
         specifier: catalog:dev
         version: 1.2.3
-      bullmq:
-        specifier: catalog:prod
-        version: 5.55.0
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
       date-fns:
         specifier: catalog:prod
         version: 4.1.0
-      drizzle-orm:
-        specifier: catalog:prod
-        version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
       he:
         specifier: catalog:prod
         version: 1.2.0
@@ -445,9 +412,6 @@ importers:
 
   packages/database:
     dependencies:
-      '@repo/database':
-        specifier: workspace:*
-        version: 'link:'
       '@repo/rt-scraper':
         specifier: workspace:*
         version: link:../../libs/rt-scraper
@@ -460,33 +424,21 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../../libs/types
-      '@repo/warforum-scraper':
-        specifier: workspace:*
-        version: link:../../libs/warforum-scraper
       '@types/pg':
         specifier: catalog:dev
         version: 8.15.4
-      dotenv:
-        specifier: catalog:prod
-        version: 16.5.0
       drizzle-kit:
         specifier: catalog:dev
         version: 0.31.1
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
-      node-postgres:
-        specifier: catalog:prod
-        version: 0.6.2
       pg:
         specifier: catalog:prod
         version: 8.16.2
 
   packages/shared:
     dependencies:
-      '@repo/warforum-scraper':
-        specifier: workspace:*
-        version: link:../../libs/warforum-scraper
       axios:
         specifier: catalog:prod
         version: 1.10.0
@@ -4656,9 +4608,6 @@ packages:
 
   node-mock-http@1.0.0:
     resolution: {integrity: sha512-0uGYQ1WQL1M5kKvGRXWQ3uZCHtLTO8hln3oBjIusM75WoesZ909uQJs/Hb946i2SS+Gsrhkaa6iAO17jRIv6DQ==}
-
-  node-postgres@0.6.2:
-    resolution: {integrity: sha512-wjaW+KutPOFemtBDuogyy6OMMOs2vpSOwuqbUhFUbrDEOTk66K2lmRyvOdO4t26qGtnPyZXQ4bAuF17cBhi5aQ==}
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
@@ -11331,8 +11280,6 @@ snapshots:
   node-gyp-build@4.8.4: {}
 
   node-mock-http@1.0.0: {}
-
-  node-postgres@0.6.2: {}
 
   node-releases@2.0.19: {}
 

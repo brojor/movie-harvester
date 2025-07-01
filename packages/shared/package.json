@@ -12,7 +12,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/warforum-scraper": "workspace:*",
     "axios": "catalog:prod",
     "dotenv": "catalog:prod",
     "http-cookie-agent": "catalog:prod",

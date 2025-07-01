@@ -13,10 +13,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "cheerio": "catalog:prod",
-    "drizzle-orm": "catalog:prod"
+    "cheerio": "catalog:prod"
   }
 }

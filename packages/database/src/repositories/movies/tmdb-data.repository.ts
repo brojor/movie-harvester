@@ -1,4 +1,4 @@
-import type { TmdbMovieDetails } from 'libs/tmdb-fetcher/dist/index.js'
+import type { TmdbMovieDetails } from '@repo/tmdb-fetcher'
 import type { Database } from '../../connection.js'
 import type { TmdbMovieDataRepository } from './types.js'
 import { moviesSchema } from '../../index.js'

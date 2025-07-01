@@ -17,17 +17,13 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/database": "workspace:*",
     "@repo/rt-scraper": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/tmdb-fetcher": "workspace:*",
     "@repo/types": "workspace:*",
-    "@repo/warforum-scraper": "workspace:*",
     "@types/pg": "catalog:dev",
-    "dotenv": "catalog:prod",
     "drizzle-kit": "catalog:dev",
     "drizzle-orm": "catalog:prod",
-    "node-postgres": "catalog:prod",
     "pg": "catalog:prod"
   }
 }
