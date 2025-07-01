@@ -1,4 +1,4 @@
-name: Build and deploy media-harvester
+name: Build and deploy workers and indexer
 
 on:
   push:
@@ -23,19 +23,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm --filter "./packages/*" run build
-
-      - name: Build libraries
-        run: pnpm --filter "./libs/*" run build
-
-      - name: Build media-harvester
-        working-directory: apps/media-harvester
+      - name: Build
         run: pnpm run build
 
       - name: Create deployment archive
-        working-directory: apps/media-harvester
-        run: tar czf release.tar.gz dist ecosystem.config.js
+        run: |
+          mkdir -p deployment
+          cp -r apps/workers/*/dist deployment/workers/
+          cp -r apps/warforum-indexer/dist deployment/warforum-indexer/
+          cp ecosystem.config.js deployment/
+          tar czf release.tar.gz deployment/
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v2
@@ -50,7 +47,7 @@ jobs:
           RELEASE_DIR="/var/www/media-harvester/releases/$TIMESTAMP"
 
           ssh -o StrictHostKeyChecking=no deploy@prod-01 "mkdir -p $RELEASE_DIR"
-          scp -o StrictHostKeyChecking=no apps/media-harvester/release.tar.gz deploy@prod-01:$RELEASE_DIR/
+          scp -o StrictHostKeyChecking=no release.tar.gz deploy@prod-01:$RELEASE_DIR/
 
           ssh -o StrictHostKeyChecking=no deploy@prod-01 "
             cd $RELEASE_DIR && \
