@@ -1,45 +1,48 @@
-import { createDatabase, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
-import { csfdQueue, rtQueue, tmdbQueue } from '@repo/queues'
+import { createDatabase, MovieRepo, TvShowRepo } from '@repo/database'
+import { MediaService } from '@repo/media-service'
+import { tmdbQueue } from '@repo/queues'
 import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/types'
 import { indexMediaFromTopic } from '@repo/warforum-scraper'
 
 const db = createDatabase()
 export async function parseMovieTopics(): Promise<void> {
+  const mediaService = new MediaService(db)
   const movieRepo = new MovieRepo(db)
-  const movieTopicsRepo = new MovieTopicsRepo(db)
   const lastRun = await movieRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(movieTopicIdMap)) {
-    const movies = await indexMediaFromTopic(topicId, lastRun)
+    const movieTopics = await indexMediaFromTopic(topicId, lastRun)
 
-    for (const movie of movies) {
-      const movieRecord = await movieRepo.firstOrCreate(movie.coreMeta)
-      await movieTopicsRepo.setMovieTopicSource(movieRecord.id, topicId, topicType)
+    for (const movieTopic of movieTopics) {
+      if (movieTopic.titles.length === 2) {
+        const isDubbed = movieTopic.type === 'hdDub' || movieTopic.type === 'uhdDub'
+        const [czechTitle, originalTitle] = isDubbed ? movieTopic.titles : movieTopic.titles.reverse()
 
-      if (!movieRecord.csfdId)
-        csfdQueue.add('find-id', movieRecord)
-      if (!movieRecord.rtId)
-        rtQueue.add('find-id', movieRecord)
-      if (!movieRecord.tmdbId)
-        tmdbQueue.add('find-id', movieRecord)
+        await mediaService.addMovieWithTopic({ czechTitle, originalTitle, year: movieTopic.year }, topicId, topicType)
+      }
+      else {
+        tmdbQueue.add('find-movie', movieTopic)
+      }
     }
   }
 }
 
 export async function parseTvShowTopics(): Promise<void> {
+  const mediaService = new MediaService(db)
   const tvShowRepo = new TvShowRepo(db)
-  const tvShowTopicsRepo = new TvShowTopicsRepo(db)
   const lastRun = await tvShowRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(tvShowTopicIdMap)) {
-    const tvShows = await indexMediaFromTopic(topicId, lastRun)
+    const tvShowsTopics = await indexMediaFromTopic(topicId, lastRun)
 
-    for (const tvShow of tvShows) {
-      const tvShowRecord = await tvShowRepo.addTvShow(tvShow.coreMeta)
-      await tvShowTopicsRepo.setTvShowTopicSource(tvShowRecord.id, tvShow.coreMeta.languages, topicId, topicType)
-      csfdQueue.add('find-id', tvShowRecord)
-      rtQueue.add('find-id', tvShowRecord)
-      tmdbQueue.add('find-id', tvShowRecord)
+    for (const tvShowTopic of tvShowsTopics) {
+      if (tvShowTopic.titles.length === 2) {
+        const [czechTitle, originalTitle] = tvShowTopic.titles
+        await mediaService.addTvShowWithTopic({ czechTitle, originalTitle }, tvShowTopic.languages, tvShowTopic.id, topicType)
+      }
+      else {
+        tmdbQueue.add('find-tv-show', tvShowTopic)
+      }
     }
   }
 }

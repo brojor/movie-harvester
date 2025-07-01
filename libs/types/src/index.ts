@@ -53,7 +53,7 @@ export interface TvShowWithLanguages extends TvShow {
   readonly languages: string[]
 }
 
-export type WorkerAction = 'find-id' | 'get-meta'
+export type WorkerAction = 'find-id' | 'get-meta' | 'find-tv-show' | 'find-movie'
 
 export interface Identifiable {
   id: number | string
@@ -83,3 +83,30 @@ export interface CsfdMovieDetails {
 }
 
 export type CsfdTvShowDetails = Omit<CsfdMovieDetails, 'runtime' | 'originalTitle' | 'releaseYear'>
+
+export interface TvShowCoreMeta {
+  readonly titles: string[]
+  readonly languages: string[]
+}
+
+export interface MovieCoreMeta {
+  readonly titles: string[]
+  readonly year: number
+}
+
+export interface TvShowTopic extends TvShowCoreMeta {
+  readonly id: number
+  readonly type: TvShowTopicType
+}
+
+export interface MovieTopic extends MovieCoreMeta {
+  readonly id: number
+  readonly type: MovieTopicType
+}
+
+export type MediaTopic<T> = T extends MovieTopicId ? MovieTopic : TvShowTopic
+
+export interface ParseTopicResult<T> {
+  mediaItems: T[]
+  reachedCutoff: boolean
+}

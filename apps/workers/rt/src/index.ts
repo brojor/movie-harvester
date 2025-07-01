@@ -30,6 +30,9 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         await rtMovieRepo.save(movieDetails)
         return { id: rtId }
       }
+
+      default:
+        throw new Error(`Unknown action: ${job.name}`)
     }
   },
   { connection, prefix: 'rt' },
@@ -57,6 +60,9 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         await rtTvShowRepo.save(meta)
         return { id: rtId }
       }
+
+      default:
+        throw new Error(`Unknown action: ${job.name}`)
     }
   },
   { connection, prefix: 'rt' },

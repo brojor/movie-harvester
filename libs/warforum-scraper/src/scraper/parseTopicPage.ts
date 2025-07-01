@@ -1,19 +1,18 @@
-import type { MediaType, TopicType } from '@repo/types'
-import type { MediaMetaWithSource, MovieMetaWithSource, ParseTopicResult, TvShowMetaWithSource } from '../types/domain.js'
+import type { MediaType, MovieTopic, MovieTopicType, ParseTopicResult, TopicType, TvShowTopic, TvShowTopicType } from '@repo/types'
 import process from 'node:process'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'
-import { extractTopicRows, parseTopicId, parseTopicTitle } from '../utils/htmlParsing.js'
-import { parseMediaItem } from '../utils/parsing.js'
+import { extractTopicRows, parseTopicId, parseTopicTitle as parseTopicTitleText } from '../utils/htmlParsing.js'
+import { parseMovieCoreMeta, parseTvShowCoreMeta } from '../utils/parsing.js'
 
 export function parseTopicPage<T extends MediaType>(
   html: string,
   topicType: TopicType,
   mediaType: T,
   cutoffDate: Date,
-): ParseTopicResult<MediaMetaWithSource<T>> {
+): ParseTopicResult<MovieTopic | TvShowTopic> {
   const $ = cheerio.load(html)
-  const mediaItems: (MovieMetaWithSource | TvShowMetaWithSource)[] = []
+  const mediaItems: (MovieTopic | TvShowTopic)[] = []
   let lastRowDate: Date = new Date()
 
   const rows = extractTopicRows($)
@@ -41,24 +40,32 @@ export function parseTopicPage<T extends MediaType>(
     if (isOld(date, cutoffDate))
       return
 
-    const title = parseTopicTitle(row, $)
-    const sourceTopic = parseTopicId(row, $)
+    const topicTitleText = parseTopicTitleText(row, $)
+    const topicId = parseTopicId(row, $)
 
-    if (!title || !sourceTopic) {
+    if (!topicTitleText || !topicId) {
       console.error('Missing title or sourceTopic, skipping row')
       return
     }
 
-    const parsedItem = parseMediaItem(title, sourceTopic, mediaType, topicType)
-    if (parsedItem) {
-      mediaItems.push(parsedItem)
+    if (mediaType === 'movie') {
+      const movieCoreMeta = parseMovieCoreMeta(topicTitleText)
+      if (movieCoreMeta) {
+        mediaItems.push({ ...movieCoreMeta, id: topicId, type: topicType as MovieTopicType })
+      }
+    }
+    else {
+      const tvShowCoreMeta = parseTvShowCoreMeta(topicTitleText)
+      if (tvShowCoreMeta) {
+        mediaItems.push({ ...tvShowCoreMeta, id: topicId, type: topicType as TvShowTopicType })
+      }
     }
   })
 
   const reachedCutoff = isOld(lastRowDate, cutoffDate)
 
   return {
-    mediaItems: mediaItems as MediaMetaWithSource<T>[],
+    mediaItems,
     reachedCutoff,
   }
 }

@@ -4,7 +4,7 @@ import type { CsfdTvShowDetails, TopicType, TvShow } from '@repo/types'
 import type { TvShowRecord } from '../../types.js'
 
 export interface TvShowRepository {
-  addTvShow: (tvShow: TvShow) => Promise<TvShowRecord>
+  firstOrCreate: (tvShow: TvShow) => Promise<TvShowRecord>
   setCsfdId: (tvShowId: number, csfdId: number) => Promise<void>
   setTmdbId: (tvShowId: number, tmdbId: number) => Promise<void>
   setRtId: (tvShowId: number, rtId: string) => Promise<void>

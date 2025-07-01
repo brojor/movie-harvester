@@ -249,6 +249,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/media-service':
+        specifier: workspace:*
+        version: link:../../libs/media-service
       '@repo/queues':
         specifier: workspace:*
         version: link:../../libs/queues
@@ -303,6 +306,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../../packages/database
+      '@repo/media-service':
+        specifier: workspace:*
+        version: link:../../../libs/media-service
       '@repo/shared':
         specifier: workspace:*
         version: link:../../../packages/shared
@@ -333,6 +339,18 @@ importers:
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
+
+  libs/media-service:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@repo/queues':
+        specifier: workspace:*
+        version: link:../queues
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
 
   libs/queues:
     dependencies:
@@ -372,15 +390,6 @@ importers:
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.4)(pg@8.16.2)
-
-  libs/tv-show-service:
-    dependencies:
-      '@repo/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@repo/types':
-        specifier: workspace:*
-        version: link:../types
 
   libs/types:
     dependencies:

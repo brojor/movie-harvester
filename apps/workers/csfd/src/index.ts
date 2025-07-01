@@ -65,6 +65,8 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         return handleFindId(job.data as MovieRecord, true)
       case 'get-meta':
         return handleGetMeta((job.data as { id: number }).id, true)
+      default:
+        throw new Error(`Unknown action: ${job.name}`)
     }
   },
   { connection, prefix: 'csfd' },
@@ -82,6 +84,8 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const { id } = job.data as { id: number }
         return handleGetMeta(id, false)
       }
+      default:
+        throw new Error(`Unknown action: ${job.name}`)
     }
   },
   { connection, prefix: 'csfd' },

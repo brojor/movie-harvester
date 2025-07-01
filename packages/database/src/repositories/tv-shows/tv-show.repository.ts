@@ -2,19 +2,31 @@ import type { TvShow } from '@repo/types'
 import type { Database, Transaction } from '../../connection.js'
 import type { TvShowRecord } from '../../types.js'
 import type { TvShowRepository } from './types.js'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, or } from 'drizzle-orm'
 import { tvShows } from '../../schemas/tv-shows.js'
 
 export class TvShowRepo implements TvShowRepository {
-  constructor(private readonly db: Database | Transaction) {}
+  constructor(private readonly db: Database | Transaction) { }
 
-  async addTvShow(tvShow: TvShow): Promise<TvShowRecord> {
+  async firstOrCreate(tvShow: TvShow): Promise<TvShowRecord> {
     const [result] = await this.db.insert(tvShows).values(tvShow).onConflictDoNothing().returning()
-    if (!result) {
-      throw new Error('Failed to add tv show')
-    }
+    if (result)
+      return result
 
-    return result
+    const [existing] = await this.db
+      .select()
+      .from(tvShows)
+      .where(
+        or(
+          eq(tvShows.czechTitle, tvShow.czechTitle),
+          eq(tvShows.originalTitle, tvShow.originalTitle),
+        ),
+      )
+
+    if (existing)
+      return existing
+
+    throw new Error(`Failed to add tv show: ${JSON.stringify(tvShow)}`)
   }
 
   async setCsfdId(tvShowId: number, csfdId: number): Promise<void> {

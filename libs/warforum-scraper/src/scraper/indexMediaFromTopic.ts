@@ -1,5 +1,4 @@
-import type { MovieTopicId, TvShowTopicId } from '@repo/types'
-import type { MediaMetaWithSource, MovieMetaWithSource, TvShowMetaWithSource } from '../types/domain.js'
+import type { MediaTopic, MovieTopic, MovieTopicId, TvShowTopic, TvShowTopicId } from '@repo/types'
 import { fetchHtml } from '../infra/httpClient.js'
 import { buildTopicUrl, getMediaType, getTopicType } from '../utils/topicHelpers.js'
 import { parseTopicPage } from './parseTopicPage.js'
@@ -7,8 +6,8 @@ import { parseTopicPage } from './parseTopicPage.js'
 export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId>(
   topicId: T,
   cutoffDate: Date,
-): Promise<MediaMetaWithSource<T>[]> {
-  const items: (MovieMetaWithSource | TvShowMetaWithSource)[] = []
+): Promise<MediaTopic<T>[]> {
+  const items: (MovieTopic | TvShowTopic)[] = []
   const mediaType = getMediaType(topicId)
   const topicType = getTopicType(topicId)
 
@@ -29,5 +28,5 @@ export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId
     page++
   }
 
-  return items as MediaMetaWithSource<T>[]
+  return items as MediaTopic<T>[]
 }

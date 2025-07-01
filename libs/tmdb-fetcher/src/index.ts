@@ -23,9 +23,9 @@ export async function findTmdbMovieId(movie: MovieRecord): Promise<number> {
   ].filter(isValidMovieSearchCandidate)
 
   for (const candidate of basicCandidates) {
-    const movieId = await searchAndMatchMovie(candidate)
-    if (movieId)
-      return movieId
+    const movie = await searchMovie(candidate)
+    if (movie)
+      return movie.id
   }
 
   throw new Error(`TMDB ID for movie ${movie.id} not found`)
@@ -38,22 +38,24 @@ export async function findTmdbTvShowId(tvShow: TvShowRecord): Promise<number> {
   ].filter(isValidTvShowSearchCandidate)
 
   for (const candidate of basicCandidates) {
-    const tvShowId = await searchAndMatchTvShow(candidate)
-    if (tvShowId)
-      return tvShowId
+    const tvShow = await searchTvShow(candidate)
+    if (tvShow)
+      return tvShow.id
   }
 
   throw new Error(`TMDB ID for tv show ${tvShow.id} not found`)
 }
 
-async function searchAndMatchMovie({ title, year }: SearchMovieCandidate): Promise<number | null> {
+export async function searchMovie({ title, year }: SearchMovieCandidate): Promise<MovieSearchResult | null> {
   const searchResults = await searchMovies(title, year)
-  return findBestMovieMatch(searchResults, title, year)
+  const match = findMovieMatch(searchResults, title, year)
+  return match ?? null
 }
 
-async function searchAndMatchTvShow({ title }: SearchTvShowCandidate): Promise<number | null> {
+export async function searchTvShow({ title }: SearchTvShowCandidate): Promise<TvShowSearchResult | null> {
   const searchResults = await searchTvShows(title)
-  return findBestTvShowMatch(searchResults, title)
+  const match = findTvShowMatch(searchResults, title)
+  return match ?? null
 }
 
 async function searchMovies(title: string, year: number): Promise<MovieSearchResult[]> {
@@ -77,7 +79,7 @@ async function searchTvShows(title: string): Promise<TvShowSearchResult[]> {
   return response.results
 }
 
-function findBestMovieMatch(searchResults: MovieSearchResult[], title: string, year: number): number | null {
+function findMovieMatch(searchResults: MovieSearchResult[], title: string, year: number): MovieSearchResult | null {
   const normalizedTitle = title.toLowerCase()
   const acceptableYears = [year - 1, year, year + 1]
 
@@ -89,17 +91,17 @@ function findBestMovieMatch(searchResults: MovieSearchResult[], title: string, y
     return titleMatch && yearMatch
   })
 
-  return match?.id ?? null
+  return match ?? null
 }
 
-function findBestTvShowMatch(searchResults: TvShowSearchResult[], title: string): number | null {
+function findTvShowMatch(searchResults: TvShowSearchResult[], title: string): TvShowSearchResult | null {
   const normalizedTitle = title.toLowerCase()
   const match = searchResults.find((result) => {
     const resultTitles = [result.original_name, result.name].map(t => t.toLowerCase())
     return resultTitles.includes(normalizedTitle)
   })
 
-  return match?.id ?? null
+  return match ?? null
 }
 
 export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {

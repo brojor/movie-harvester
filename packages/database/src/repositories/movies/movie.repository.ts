@@ -1,12 +1,12 @@
 import type { Movie } from '@repo/types'
-import type { Database } from '../../connection.js'
+import type { Database, Transaction } from '../../connection.js'
 import type { MovieRecord } from '../../types.js'
 import type { MovieRepository } from './types.js'
 import { and, desc, eq, or } from 'drizzle-orm'
 import { movies } from '../../schemas/movies.js'
 
 export class MovieRepo implements MovieRepository {
-  constructor(private readonly db: Database) {}
+  constructor(private readonly db: Database | Transaction) {}
 
   async firstOrCreate(movie: Movie): Promise<MovieRecord> {
     const [result] = await this.db.insert(movies).values(movie).onConflictDoNothing().returning()
