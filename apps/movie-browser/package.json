@@ -6,8 +6,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "type-check": "tsc --noEmit"
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@headlessui/vue": "catalog:prod",

@@ -1,5 +1,5 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
-import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TmdbMovieDetails, TmdbTvShowDetails, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from './types.js'
+import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TmdbMovieDetails, TmdbTvShowDetails, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from '@repo/types'
 import { env, makeHttpClient, normalizeTitle } from '@repo/shared'
 
 // Rate limit is ~50 requests per second
@@ -153,4 +153,4 @@ export async function getTvShowDetails(id: number): Promise<TmdbTvShowDetails> {
   }
 }
 
-export * from './types.js'
+export * from '@repo/types'

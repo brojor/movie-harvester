@@ -1,4 +1,4 @@
-import { tvShowTopicIdMap } from '@repo/types'
+import { tvShowTopicIdMap } from '@repo/shared'
 import { relations } from 'drizzle-orm'
 import {
   integer,

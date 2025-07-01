@@ -1,6 +1,5 @@
-import type { RtDetails } from '@repo/rt-scraper'
-import type { TmdbMovieDetails } from '@repo/tmdb-fetcher'
-import type { CsfdMovieDetails, Movie, TopicType } from '@repo/types'
+import type { TopicType } from '@repo/shared'
+import type { CsfdMovieDetails, Movie, RtDetails, TmdbMovieDetails } from '@repo/types'
 import type { MovieRecord } from '../../types.js'
 
 export interface MovieRepository {

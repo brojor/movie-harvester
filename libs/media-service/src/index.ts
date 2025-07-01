@@ -1,5 +1,6 @@
 import type { Database, Transaction } from '@repo/database'
-import type { Movie, MovieTopicType, TvShow, TvShowTopicType } from '@repo/types'
+import type { MovieTopicType, TvShowTopicType } from '@repo/shared'
+import type { Movie, TvShow } from '@repo/types'
 import { MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
 import { csfdQueue, rtQueue, tmdbQueue } from '@repo/queues'
 

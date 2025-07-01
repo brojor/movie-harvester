@@ -1,4 +1,5 @@
-import type { MediaType, MovieTopic, MovieTopicType, ParseTopicResult, TopicType, TvShowTopic, TvShowTopicType } from '@repo/types'
+import type { MovieTopicType, TopicType, TvShowTopicType } from '@repo/shared'
+import type { MediaType, MovieTopic, ParseTopicResult, TvShowTopic } from '@repo/types'
 import process from 'node:process'
 import * as cheerio from 'cheerio'
 import { isOld, parseDate } from '../utils/date.js'

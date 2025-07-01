@@ -16,6 +16,7 @@
     "@repo/database": "workspace:*",
     "@repo/media-service": "workspace:*",
     "@repo/queues": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/warforum-scraper": "workspace:*"
   }

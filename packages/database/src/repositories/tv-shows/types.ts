@@ -1,6 +1,5 @@
-import type { RtDetails } from '@repo/rt-scraper'
-import type { TmdbTvShowDetails } from '@repo/tmdb-fetcher'
-import type { CsfdTvShowDetails, TopicType, TvShow } from '@repo/types'
+import type { TopicType } from '@repo/shared'
+import type { CsfdTvShowDetails, RtDetails, TmdbTvShowDetails, TvShow } from '@repo/types'
 import type { TvShowRecord } from '../../types.js'
 
 export interface TvShowRepository {

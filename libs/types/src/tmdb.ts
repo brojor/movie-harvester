@@ -184,6 +184,7 @@ export interface Season {
   season_number: number
   vote_average: number
 }
+
 export interface TmdbMovieDetails {
   id: number
   imdbId: string

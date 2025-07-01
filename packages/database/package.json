@@ -17,9 +17,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/rt-scraper": "workspace:*",
     "@repo/shared": "workspace:*",
-    "@repo/tmdb-fetcher": "workspace:*",
     "@repo/types": "workspace:*",
     "@types/pg": "catalog:dev",
     "drizzle-kit": "catalog:dev",

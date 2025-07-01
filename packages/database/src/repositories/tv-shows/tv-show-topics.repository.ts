@@ -1,4 +1,4 @@
-import type { TopicType } from '@repo/types'
+import type { TopicType } from '@repo/shared'
 import type { Database, Transaction } from '../../connection.js'
 import type { TvShowTopicsRepository } from './types.js'
 import { eq } from 'drizzle-orm'

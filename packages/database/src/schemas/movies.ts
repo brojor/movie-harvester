@@ -1,3 +1,4 @@
+import { movieTopicIdMap } from '@repo/shared'
 import { relations } from 'drizzle-orm'
 import {
   integer,
@@ -10,7 +11,9 @@ import {
 } from 'drizzle-orm/pg-core'
 import { csfdGenres, timestamps } from './common.js'
 
-export const topicTypeEnum = pgEnum('movie_topic_type', ['hd', 'uhd', 'hdDub', 'uhdDub'])
+const topicTypeValues = Object.values(movieTopicIdMap) as [string, ...string[]]
+
+export const topicTypeEnum = pgEnum('movie_topic_type', topicTypeValues)
 
 export const tmdbMovieData = pgTable('tmdb_movie_data', {
   id: integer().primaryKey(),

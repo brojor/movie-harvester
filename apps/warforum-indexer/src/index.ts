@@ -1,7 +1,7 @@
 import { createDatabase, MovieRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { tmdbQueue } from '@repo/queues'
-import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/types'
+import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/shared'
 import { indexMediaFromTopic } from '@repo/warforum-scraper'
 
 const db = createDatabase()

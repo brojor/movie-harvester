@@ -1,5 +1,5 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
-import type { RtDetails } from './types.js'
+import type { RtDetails } from '@repo/types'
 import { URLSearchParams } from 'node:url'
 import { makeHttpClient, normalizeTitle } from '@repo/shared'
 import * as cheerio from 'cheerio'
@@ -92,5 +92,3 @@ export async function getTvShowDetails(rtId: string): Promise<RtDetails> {
     audienceReviews: parseNullableInt(audienceReviews),
   }
 }
-
-export * from './types.js'

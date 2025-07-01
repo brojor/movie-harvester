@@ -1,4 +1,4 @@
-import type { RtDetails } from '@repo/rt-scraper'
+import type { RtDetails } from '@repo/types'
 import type { Database } from '../../connection.js'
 import type { RtTvShowDataRepository } from './types.js'
 import { tvShowsSchema } from '../../index.js'

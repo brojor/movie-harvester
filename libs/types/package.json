@@ -12,6 +12,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/database": "workspace:*"
+    "@repo/shared": "workspace:*"
   }
 }

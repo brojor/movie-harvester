@@ -1,34 +1,46 @@
-import type { MovieRecord, TvShowRecord } from '@repo/database'
-
-export type { MovieRecord, TvShowRecord }
+import type { MovieTopicId, MovieTopicType, TvShowTopicType } from '@repo/shared'
 
 export type MediaType = 'movie' | 'tvShow'
+export * from './csfd.js'
+export * from './rt.js'
+export * from './tmdb.js'
 
-export const movieTopicIdMap = {
-  322: 'hd',
-  323: 'hdDub',
-  374: 'uhd',
-  373: 'uhdDub',
-} as const
+// Topic types - these should match the ones in @repo/shared
+export type {
+  MovieTopicId,
+  MovieTopicType,
+  TopicType,
+  TvShowTopicId,
+  TvShowTopicType,
+} from '@repo/shared'
 
-export type MovieTopicId = keyof typeof movieTopicIdMap
+// Database record types - these should match the ones in @repo/database
+export interface MovieRecord {
+  id: number
+  czechTitle: string | null
+  originalTitle: string | null
+  year: number
+  tmdbId: number | null
+  csfdId: number | null
+  rtId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
-export type MovieTopicType = typeof movieTopicIdMap[keyof typeof movieTopicIdMap]
+export interface TvShowRecord {
+  id: number
+  czechTitle: string | null
+  originalTitle: string
+  tmdbId: number | null
+  csfdId: number | null
+  rtId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 export interface TvShowTopicMeta {
   readonly id: number
 }
-
-export const tvShowTopicIdMap = {
-  324: 'hd',
-  384: 'uhd',
-} as const
-
-export type TvShowTopicType = typeof tvShowTopicIdMap[keyof typeof tvShowTopicIdMap]
-
-export type TvShowTopicId = keyof typeof tvShowTopicIdMap
-
-export type TopicType = MovieTopicType | TvShowTopicType
 
 export interface NonDubbedMovie {
   readonly originalTitle: string
@@ -59,30 +71,10 @@ export interface Identifiable {
   id: number | string
 }
 
-export type WorkerInputData = MovieRecord | TvShowRecord | Identifiable
+// Note: MovieRecord and TvShowRecord are now in @repo/database
+export type WorkerInputData = Identifiable
 
 export type WorkerResult = Identifiable
-
-// CSFD types
-export interface CsfdGenre {
-  name: string
-  id: number
-}
-
-export interface CsfdMovieDetails {
-  id: number
-  title: string
-  originalTitle: string
-  releaseYear: number
-  runtime: number | null
-  voteAverage: number | null
-  voteCount: number | null
-  posterPath: string | null
-  overview: string | null
-  genres: CsfdGenre[]
-}
-
-export type CsfdTvShowDetails = Omit<CsfdMovieDetails, 'runtime' | 'originalTitle' | 'releaseYear'>
 
 export interface TvShowCoreMeta {
   readonly titles: string[]

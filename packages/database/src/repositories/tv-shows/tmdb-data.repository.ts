@@ -1,4 +1,4 @@
-import type { TmdbTvShowDetails } from '@repo/tmdb-fetcher'
+import type { TmdbTvShowDetails } from '@repo/types'
 import type { Database } from '../../connection.js'
 import type { TmdbTvShowDataRepository } from './types.js'
 import { tvShowsSchema } from '../../index.js'

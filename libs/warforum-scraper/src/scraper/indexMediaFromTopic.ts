@@ -1,4 +1,5 @@
-import type { MediaTopic, MovieTopic, MovieTopicId, TvShowTopic, TvShowTopicId } from '@repo/types'
+import type { MovieTopicId, TvShowTopicId } from '@repo/shared'
+import type { MediaTopic, MovieTopic, TvShowTopic } from '@repo/types'
 import { fetchHtml } from '../infra/httpClient.js'
 import { buildTopicUrl, getMediaType, getTopicType } from '../utils/topicHelpers.js'
 import { parseTopicPage } from './parseTopicPage.js'

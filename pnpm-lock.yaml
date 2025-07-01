@@ -252,6 +252,9 @@ importers:
       '@repo/queues':
         specifier: workspace:*
         version: link:../../libs/queues
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@repo/types':
         specifier: workspace:*
         version: link:../../libs/types
@@ -339,6 +342,9 @@ importers:
       '@repo/queues':
         specifier: workspace:*
         version: link:../queues
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@repo/types':
         specifier: workspace:*
         version: link:../types
@@ -360,6 +366,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
       cheerio:
         specifier: catalog:prod
         version: 1.1.0
@@ -372,12 +381,15 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@repo/types':
+        specifier: workspace:*
+        version: link:../types
 
   libs/types:
     dependencies:
-      '@repo/database':
+      '@repo/shared':
         specifier: workspace:*
-        version: link:../../packages/database
+        version: link:../../packages/shared
 
   libs/warforum-scraper:
     dependencies:
@@ -412,15 +424,9 @@ importers:
 
   packages/database:
     dependencies:
-      '@repo/rt-scraper':
-        specifier: workspace:*
-        version: link:../../libs/rt-scraper
       '@repo/shared':
         specifier: workspace:*
         version: link:../shared
-      '@repo/tmdb-fetcher':
-        specifier: workspace:*
-        version: link:../../libs/tmdb-fetcher
       '@repo/types':
         specifier: workspace:*
         version: link:../../libs/types
