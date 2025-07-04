@@ -18,7 +18,7 @@ export async function parseMovieTopics(): Promise<void> {
         const isDubbed = movieTopic.type === 'hdDub' || movieTopic.type === 'uhdDub'
         const [czechTitle, originalTitle] = isDubbed ? movieTopic.titles : movieTopic.titles.reverse()
 
-        await mediaService.addMovieWithTopic({ czechTitle, originalTitle, year: movieTopic.year }, topicId, topicType)
+        await mediaService.addMovieWithTopic({ czechTitle, originalTitle, year: movieTopic.year }, movieTopic.id, topicType)
       }
       else {
         tmdbQueue.add('find-movie', movieTopic)
