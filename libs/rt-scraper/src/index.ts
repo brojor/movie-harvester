@@ -28,7 +28,7 @@ export async function findRtMovieId(movie: MovieRecord): Promise<string | null> 
     const parsedTitle = $(this).find('a[data-qa="info-name"]').text().trim()
     const parsedYear = $(this).attr('releaseyear')?.toString().trim()
 
-    return parsedTitle === originalTitle && parsedYear === year.toString()
+    return parsedTitle === normalizedTitle && parsedYear === year.toString()
   }).find('a[data-qa="info-name"]').attr('href')
 
   const id = url?.split('/').filter(Boolean).pop()
