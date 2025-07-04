@@ -28,6 +28,7 @@ export class MediaService {
 
         if (tmdbId) {
           await tvShowRepo.setTmdbId(newRecord.id, tmdbId)
+          tmdbTvShowQueue.add('get-meta', { id: tmdbId })
         }
 
         return newRecord
@@ -67,6 +68,7 @@ export class MediaService {
 
         if (tmdbId) {
           await movieRepo.setTmdbId(newRecord.id, tmdbId)
+          tmdbMovieQueue.add('get-meta', { id: tmdbId })
         }
 
         return newRecord
