@@ -12,6 +12,7 @@ export interface MovieRepository {
 
 export interface MovieTopicsRepository {
   setMovieTopicSource: (movieId: number, topicId: number, sourceType: TopicType) => Promise<void>
+  getTopicId: (movieId: number) => Promise<number>
 }
 
 export interface CsfdMovieDataRepository {

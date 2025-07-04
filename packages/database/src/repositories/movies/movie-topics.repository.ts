@@ -24,8 +24,11 @@ export class MovieTopicsRepo implements MovieTopicsRepository {
       })
   }
 
-  async getTopicsIds(movieId: number): Promise<number[]> {
+  async getTopicId(movieId: number): Promise<number> {
     const topics = await this.db.select().from(movieTopics).where(eq(movieTopics.movieId, movieId))
-    return topics.map(topic => topic.topicId)
+    if (!topics.length)
+      throw new Error(`Movie ${movieId} has no topics`)
+
+    return topics[0].topicId
   }
 }

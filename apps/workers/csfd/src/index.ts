@@ -1,6 +1,7 @@
 import type { MovieRecord, TvShowRecord, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import * as csfdScraper from '@repo/csfd-scraper'
 import { createDatabase, CsfdMovieDataRepo, CsfdTvShowDataRepo, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
+import { csfdMovieQueue, csfdTvShowQueue } from '@repo/queues'
 import { env } from '@repo/shared'
 import { findCsfdIdInTopic } from '@repo/warforum-scraper'
 import { Worker } from 'bullmq'
@@ -14,23 +15,19 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
 ): Promise<{ id: number }> {
   const repo = isMovie ? new MovieRepo(db) : new TvShowRepo(db)
   const topicsRepo = isMovie ? new MovieTopicsRepo(db) : new TvShowTopicsRepo(db)
-  const topicsIds = await topicsRepo.getTopicsIds(record.id)
+  const topicId = await topicsRepo.getTopicId(record.id)
 
-  if (topicsIds.length === 0) {
-    throw new Error(`${isMovie ? 'Movie' : 'TV show'} ${record.id} has no topics`)
+  // Try to find CSFD ID in topic
+  let csfdId = await findCsfdIdInTopic(topicId)
+
+  if (csfdId) {
+    await repo.setCsfdId(record.id, csfdId)
+    isMovie ? csfdMovieQueue.add('get-meta', { id: csfdId }) : csfdTvShowQueue.add('get-meta', { id: csfdId })
+    return { id: csfdId }
   }
 
-  // Try to find CSFD ID in topics
-  for (const topicId of topicsIds) {
-    const csfdId = await findCsfdIdInTopic(topicId)
-    if (csfdId) {
-      await repo.setCsfdId(record.id, csfdId)
-      return { id: csfdId }
-    }
-  }
-
-  // Try to find CSFD ID using scraper
-  const csfdId = isMovie
+  // Try to find CSFD ID using scraper if not found in topic
+  csfdId = isMovie
     ? await csfdScraper.findCsfdMovieId(record as MovieRecord)
     : await csfdScraper.findCsfdTvShowId(record as TvShowRecord)
 
@@ -39,6 +36,8 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
   }
 
   await repo.setCsfdId(record.id, csfdId)
+
+  isMovie ? csfdMovieQueue.add('get-meta', { id: csfdId }) : csfdTvShowQueue.add('get-meta', { id: csfdId })
   return { id: csfdId }
 }
 
@@ -73,7 +72,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
 )
 
 const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
-  'tv-show',
+  'tv-shows',
   async (job) => {
     switch (job.name) {
       case 'find-id': {

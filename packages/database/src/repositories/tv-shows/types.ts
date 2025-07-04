@@ -13,6 +13,7 @@ export interface TvShowRepository {
 
 export interface TvShowTopicsRepository {
   setTvShowTopicSource: (tvShowId: number, languages: string[], topicId: number, topicType: TopicType) => Promise<void>
+  getTopicId: (tvShowId: number) => Promise<number>
 }
 
 export interface CsfdTvShowDataRepository {

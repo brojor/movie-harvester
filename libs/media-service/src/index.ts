@@ -9,6 +9,7 @@ export class MediaService {
 
   async addTvShowWithTopic(tvShow: TvShow, languages: string[], topicId: number, topicType: TvShowTopicType, tmdbId?: number): Promise<number> {
     let tvShowRecord: TvShowRecord
+    let wasCreated = false
     try {
       tvShowRecord = await this.db.transaction(async (tx: Transaction) => {
         const tvShowRepo = new TvShowRepo(tx)
@@ -21,6 +22,7 @@ export class MediaService {
           return existingRecord
         }
 
+        wasCreated = true
         const newRecord = await tvShowRepo.create(tvShow)
         await tvShowTopicsRepo.setTvShowTopicSource(newRecord.id, languages.sort(), topicId, topicType)
 
@@ -35,16 +37,19 @@ export class MediaService {
       throw new Error(`Failed to add tv show ${tvShow.czechTitle} / ${tvShow.originalTitle} with topic ${topicId}: ${error}`)
     }
 
-    csfdTvShowQueue.add('find-id', tvShowRecord)
-    rtTvShowQueue.add('find-id', tvShowRecord)
-    if (!tmdbId)
-      tmdbTvShowQueue.add('find-id', tvShowRecord)
+    if (wasCreated) {
+      csfdTvShowQueue.add('find-id', tvShowRecord)
+      rtTvShowQueue.add('find-id', tvShowRecord)
+      if (!tmdbId)
+        tmdbTvShowQueue.add('find-id', tvShowRecord)
+    }
 
     return tvShowRecord.id
   }
 
   async addMovieWithTopic(movie: Movie, topicId: number, topicType: MovieTopicType, tmdbId?: number): Promise<number> {
     let movieRecord: MovieRecord
+    let wasCreated = false
     try {
       movieRecord = await this.db.transaction(async (tx: Transaction) => {
         const movieRepo = new MovieRepo(tx)
@@ -56,6 +61,7 @@ export class MediaService {
           return existingRecord
         }
 
+        wasCreated = true
         const newRecord = await movieRepo.create(movie)
         await movieTopicsRepo.setMovieTopicSource(newRecord.id, topicId, topicType)
 
@@ -70,10 +76,12 @@ export class MediaService {
       throw new Error(`Failed to add movie ${movie.czechTitle} / ${movie.originalTitle} with topic ${topicId}: ${error}`)
     }
 
-    csfdMovieQueue.add('find-id', movieRecord)
-    rtMovieQueue.add('find-id', movieRecord)
-    if (!tmdbId)
-      tmdbMovieQueue.add('find-id', movieRecord)
+    if (wasCreated) {
+      csfdMovieQueue.add('find-id', movieRecord)
+      rtMovieQueue.add('find-id', movieRecord)
+      if (!tmdbId)
+        tmdbMovieQueue.add('find-id', movieRecord)
+    }
 
     return movieRecord.id
   }

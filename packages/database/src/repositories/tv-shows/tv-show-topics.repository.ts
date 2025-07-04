@@ -20,8 +20,11 @@ export class TvShowTopicsRepo implements TvShowTopicsRepository {
       })
   }
 
-  async getTopicsIds(tvShowId: number): Promise<number[]> {
+  async getTopicId(tvShowId: number): Promise<number> {
     const topics = await this.db.select().from(tvShowTopics).where(eq(tvShowTopics.tvShowId, tvShowId))
-    return topics.map(topic => topic.topicId)
+    if (!topics.length)
+      throw new Error(`TV show ${tvShowId} has no topics`)
+
+    return topics[0].topicId
   }
 }

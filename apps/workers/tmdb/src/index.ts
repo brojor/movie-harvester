@@ -3,6 +3,7 @@ import type { MovieSearchResult, TvShowSearchResult } from '@repo/tmdb-fetcher'
 import type { MovieTopic, TvShowTopic, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import { createDatabase, MovieRepo, TmdbMovieDataRepo, TmdbTvShowDataRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
+import { tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
 import { env } from '@repo/shared'
 import { findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
@@ -19,6 +20,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const tmdbId = await findTmdbMovieId(movie)
         const movieRepo = new MovieRepo(db)
         await movieRepo.setTmdbId(movie.id, tmdbId)
+        tmdbMovieQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
 
@@ -56,11 +58,11 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'rt' },
+  { connection, prefix: 'tmdb' },
 )
 
 const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
-  'tv-show',
+  'tv-shows',
   async (job) => {
     switch (job.name) {
       case 'find-id': {
@@ -71,6 +73,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const tvShowRepo = new TvShowRepo(db)
         await tvShowRepo.setTmdbId(tvShow.id, tmdbId)
+        tmdbTvShowQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
 
@@ -107,5 +110,5 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'rt' },
+  { connection, prefix: 'tmdb' },
 )

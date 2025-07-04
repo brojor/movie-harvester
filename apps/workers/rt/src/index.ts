@@ -1,6 +1,7 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import { createDatabase, MovieRepo, RtMovieDataRepo, RtTvShowDataRepo, TvShowRepo } from '@repo/database'
+import { rtMovieQueue, rtTvShowQueue } from '@repo/queues'
 import { findRtMovieId, findRtTvShowId, getMovieDetails, getTvShowDetails } from '@repo/rt-scraper'
 import { env } from '@repo/shared'
 import { Worker } from 'bullmq'
@@ -20,6 +21,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const movieRepo = new MovieRepo(db)
         await movieRepo.setRtId(movie.id, rtId)
+        rtMovieQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
 
@@ -39,7 +41,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
 )
 
 const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
-  'tv-show',
+  'tv-shows',
   async (job) => {
     switch (job.name) {
       case 'find-id': {
@@ -50,6 +52,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const tvShowRepo = new TvShowRepo(db)
         await tvShowRepo.setRtId(tvShow.id, rtId)
+        rtTvShowQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
 
