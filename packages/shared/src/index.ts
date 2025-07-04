@@ -13,4 +13,4 @@ export { makeHttpClient } from './httpClient.js'
 export { redis } from './redisClient.js'
 export { getDelayMs } from './utils/http-utils.js'
 
-export { normalizeTitle } from './utils/string.js'
+export * from './utils/string.js'

@@ -1,7 +1,7 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { RtDetails } from '@repo/types'
 import { URLSearchParams } from 'node:url'
-import { makeHttpClient, normalizeTitle } from '@repo/shared'
+import { makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
 import * as cheerio from 'cheerio'
 
 const httpClient = makeHttpClient('https://www.rottentomatoes.com')
@@ -12,14 +12,15 @@ function parseNullableInt(value: string): number | null {
 }
 
 export async function findRtMovieId(movie: MovieRecord): Promise<string | null> {
-  const { year } = movie
-  const originalTitle = normalizeTitle(movie.originalTitle)
+  const { year, originalTitle } = movie
 
-  if (!originalTitle) {
+  if (!originalTitle || !year) {
     return null
   }
 
-  const queryString = new URLSearchParams({ search: originalTitle }).toString()
+  const normalizedTitle = moveDefiniteArticleToFront(originalTitle)
+
+  const queryString = new URLSearchParams({ search: normalizedTitle }).toString()
   const html = await httpClient.get(`/search?${queryString}`)
 
   const $ = cheerio.load(html)
@@ -36,7 +37,7 @@ export async function findRtMovieId(movie: MovieRecord): Promise<string | null> 
 }
 
 export async function findRtTvShowId(tvShow: TvShowRecord): Promise<string | null> {
-  const originalTitle = normalizeTitle(tvShow.originalTitle)
+  const originalTitle = moveDefiniteArticleToFront(tvShow.originalTitle)
 
   if (!originalTitle) {
     return null

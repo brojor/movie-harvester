@@ -4,7 +4,7 @@ import type { MovieTopic, TvShowTopic, WorkerAction, WorkerInputData, WorkerResu
 import { createDatabase, MovieRepo, TmdbMovieDataRepo, TmdbTvShowDataRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
-import { env } from '@repo/shared'
+import { env, moveDefiniteArticleToEnd } from '@repo/shared'
 import { findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
 
@@ -47,7 +47,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const mediaService = new MediaService(db)
         const movie = {
           czechTitle: movieSearchResult.title,
-          originalTitle: movieSearchResult.original_title,
+          originalTitle: moveDefiniteArticleToEnd(movieSearchResult.original_title),
           year: movieTopic.year,
         }
         const movieId = await mediaService.addMovieWithTopic(movie, movieTopic.id, movieTopic.type, movieSearchResult.id)

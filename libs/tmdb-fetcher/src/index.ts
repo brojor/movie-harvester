@@ -1,6 +1,6 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TmdbMovieDetails, TmdbTvShowDetails, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from '@repo/types'
-import { env, makeHttpClient, normalizeTitle } from '@repo/shared'
+import { env, makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
 
 // Rate limit is ~50 requests per second
 const httpClient = makeHttpClient(env.TMDB_BASE_URL, {
@@ -18,7 +18,7 @@ function isValidTvShowSearchCandidate(candidate: { title: string | null }): cand
 
 export async function findTmdbMovieId(movie: MovieRecord): Promise<number> {
   const basicCandidates: SearchMovieCandidate[] = [
-    { title: normalizeTitle(movie.originalTitle), year: movie.year },
+    ...(movie.originalTitle ? [{ title: moveDefiniteArticleToFront(movie.originalTitle), year: movie.year }] : []),
     { title: movie.czechTitle, year: movie.year },
   ].filter(isValidMovieSearchCandidate)
 
@@ -33,7 +33,7 @@ export async function findTmdbMovieId(movie: MovieRecord): Promise<number> {
 
 export async function findTmdbTvShowId(tvShow: TvShowRecord): Promise<number> {
   const basicCandidates: SearchTvShowCandidate[] = [
-    { title: tvShow.originalTitle },
+    { title: moveDefiniteArticleToFront(tvShow.originalTitle) },
     { title: tvShow.czechTitle },
   ].filter(isValidTvShowSearchCandidate)
 
