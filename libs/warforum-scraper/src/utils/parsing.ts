@@ -1,4 +1,5 @@
 import type { MediaType, MovieCoreMeta, TvShowCoreMeta } from '@repo/types'
+import { moveDefiniteArticleToEnd } from 'packages/shared/dist/index.js'
 
 export function extractTopicId(url: string): number | null {
   const match = url.match(/t=(\d+)/)
@@ -18,7 +19,7 @@ export function parseMovieCoreMeta(topicTitle: string): MovieCoreMeta | null {
   }
 
   const titlePart = match[1].trim()
-  const titles = titlePart.split(/\s*\/\s*/).filter(Boolean)
+  const titles = titlePart.split(/\s*\/\s*/).filter(Boolean).map(moveDefiniteArticleToEnd)
   const year = Number.parseInt(match[2], 10)
 
   return { titles, year }
@@ -36,7 +37,7 @@ export function parseMovieCoreMeta(topicTitle: string): MovieCoreMeta | null {
 // }
 
 export function parseTvShowCoreMeta(topicTitle: string): TvShowCoreMeta | null {
-  const parts = removeParentheses(topicTitle).split('/').map(part => part.trim())
+  const parts = removeParentheses(topicTitle).split('/').map(part => part.trim()).map(moveDefiniteArticleToEnd)
 
   const languages = parts.pop()?.split(',').map(lang => lang.trim()) || []
 
