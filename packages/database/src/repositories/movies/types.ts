@@ -3,7 +3,8 @@ import type { CsfdMovieDetails, Movie, RtDetails, TmdbMovieDetails } from '@repo
 import type { MovieRecord } from '../../types.js'
 
 export interface MovieRepository {
-  firstOrCreate: (movie: Movie) => Promise<MovieRecord>
+  find: (movie: Movie) => Promise<MovieRecord | null>
+  create: (movie: Movie) => Promise<MovieRecord>
   setCsfdId: (movieId: number, csfdId: number) => Promise<void>
   setTmdbId: (movieId: number, tmdbId: number) => Promise<void>
   setRtId: (movieId: number, rtId: string) => Promise<void>

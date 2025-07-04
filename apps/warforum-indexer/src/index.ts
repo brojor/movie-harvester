@@ -1,6 +1,6 @@
 import { createDatabase, MovieRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
-import { tmdbQueue } from '@repo/queues'
+import { tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
 import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/shared'
 import { indexMediaFromTopic } from '@repo/warforum-scraper'
 
@@ -21,7 +21,7 @@ export async function parseMovieTopics(): Promise<void> {
         await mediaService.addMovieWithTopic({ czechTitle, originalTitle, year: movieTopic.year }, movieTopic.id, topicType)
       }
       else {
-        tmdbQueue.add('find-movie', movieTopic)
+        tmdbMovieQueue.add('find-movie', movieTopic)
       }
     }
   }
@@ -41,7 +41,7 @@ export async function parseTvShowTopics(): Promise<void> {
         await mediaService.addTvShowWithTopic({ czechTitle, originalTitle }, tvShowTopic.languages, tvShowTopic.id, topicType)
       }
       else {
-        tmdbQueue.add('find-tv-show', tvShowTopic)
+        tmdbTvShowQueue.add('find-tv-show', tvShowTopic)
       }
     }
   }

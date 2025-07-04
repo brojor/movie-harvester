@@ -3,7 +3,8 @@ import type { CsfdTvShowDetails, RtDetails, TmdbTvShowDetails, TvShow } from '@r
 import type { TvShowRecord } from '../../types.js'
 
 export interface TvShowRepository {
-  firstOrCreate: (tvShow: TvShow) => Promise<TvShowRecord>
+  find: (tvShow: TvShow) => Promise<TvShowRecord | null>
+  create: (tvShow: TvShow) => Promise<TvShowRecord>
   setCsfdId: (tvShowId: number, csfdId: number) => Promise<void>
   setTmdbId: (tvShowId: number, tmdbId: number) => Promise<void>
   setRtId: (tvShowId: number, rtId: string) => Promise<void>

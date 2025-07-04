@@ -8,11 +8,7 @@ import { tvShows } from '../../schemas/tv-shows.js'
 export class TvShowRepo implements TvShowRepository {
   constructor(private readonly db: Database | Transaction) { }
 
-  async firstOrCreate(tvShow: TvShow): Promise<TvShowRecord> {
-    const [result] = await this.db.insert(tvShows).values(tvShow).onConflictDoNothing().returning()
-    if (result)
-      return result
-
+  async find(tvShow: TvShow): Promise<TvShowRecord | null> {
     const [existing] = await this.db
       .select()
       .from(tvShows)
@@ -23,22 +19,24 @@ export class TvShowRepo implements TvShowRepository {
         ),
       )
 
-    if (existing)
-      return existing
+    return existing || null
+  }
 
-    throw new Error(`Failed to add tv show: ${JSON.stringify(tvShow)}`)
+  async create(tvShow: TvShow): Promise<TvShowRecord> {
+    const [result] = await this.db.insert(tvShows).values(tvShow).returning()
+    return result
   }
 
   async setCsfdId(tvShowId: number, csfdId: number): Promise<void> {
-    await this.db.update(tvShows).set({ csfdId }).where(eq(tvShows.id, tvShowId))
+    await this.db.update(tvShows).set({ csfdId, updatedAt: new Date() }).where(eq(tvShows.id, tvShowId))
   }
 
   async setTmdbId(tvShowId: number, tmdbId: number): Promise<void> {
-    await this.db.update(tvShows).set({ tmdbId }).where(eq(tvShows.id, tvShowId))
+    await this.db.update(tvShows).set({ tmdbId, updatedAt: new Date() }).where(eq(tvShows.id, tvShowId))
   }
 
   async setRtId(tvShowId: number, rtId: string): Promise<void> {
-    await this.db.update(tvShows).set({ rtId }).where(eq(tvShows.id, tvShowId))
+    await this.db.update(tvShows).set({ rtId, updatedAt: new Date() }).where(eq(tvShows.id, tvShowId))
   }
 
   async getLastUpdateDate(): Promise<Date> {

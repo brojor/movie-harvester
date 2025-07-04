@@ -1,57 +1,80 @@
 import type { Database, Transaction } from '@repo/database'
 import type { MovieTopicType, TvShowTopicType } from '@repo/shared'
-import type { Movie, TvShow } from '@repo/types'
+import type { Movie, MovieRecord, TvShow, TvShowRecord } from '@repo/types'
 import { MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
-import { csfdQueue, rtQueue, tmdbQueue } from '@repo/queues'
+import { csfdMovieQueue, csfdTvShowQueue, rtMovieQueue, rtTvShowQueue, tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
 
 export class MediaService {
   constructor(private readonly db: Database) {}
 
   async addTvShowWithTopic(tvShow: TvShow, languages: string[], topicId: number, topicType: TvShowTopicType, tmdbId?: number): Promise<number> {
-    return this.db.transaction(async (tx: Transaction) => {
-      const tvShowRepo = new TvShowRepo(tx)
-      const tvShowTopicsRepo = new TvShowTopicsRepo(tx)
+    let tvShowRecord: TvShowRecord
+    try {
+      tvShowRecord = await this.db.transaction(async (tx: Transaction) => {
+        const tvShowRepo = new TvShowRepo(tx)
+        const tvShowTopicsRepo = new TvShowTopicsRepo(tx)
 
-      const tvShowRecord = await tvShowRepo.firstOrCreate(tvShow)
+        const existingRecord = await tvShowRepo.find(tvShow)
 
-      await tvShowTopicsRepo.setTvShowTopicSource(tvShowRecord.id, languages.sort(), topicId, topicType)
+        if (existingRecord) {
+          await tvShowTopicsRepo.setTvShowTopicSource(existingRecord.id, languages.sort(), topicId, topicType)
+          return existingRecord
+        }
 
-      if (tmdbId) {
-        await tvShowRepo.setTmdbId(tvShowRecord.id, tmdbId)
-        csfdQueue.add('find-id', tvShowRecord)
-        rtQueue.add('find-id', tvShowRecord)
-      }
-      else {
-        csfdQueue.add('find-id', tvShowRecord)
-        rtQueue.add('find-id', tvShowRecord)
-        tmdbQueue.add('find-id', tvShowRecord)
-      }
+        const newRecord = await tvShowRepo.create(tvShow)
+        await tvShowTopicsRepo.setTvShowTopicSource(newRecord.id, languages.sort(), topicId, topicType)
 
-      return tvShowRecord.id
-    })
+        if (tmdbId) {
+          await tvShowRepo.setTmdbId(newRecord.id, tmdbId)
+        }
+
+        return newRecord
+      })
+    }
+    catch (error) {
+      throw new Error(`Failed to add tv show ${tvShow.czechTitle} / ${tvShow.originalTitle} with topic ${topicId}: ${error}`)
+    }
+
+    csfdTvShowQueue.add('find-id', tvShowRecord)
+    rtTvShowQueue.add('find-id', tvShowRecord)
+    if (!tmdbId)
+      tmdbTvShowQueue.add('find-id', tvShowRecord)
+
+    return tvShowRecord.id
   }
 
   async addMovieWithTopic(movie: Movie, topicId: number, topicType: MovieTopicType, tmdbId?: number): Promise<number> {
-    return this.db.transaction(async (tx: Transaction) => {
-      const movieRepo = new MovieRepo(tx)
-      const movieTopicsRepo = new MovieTopicsRepo(tx)
+    let movieRecord: MovieRecord
+    try {
+      movieRecord = await this.db.transaction(async (tx: Transaction) => {
+        const movieRepo = new MovieRepo(tx)
+        const movieTopicsRepo = new MovieTopicsRepo(tx)
 
-      const movieRecord = await movieRepo.firstOrCreate(movie)
+        const existingRecord = await movieRepo.find(movie)
+        if (existingRecord) {
+          await movieTopicsRepo.setMovieTopicSource(existingRecord.id, topicId, topicType)
+          return existingRecord
+        }
 
-      await movieTopicsRepo.setMovieTopicSource(movieRecord.id, topicId, topicType)
+        const newRecord = await movieRepo.create(movie)
+        await movieTopicsRepo.setMovieTopicSource(newRecord.id, topicId, topicType)
 
-      if (tmdbId) {
-        await movieRepo.setTmdbId(movieRecord.id, tmdbId)
-        csfdQueue.add('find-id', movieRecord)
-        rtQueue.add('find-id', movieRecord)
-      }
-      else {
-        csfdQueue.add('find-id', movieRecord)
-        rtQueue.add('find-id', movieRecord)
-        tmdbQueue.add('find-id', movieRecord)
-      }
+        if (tmdbId) {
+          await movieRepo.setTmdbId(newRecord.id, tmdbId)
+        }
 
-      return movieRecord.id
-    })
+        return newRecord
+      })
+    }
+    catch (error) {
+      throw new Error(`Failed to add movie ${movie.czechTitle} / ${movie.originalTitle} with topic ${topicId}: ${error}`)
+    }
+
+    csfdMovieQueue.add('find-id', movieRecord)
+    rtMovieQueue.add('find-id', movieRecord)
+    if (!tmdbId)
+      tmdbMovieQueue.add('find-id', movieRecord)
+
+    return movieRecord.id
   }
 }

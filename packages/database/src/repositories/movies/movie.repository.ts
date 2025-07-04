@@ -8,12 +8,7 @@ import { movies } from '../../schemas/movies.js'
 export class MovieRepo implements MovieRepository {
   constructor(private readonly db: Database | Transaction) {}
 
-  async firstOrCreate(movie: Movie): Promise<MovieRecord> {
-    const [result] = await this.db.insert(movies).values(movie).onConflictDoNothing().returning()
-
-    if (result)
-      return result
-
+  async find(movie: Movie): Promise<MovieRecord | null> {
     const conditions = []
 
     if (movie.czechTitle) {
@@ -26,12 +21,15 @@ export class MovieRepo implements MovieRepository {
 
     if (conditions.length > 0) {
       const [existing] = await this.db.select().from(movies).where(or(...conditions))
-
-      if (existing)
-        return existing
+      return existing || null
     }
 
-    throw new Error(`Failed to add movie: ${JSON.stringify(movie)}`)
+    return null
+  }
+
+  async create(movie: Movie): Promise<MovieRecord> {
+    const [result] = await this.db.insert(movies).values(movie).returning()
+    return result
   }
 
   async setCsfdId(movieId: number, csfdId: number): Promise<void> {
