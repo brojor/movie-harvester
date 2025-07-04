@@ -213,6 +213,7 @@ export interface TmdbTvShowDetails {
   backdropPath: string
   firstAirDate: string
   episodeRunTime: number[]
+  networks: Network[]
   numberOfEpisodes: number
   numberOfSeasons: number
   originCountry: string[]

@@ -141,6 +141,7 @@ export async function getTvShowDetails(id: number): Promise<TmdbTvShowDetails> {
     backdropPath: tvShowDetails.backdrop_path,
     firstAirDate: tvShowDetails.first_air_date,
     episodeRunTime: tvShowDetails.episode_run_time,
+    networks: tvShowDetails.networks,
     numberOfEpisodes: tvShowDetails.number_of_episodes,
     numberOfSeasons: tvShowDetails.number_of_seasons,
     originCountry: tvShowDetails.origin_country,
