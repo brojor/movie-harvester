@@ -3,41 +3,34 @@ module.exports = {
     {
       name: 'csfd-worker',
       script: './workers/csfd/index.js',
-      instances: 1,
-      autorestart: true,
-      max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
     {
       name: 'rt-worker',
       script: './workers/rt/index.js',
-      instances: 1,
-      autorestart: true,
-      max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
     {
       name: 'tmdb-worker',
       script: './workers/tmdb/index.js',
-      instances: 1,
-      autorestart: true,
-      max_memory_restart: '512M',
       env: {
         NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
     {
       name: 'warforum-indexer',
       script: './warforum-indexer/index.js',
-      instances: 1,
-      autorestart: true,
-      max_memory_restart: '512M',
+      autorestart: false,
       env: {
         NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
   ],
