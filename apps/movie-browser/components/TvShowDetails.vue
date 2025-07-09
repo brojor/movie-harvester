@@ -81,7 +81,7 @@ function getColor(value: number): string {
         <NuxtImg v-if="currentTvShow.tmdbData?.posterPath" provider="tmdbPoster" :src="currentTvShow.tmdbData.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">
           <MediaRatings :csfd="currentTvShow.csfdData?.voteAverage" :tmdb="currentTvShow.tmdbData?.voteAverage" :rt="currentTvShow.rtData?.criticsScore" />
-          <MainHeader :title="title" :year="Number(currentTvShow.tmdbData?.firstAirDate?.split('-')[0])" />
+          <MainHeader :title="title" :year="Number(currentTvShow.tmdbData?.firstAirDate?.split('-')[0])" :network-logo="currentTvShow.tmdbData?.networks?.[0]?.network?.logoPath" />
           <OriginCountry v-if="currentTvShow.tmdbData?.originalLanguage && currentTvShow.tmdbData?.originalName" :origin-country="currentTvShow.tmdbData.originalLanguage" :origin-title="currentTvShow.tmdbData.originalName" />
           <AdditionalInfo :items="additionalInfo" />
           <div class="grid grid-cols-2 gap-x-16 w-max">

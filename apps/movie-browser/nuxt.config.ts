@@ -23,6 +23,10 @@ export default defineNuxtConfig({
         name: 'tmdbPoster',
         provider: '~/providers/tmdbPoster',
       },
+      tmdbNetwork: {
+        name: 'tmdbNetwork',
+        provider: '~/providers/tmdbNetwork',
+      },
     },
   },
 })
