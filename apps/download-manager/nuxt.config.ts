@@ -6,4 +6,9 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'node-server',
   },
+  eslint: {
+    config: {
+      standalone: false,
+    },
+  },
 })
