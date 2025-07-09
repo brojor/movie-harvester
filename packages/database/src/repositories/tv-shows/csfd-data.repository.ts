@@ -16,20 +16,22 @@ export class CsfdTvShowDataRepo implements CsfdTvShowDataRepository {
         .returning({ id: tvShowsSchema.csfdTvShowData.id })
 
       // 2) Save genres (ignore duplicates)
-      await tx
-        .insert(commonSchema.csfdGenres)
-        .values(tvShowDetails.genres)
-        .onConflictDoNothing({ target: commonSchema.csfdGenres.id })
+      if (tvShowDetails.genres.length > 0) {
+        await tx
+          .insert(commonSchema.csfdGenres)
+          .values(tvShowDetails.genres)
+          .onConflictDoNothing({ target: commonSchema.csfdGenres.id })
 
-      // 3) Link tv show to genres
-      await tx
-        .insert(tvShowsSchema.csfdTvShowsToGenres)
-        .values(
-          tvShowDetails.genres.map(g => ({
-            csfdId,
-            genreId: g.id,
-          })),
-        )
+        // 3) Link tv show to genres
+        await tx
+          .insert(tvShowsSchema.csfdTvShowsToGenres)
+          .values(
+            tvShowDetails.genres.map(g => ({
+              csfdId,
+              genreId: g.id,
+            })),
+          )
+      }
 
       return csfdId
     })

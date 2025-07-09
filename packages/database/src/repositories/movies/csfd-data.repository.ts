@@ -16,20 +16,22 @@ export class CsfdMovieDataRepo implements CsfdMovieDataRepository {
         .returning({ id: moviesSchema.csfdMovieData.id })
 
       // 2) Save genres (ignore duplicates)
-      await tx
-        .insert(commonSchema.csfdGenres)
-        .values(movieDetails.genres)
-        .onConflictDoNothing({ target: commonSchema.csfdGenres.id })
+      if (movieDetails.genres.length > 0) {
+        await tx
+          .insert(commonSchema.csfdGenres)
+          .values(movieDetails.genres)
+          .onConflictDoNothing({ target: commonSchema.csfdGenres.id })
 
-      // 3) Link movie to genres
-      await tx
-        .insert(moviesSchema.csfdMoviesToGenres)
-        .values(
-          movieDetails.genres.map(g => ({
-            csfdId,
-            genreId: g.id,
-          })),
-        )
+        // 3) Link movie to genres
+        await tx
+          .insert(moviesSchema.csfdMoviesToGenres)
+          .values(
+            movieDetails.genres.map(g => ({
+              csfdId,
+              genreId: g.id,
+            })),
+          )
+      }
 
       return csfdId
     })
