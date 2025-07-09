@@ -80,7 +80,7 @@ export function getCsfdId(csfdSlug: string): number {
 export async function findCsfdMovieSlugByCzechTitle(html: string, title: string, year: number): Promise<string | null> {
   const $ = cheerio.load(html)
   const url = $('#snippet--containerFilms .film-title-nooverflow').filter(function () {
-    const czechTitleWithYear = $(this).text().trim()
+    const czechTitleWithYear = removeAfterFirstParentheses($(this).text().trim())
     return czechTitleWithYear.toLowerCase() === `${title} (${year})`.toLowerCase()
   }).find('a').attr('href')
 
@@ -90,7 +90,7 @@ export async function findCsfdMovieSlugByCzechTitle(html: string, title: string,
 export async function findCsfdTvShowSlugByCzechTitle(html: string, title: string): Promise<string | null> {
   const $ = cheerio.load(html)
   const url = $('#snippet--containerSeries .film-title-nooverflow').filter(function () {
-    const czechTitle = $(this).find('a').text().trim()
+    const czechTitle = removeAfterFirstParentheses($(this).find('a').text().trim())
     return czechTitle.toLowerCase() === title.toLowerCase()
   }).find('a').attr('href')
 
@@ -141,4 +141,9 @@ function extractCsfdSlugFromUrl(url: string | undefined): string | null {
 
   const parts = url.split('/').filter(Boolean)
   return parts[parts.length - 1]
+}
+
+function removeAfterFirstParentheses(text: string): string {
+  const match = text.match(/^([^(]*\([^)]*\))/)
+  return match ? match[1] : text
 }
