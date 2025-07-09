@@ -1,18 +1,18 @@
 interface MediaItem {
-  tmdb: {
+  tmdbData: {
     posterPath: string | null
     backdropPath: string | null
-  }
+  } | null
 }
 
 export function useImagePreloader(nextItem: Ref<MediaItem | undefined>): void {
   const img = useImage()
 
   const prefetchLinks = computed(() => {
-    if (!nextItem.value)
+    if (!nextItem.value?.tmdbData)
       return []
-    const poster = img.getImage(nextItem.value.tmdb.posterPath ?? '', { provider: 'tmdbPoster' })
-    const backdrop = img.getImage(nextItem.value.tmdb.backdropPath ?? '', { provider: 'tmdbBackdrop' })
+    const poster = img.getImage(nextItem.value.tmdbData.posterPath ?? '', { provider: 'tmdbPoster' })
+    const backdrop = img.getImage(nextItem.value.tmdbData.backdropPath ?? '', { provider: 'tmdbBackdrop' })
     return [
       {
         rel: 'prefetch',

@@ -4,20 +4,24 @@ import * as commonSchema from './schemas/common.js'
 import * as moviesSchema from './schemas/movies.js'
 import * as tvShowsSchema from './schemas/tv-shows.js'
 
-export type Database = ReturnType<typeof drizzle>
+const schema = {
+  ...moviesSchema,
+  ...tvShowsSchema,
+  ...commonSchema,
+}
+
+const db = drizzle(env.DATABASE_URL!, {
+  schema,
+})
+
+export type Database = typeof db
 export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0]
 
 let dbInstance: Database | null = null
 
 export function createDatabase(): Database {
   if (!dbInstance) {
-    dbInstance = drizzle(env.DATABASE_URL!, {
-      schema: {
-        ...moviesSchema,
-        ...tvShowsSchema,
-        ...commonSchema,
-      },
-    })
+    dbInstance = db
   }
   return dbInstance
 }

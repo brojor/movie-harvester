@@ -1,83 +1,65 @@
 import type { SearchParams } from '../../types'
-import { commonSchema, db, moviesSchema } from '@repo/database'
-import { asc, desc, eq } from 'drizzle-orm'
+import { createDatabase } from '@repo/database'
 
-const { movieSources, tmdbMovieData, rtMovieData, csfdMovieData, tmdbMoviesToGenres, csfdMoviesToGenres, tmdbMovieGenres } = moviesSchema
+const db = createDatabase()
 
-const ratingColumns = {
-  csfd: csfdMovieData.voteAverage,
-  tmdb: tmdbMovieData.voteAverage,
-  rt: rtMovieData.criticsScore,
+function getRatingValue(movie: any, ratingSource: string): number {
+  switch (ratingSource) {
+    case 'csfd':
+      return movie.csfdData?.voteAverage ?? 0
+    case 'tmdb':
+      return movie.tmdbData?.voteAverage ?? 0
+    case 'rt':
+      return movie.rtData?.criticsScore ?? 0
+    default:
+      throw new Error(`Invalid ratingSource: ${ratingSource}`)
+  }
 }
 
-const sortByToColumn = {
-  title: tmdbMovieData.title,
-  year: tmdbMovieData.releaseDate,
-  rating: ratingColumns,
-  releaseDate: tmdbMovieData.releaseDate,
+function getSortValue(movie: any, sortBy: string): string | number {
+  switch (sortBy) {
+    case 'rating':
+      throw new Error('Use getRatingValue for rating sorting')
+    case 'releaseDate':
+      return movie.tmdbData?.releaseDate ?? ''
+    case 'title':
+      return movie.tmdbData?.title ?? ''
+    default:
+      throw new Error(`Invalid sortBy: ${sortBy}`)
+  }
+}
+
+function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): number {
+  const comparison = sortBy === 'title'
+    ? String(a).localeCompare(String(b), 'cs')
+    : a < b ? -1 : a > b ? 1 : 0
+
+  return order === 'asc' ? comparison : -comparison
 }
 
 export default defineEventHandler(async (event) => {
   const { sortBy, ratingSource, order } = getQuery(event) as SearchParams
 
-  // 1. Základní dotaz
-  const movies = await db
-    .select({
-      movie: movieSources,
-      tmdb: tmdbMovieData,
-      rt: rtMovieData,
-      csfd: csfdMovieData,
-    })
-    .from(movieSources)
-    .innerJoin(tmdbMovieData, eq(movieSources.id, tmdbMovieData.sourceId))
-    .leftJoin(rtMovieData, eq(movieSources.id, rtMovieData.sourceId))
-    .leftJoin(csfdMovieData, eq(movieSources.id, csfdMovieData.sourceId))
-    .orderBy((order === 'desc' ? desc : asc)(
-      sortBy === 'rating' ? ratingColumns[ratingSource] : sortByToColumn[sortBy],
-    ))
+  const moviesWithAllData = await db.query.movies.findMany({
+    with: {
+      rtData: true,
+      csfdData: { with: { genres: { with: { genre: true } } } },
+      tmdbData: { with: { genres: { with: { genre: true } } } },
+    },
+  })
 
-  // 2. Načtení TMDB žánrů
-  const tmdbGenresMap = new Map<number, string[]>()
-
-  const tmdbGenresJoin = await db
-    .select({
-      movieId: tmdbMoviesToGenres.movieId,
-      genre: tmdbMovieGenres.name,
-    })
-    .from(tmdbMoviesToGenres)
-    .innerJoin(tmdbMovieGenres, eq(tmdbMoviesToGenres.genreId, tmdbMovieGenres.id))
-
-  for (const { movieId, genre } of tmdbGenresJoin) {
-    if (!tmdbGenresMap.has(movieId)) {
-      tmdbGenresMap.set(movieId, [])
+  const sortedMovies = moviesWithAllData.sort((a, b) => {
+    if (sortBy === 'rating') {
+      const aValue = getRatingValue(a, ratingSource)
+      const bValue = getRatingValue(b, ratingSource)
+      return compareValues(aValue, bValue, order)
     }
-    tmdbGenresMap.get(movieId)!.push(genre)
-  }
-
-  // 3. Načtení CSFD žánrů
-  const csfdGenresMap = new Map<number, string[]>()
-
-  const csfdGenresJoin = await db
-    .select({
-      csfdId: csfdMoviesToGenres.csfdId,
-      genre: commonSchema.csfdGenres.name,
-    })
-    .from(csfdMoviesToGenres)
-    .innerJoin(commonSchema.csfdGenres, eq(csfdMoviesToGenres.genreId, commonSchema.csfdGenres.id))
-
-  for (const { csfdId, genre } of csfdGenresJoin) {
-    if (!csfdGenresMap.has(csfdId)) {
-      csfdGenresMap.set(csfdId, [])
+    else {
+      const aValue = getSortValue(a, sortBy)
+      const bValue = getSortValue(b, sortBy)
+      return compareValues(aValue, bValue, order, sortBy)
     }
-    csfdGenresMap.get(csfdId)!.push(genre)
-  }
+  })
 
-  // 4. Složení finálního výsledku
-  const enriched = movies.map(item => ({
-    ...item,
-    tmdbGenres: item.tmdb?.id ? tmdbGenresMap.get(item.tmdb.id) ?? [] : [],
-    csfdGenres: item.csfd?.id ? csfdGenresMap.get(item.csfd.id) ?? [] : [],
-  }))
-
-  return enriched
+  return sortedMovies
 })

@@ -1,6 +1,5 @@
 export const SORT_BY_OPTIONS = [
   { label: 'Název', value: 'title' },
-  { label: 'Rok', value: 'year' },
   { label: 'Hodnocení', value: 'rating' },
   { label: 'Datum vydání', value: 'releaseDate' },
 ] as const

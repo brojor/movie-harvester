@@ -45,33 +45,33 @@ function formatMinutesVerbose(totalMinutes: number): string {
 const additionalInfo = computed(() => {
   const items = []
 
-  if (currentMovie.value?.tmdbGenres.length) {
-    items.push(currentMovie.value.tmdbGenres.join(', '))
+  if (currentMovie.value?.tmdbData?.genres?.length) {
+    items.push(currentMovie.value.tmdbData.genres.map((genre: any) => genre.genre.name).join(', '))
   }
-  if (currentMovie.value?.tmdb.runtime) {
-    items.push(formatMinutesVerbose(currentMovie.value.tmdb.runtime))
+  if (currentMovie.value?.tmdbData?.runtime) {
+    items.push(formatMinutesVerbose(currentMovie.value.tmdbData.runtime))
   }
   return items
 })
 
 const title = computed(() => {
-  return (currentMovie.value?.movie.czechTitle || currentMovie.value?.tmdb.originalTitle)!
+  return (currentMovie.value?.tmdbData?.title || currentMovie.value?.tmdbData?.originalTitle)!
 })
 </script>
 
 <template>
   <div v-if="currentMovie" class="text-white">
-    <NuxtImg v-if="currentMovie.tmdb.backdropPath" provider="tmdbBackdrop" :src="currentMovie.tmdb.backdropPath" class="h-screen w-full object-cover" />
+    <NuxtImg v-if="currentMovie.tmdbData?.backdropPath" provider="tmdbBackdrop" :src="currentMovie.tmdbData.backdropPath" class="h-screen w-full object-cover" />
     <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex flex-col px-[5vw] justify-center">
       <ControlPanel v-model:sort-options="query" v-model:media-type="mediaType" class="py-4" />
       <div class="flex gap-[5vw] my-auto">
-        <NuxtImg v-if="currentMovie.tmdb.posterPath" provider="tmdbPoster" :src="currentMovie.tmdb.posterPath" class="h-[60vh]" />
+        <NuxtImg v-if="currentMovie.tmdbData?.posterPath" provider="tmdbPoster" :src="currentMovie.tmdbData.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">
-          <MediaRatings :csfd="currentMovie.csfd?.voteAverage" :tmdb="currentMovie.tmdb.voteAverage" :rt="currentMovie.rt?.criticsScore" />
-          <MainHeader :title="title" :year="currentMovie.movie.year" />
-          <OriginCountry v-if="currentMovie.tmdb.originalLanguage && currentMovie.tmdb.originalTitle" :origin-country="currentMovie.tmdb.originalLanguage" :origin-title="currentMovie.tmdb.originalTitle" />
+          <MediaRatings :csfd="currentMovie.csfdData?.voteAverage" :tmdb="currentMovie.tmdbData?.voteAverage" :rt="currentMovie.rtData?.criticsScore" />
+          <MainHeader :title="title" :year="currentMovie.year" />
+          <OriginCountry v-if="currentMovie.tmdbData?.originalLanguage && currentMovie.tmdbData?.originalTitle" :origin-country="currentMovie.tmdbData.originalLanguage" :origin-title="currentMovie.tmdbData.originalTitle" />
           <AdditionalInfo :items="additionalInfo" />
-          <MediaOverview v-if="currentMovie.tmdb.overview" :overview="currentMovie.tmdb.overview" />
+          <MediaOverview v-if="currentMovie.tmdbData?.overview" :overview="currentMovie.tmdbData.overview" />
         </div>
       </div>
       <div class="h-[72px]" />
