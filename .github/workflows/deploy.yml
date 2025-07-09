@@ -30,13 +30,14 @@ jobs:
         run: |
           mkdir -p deployment/workers
           mkdir -p deployment/warforum-indexer
+          mkdir -p deployment/download-manager
           cp -r apps/workers/csfd/dist deployment/workers/csfd/
           cp -r apps/workers/rt/dist deployment/workers/rt/
           cp -r apps/workers/tmdb/dist deployment/workers/tmdb/
           cp -r apps/workers/webshare/dist deployment/workers/webshare/
           cp apps/warforum-indexer/dist/* deployment/warforum-indexer/
+          cp -r apps/download-manager/.output deployment/download-manager/
           cp ecosystem.config.js deployment/
-          ls -la deployment/warforum-indexer/
           tar czf release.tar.gz deployment/
 
       - name: Connect to Tailscale

@@ -41,5 +41,13 @@ module.exports = {
         ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
+    {
+      name: 'download-manager',
+      script: './download-manager/.output/server/index.mjs',
+      env: {
+        NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
+      },
+    },
   ],
 }
