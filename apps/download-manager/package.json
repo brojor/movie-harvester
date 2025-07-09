@@ -13,6 +13,7 @@
     "@nuxt/eslint": "catalog:lint",
     "eslint": "catalog:lint",
     "nuxt": "catalog:prod",
+    "unocss": "catalog:prod",
     "vue": "catalog:prod",
     "vue-router": "catalog:prod"
   }
