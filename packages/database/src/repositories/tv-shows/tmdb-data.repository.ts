@@ -16,18 +16,20 @@ export class TmdbTvShowDataRepo implements TmdbTvShowDataRepository {
         .returning({ id: tvShowsSchema.tmdbTvShowsData.id })
 
       // 2) Save genres (ignore duplicates)
-      await tx
-        .insert(tvShowsSchema.tmdbTvShowGenres)
-        .values(tvShowDetails.genres)
-        .onConflictDoNothing({ target: tvShowsSchema.tmdbTvShowGenres.id })
+      if (tvShowDetails.genres.length) {
+        await tx
+          .insert(tvShowsSchema.tmdbTvShowGenres)
+          .values(tvShowDetails.genres)
+          .onConflictDoNothing({ target: tvShowsSchema.tmdbTvShowGenres.id })
 
-      // 3) Link movie to genres
-      await tx
-        .insert(tvShowsSchema.tmdbTvShowsToGenres)
-        .values(tvShowDetails.genres.map(g => ({
-          tvShowId: tmdbId,
-          genreId: g.id,
-        })))
+        // 3) Link movie to genres
+        await tx
+          .insert(tvShowsSchema.tmdbTvShowsToGenres)
+          .values(tvShowDetails.genres.map(g => ({
+            tvShowId: tmdbId,
+            genreId: g.id,
+          })))
+      }
 
       // 4) Save networks (ignore duplicates)
       await tx

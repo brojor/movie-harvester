@@ -16,18 +16,20 @@ export class TmdbMovieDataRepo implements TmdbMovieDataRepository {
         .returning({ id: moviesSchema.tmdbMovieData.id })
 
       // 2) Save genres (ignore duplicates)
-      await tx
-        .insert(moviesSchema.tmdbMovieGenres)
-        .values(movieDetails.genres)
-        .onConflictDoNothing({ target: moviesSchema.tmdbMovieGenres.id })
+      if (movieDetails.genres.length) {
+        await tx
+          .insert(moviesSchema.tmdbMovieGenres)
+          .values(movieDetails.genres)
+          .onConflictDoNothing({ target: moviesSchema.tmdbMovieGenres.id })
 
-      // 3) Link movie to genres
-      await tx
-        .insert(moviesSchema.tmdbMoviesToGenres)
-        .values(movieDetails.genres.map(g => ({
-          movieId: tmdbId,
-          genreId: g.id,
-        })))
+        // 3) Link movie to genres
+        await tx
+          .insert(moviesSchema.tmdbMoviesToGenres)
+          .values(movieDetails.genres.map(g => ({
+            movieId: tmdbId,
+            genreId: g.id,
+          })))
+      }
 
       return tmdbId
     })
