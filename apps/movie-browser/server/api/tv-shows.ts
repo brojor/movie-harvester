@@ -1,95 +1,65 @@
-import type { TmdbNetwork, TmdbSeason } from '@repo/database'
 import type { SearchParams } from '../../types'
-import { db, tvShowsSchema } from '@repo/database'
-import { asc, desc, eq } from 'drizzle-orm'
+import { createDatabase } from '@repo/database'
 
-const { tvShowSources, tmdbTvShowsData, tmdbTvShowsToGenres, tmdbTvShowGenres, tmdbNetworks, tmdbTvShowToNetworks, tmdbSeasons } = tvShowsSchema
+const db = createDatabase()
 
-const sortByToColumn = {
-  title: tmdbTvShowsData.name,
-  year: tmdbTvShowsData.firstAirDate,
-  rating: tmdbTvShowsData.voteAverage,
-  releaseDate: tmdbTvShowsData.firstAirDate,
+function getRatingValue(movie: any, ratingSource: string): number {
+  switch (ratingSource) {
+    case 'csfd':
+      return movie.csfdData?.voteAverage ?? 0
+    case 'tmdb':
+      return movie.tmdbData?.voteAverage ?? 0
+    case 'rt':
+      return movie.rtData?.criticsScore ?? 0
+    default:
+      throw new Error(`Invalid ratingSource: ${ratingSource}`)
+  }
+}
+
+function getSortValue(movie: any, sortBy: string): string | number {
+  switch (sortBy) {
+    case 'rating':
+      throw new Error('Use getRatingValue for rating sorting')
+    case 'releaseDate':
+      return movie.tmdbData?.releaseDate ?? ''
+    case 'title':
+      return movie.tmdbData?.name ?? ''
+    default:
+      throw new Error(`Invalid sortBy: ${sortBy}`)
+  }
+}
+
+function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): number {
+  const comparison = sortBy === 'title'
+    ? String(a).localeCompare(String(b), 'cs')
+    : a < b ? -1 : a > b ? 1 : 0
+
+  return order === 'asc' ? comparison : -comparison
 }
 
 export default defineEventHandler(async (event) => {
-  const { sortBy, order } = getQuery(event) as SearchParams
+  const { sortBy, ratingSource, order } = getQuery(event) as SearchParams
 
-  // 1. Základní dotaz
-  const tvShows = await db
-    .select({
-      tvShow: tvShowSources,
-      tmdb: tmdbTvShowsData,
-    })
-    .from(tvShowSources)
-    .innerJoin(tmdbTvShowsData, eq(tvShowSources.id, tmdbTvShowsData.sourceId))
-    .orderBy((order === 'desc' ? desc : asc)(
-      sortByToColumn[sortBy],
-    ))
+  const tvShowsWithAllData = await db.query.tvShows.findMany({
+    with: {
+      rtData: true,
+      csfdData: { with: { genres: { with: { genre: true } } } },
+      tmdbData: { with: { genres: { with: { genre: true } } } },
+    },
+  })
 
-  // 2. Načtení TMDB žánrů
-  const tmdbGenresMap = new Map<number, string[]>()
-
-  const tmdbGenresJoin = await db
-    .select({
-      tvShowId: tmdbTvShowsToGenres.tvShowId,
-      genre: tmdbTvShowGenres.name,
-    })
-    .from(tmdbTvShowsToGenres)
-    .innerJoin(tmdbTvShowGenres, eq(tmdbTvShowsToGenres.genreId, tmdbTvShowGenres.id))
-
-  for (const { tvShowId, genre } of tmdbGenresJoin) {
-    if (tvShowId !== null) {
-      if (!tmdbGenresMap.has(tvShowId)) {
-        tmdbGenresMap.set(tvShowId, [])
-      }
-      tmdbGenresMap.get(tvShowId)!.push(genre)
+  const sortedTvShows = tvShowsWithAllData.sort((a, b) => {
+    if (sortBy === 'rating') {
+      const aValue = getRatingValue(a, ratingSource)
+      const bValue = getRatingValue(b, ratingSource)
+      return compareValues(aValue, bValue, order)
     }
-  }
-
-  // 3. Načtení networks
-  const networksMap = new Map<number, TmdbNetwork[]>()
-
-  const networksJoin = await db
-    .select({
-      tvShowId: tmdbTvShowToNetworks.tvShowId,
-      network: tmdbNetworks,
-    })
-    .from(tmdbTvShowToNetworks)
-    .innerJoin(tmdbNetworks, eq(tmdbTvShowToNetworks.networkId, tmdbNetworks.id))
-
-  for (const { tvShowId, network } of networksJoin) {
-    if (tvShowId !== null) {
-      if (!networksMap.has(tvShowId)) {
-        networksMap.set(tvShowId, [])
-      }
-      networksMap.get(tvShowId)!.push(network)
+    else {
+      const aValue = getSortValue(a, sortBy)
+      const bValue = getSortValue(b, sortBy)
+      return compareValues(aValue, bValue, order, sortBy)
     }
-  }
+  })
 
-  // 4. Načtení seasons
-  const seasonsMap = new Map<number, TmdbSeason[]>()
-
-  const seasonsData = await db
-    .select()
-    .from(tmdbSeasons)
-
-  for (const season of seasonsData) {
-    if (season.tvShowId !== null) {
-      if (!seasonsMap.has(season.tvShowId)) {
-        seasonsMap.set(season.tvShowId, [])
-      }
-      seasonsMap.get(season.tvShowId)!.push(season)
-    }
-  }
-
-  // 5. Složení finálního výsledku
-  const enriched = tvShows.map(item => ({
-    ...item,
-    tmdbGenres: item.tmdb?.id ? tmdbGenresMap.get(item.tmdb.id) ?? [] : [],
-    networks: item.tmdb?.id ? networksMap.get(item.tmdb.id) ?? [] : [],
-    seasons: item.tmdb?.id ? seasonsMap.get(item.tmdb.id) ?? [] : [],
-  }))
-
-  return enriched
+  return sortedTvShows
 })
