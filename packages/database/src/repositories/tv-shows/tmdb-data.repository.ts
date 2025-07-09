@@ -35,7 +35,12 @@ export class TmdbTvShowDataRepo implements TmdbTvShowDataRepository {
       if (tvShowDetails.networks.length) {
         await tx
           .insert(tvShowsSchema.tmdbNetworks)
-          .values(tvShowDetails.networks)
+          .values(tvShowDetails.networks.map(n => ({
+            id: n.id,
+            logoPath: n.logo_path,
+            name: n.name,
+            originCountry: n.origin_country,
+          })))
           .onConflictDoNothing({ target: tvShowsSchema.tmdbNetworks.id })
 
         // 5) Link tv show to networks
@@ -44,6 +49,23 @@ export class TmdbTvShowDataRepo implements TmdbTvShowDataRepository {
           .values(tvShowDetails.networks.map(n => ({
             tvShowId: tmdbId,
             networkId: n.id,
+          })))
+      }
+
+      // 6) Save seasons
+      if (tvShowDetails.seasons.length) {
+        await tx
+          .insert(tvShowsSchema.tmdbSeasons)
+          .values(tvShowDetails.seasons.map(s => ({
+            id: s.id,
+            tvShowId: tmdbId,
+            name: s.name,
+            overview: s.overview,
+            posterPath: s.poster_path,
+            seasonNumber: s.season_number,
+            voteAverage: s.vote_average,
+            episodeCount: s.episode_count,
+            airDate: s.air_date,
           })))
       }
 

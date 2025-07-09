@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
     with: {
       rtData: true,
       csfdData: { with: { genres: { with: { genre: true } } } },
-      tmdbData: { with: { genres: { with: { genre: true } } } },
+      tmdbData: { with: { genres: { with: { genre: true } }, seasons: true } },
     },
   })
 

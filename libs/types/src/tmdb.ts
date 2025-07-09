@@ -223,4 +223,5 @@ export interface TmdbTvShowDetails {
   voteAverage: number
   voteCount: number
   genres: Genre[]
+  seasons: Season[]
 }

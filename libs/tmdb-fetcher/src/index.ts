@@ -151,6 +151,7 @@ export async function getTvShowDetails(id: number): Promise<TmdbTvShowDetails> {
     voteAverage: tvShowDetails.vote_average,
     voteCount: tvShowDetails.vote_count,
     genres: tvShowDetails.genres,
+    seasons: tvShowDetails.seasons,
   }
 }
 
