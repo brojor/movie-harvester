@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TmdbSeason } from '@repo/database'
 import type { MediaType, SearchParams } from '../types'
 
 const props = defineProps<{
@@ -42,6 +43,33 @@ const additionalInfo = computed(() => {
 const title = computed(() => {
   return (currentTvShow.value?.tmdbData?.name || currentTvShow.value?.tmdbData?.originalName)!
 })
+
+function getReleaseYear(date: string | null) {
+  if (!date)
+    return null
+  return date.split('-')[0]
+}
+
+const sortedSeasons = computed(() => {
+  return currentTvShow.value?.tmdbData?.seasons
+    ?.slice()
+    .filter((season: TmdbSeason) => !!season.airDate && season.name !== 'Speciály')
+    .sort((a: TmdbSeason, b: TmdbSeason) => {
+      if (a.airDate && b.airDate) {
+        return new Date(a.airDate).getTime() - new Date(b.airDate).getTime()
+      }
+      return 0
+    })
+})
+
+// TODO: refactor duplicate code from MovieRatings.vue
+function getColor(value: number): string {
+  if (value < 40)
+    return 'text-gray-500'
+  if (value < 70)
+    return 'text-blue-500'
+  return 'text-red-500'
+}
 </script>
 
 <template>
@@ -56,6 +84,15 @@ const title = computed(() => {
           <MainHeader :title="title" :year="Number(currentTvShow.tmdbData?.firstAirDate?.split('-')[0])" />
           <OriginCountry v-if="currentTvShow.tmdbData?.originalLanguage && currentTvShow.tmdbData?.originalName" :origin-country="currentTvShow.tmdbData.originalLanguage" :origin-title="currentTvShow.tmdbData.originalName" />
           <AdditionalInfo :items="additionalInfo" />
+          <div class="grid grid-cols-2 gap-x-16 w-max">
+            <div v-for="season in sortedSeasons" :key="season.id" class="">
+              <div v-if="season.airDate && season.episodeCount" class="flex gap-2">
+                <span :class="getColor((season.voteAverage ?? 0) * 10)">&#9632;&nbsp;{{ season.name }}</span>
+                <span class="text-gray-400">({{ getReleaseYear(season.airDate) }})</span> -
+                <span>{{ season.episodeCount }} epizod</span>
+              </div>
+            </div>
+          </div>
           <MediaOverview v-if="currentTvShow.tmdbData?.overview" :overview="currentTvShow.tmdbData.overview" />
         </div>
       </div>
