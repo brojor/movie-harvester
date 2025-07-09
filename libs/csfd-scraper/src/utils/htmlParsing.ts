@@ -89,7 +89,7 @@ export async function findCsfdMovieSlugByCzechTitle(html: string, title: string,
 
 export async function findCsfdTvShowSlugByCzechTitle(html: string, title: string): Promise<string | null> {
   const $ = cheerio.load(html)
-  const url = $('#snippet--containerFilms .film-title-nooverflow').filter(function () {
+  const url = $('#snippet--containerSeries .film-title-nooverflow').filter(function () {
     const czechTitle = $(this).find('a').text().trim()
     return czechTitle.toLowerCase() === title.toLowerCase()
   }).find('a').attr('href')
@@ -111,7 +111,7 @@ export async function findCsfdMovieSlugByOriginalTitle(html: string, title: stri
 
 export async function findCsfdTvShowSlugByOriginalTitle(html: string, title: string): Promise<string | null> {
   const $ = cheerio.load(html)
-  const url = $('#snippet--containerFilms .article-header').filter(function () {
+  const url = $('#snippet--containerSeries .article-header').filter(function () {
     const originalTitle = $(this).find('p.search-name').text().replace(/[()]/g, '').trim()
     return originalTitle.toLowerCase() === title.toLowerCase()
   }).find('a').attr('href')
