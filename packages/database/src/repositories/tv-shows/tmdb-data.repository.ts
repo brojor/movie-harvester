@@ -32,18 +32,20 @@ export class TmdbTvShowDataRepo implements TmdbTvShowDataRepository {
       }
 
       // 4) Save networks (ignore duplicates)
-      await tx
-        .insert(tvShowsSchema.tmdbNetworks)
-        .values(tvShowDetails.networks)
-        .onConflictDoNothing({ target: tvShowsSchema.tmdbNetworks.id })
+      if (tvShowDetails.networks.length) {
+        await tx
+          .insert(tvShowsSchema.tmdbNetworks)
+          .values(tvShowDetails.networks)
+          .onConflictDoNothing({ target: tvShowsSchema.tmdbNetworks.id })
 
-      // 5) Link tv show to networks
-      await tx
-        .insert(tvShowsSchema.tmdbTvShowToNetworks)
-        .values(tvShowDetails.networks.map(n => ({
-          tvShowId: tmdbId,
-          networkId: n.id,
-        })))
+        // 5) Link tv show to networks
+        await tx
+          .insert(tvShowsSchema.tmdbTvShowToNetworks)
+          .values(tvShowDetails.networks.map(n => ({
+            tvShowId: tmdbId,
+            networkId: n.id,
+          })))
+      }
 
       return tmdbId
     })
