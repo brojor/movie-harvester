@@ -33,6 +33,7 @@ jobs:
           cp -r apps/workers/csfd/dist deployment/workers/csfd/
           cp -r apps/workers/rt/dist deployment/workers/rt/
           cp -r apps/workers/tmdb/dist deployment/workers/tmdb/
+          cp -r apps/workers/webshare/dist deployment/workers/webshare/
           cp apps/warforum-indexer/dist/* deployment/warforum-indexer/
           cp ecosystem.config.js deployment/
           ls -la deployment/warforum-indexer/

@@ -25,6 +25,14 @@ module.exports = {
       },
     },
     {
+      name: 'webshare-worker',
+      script: './workers/webshare/index.js',
+      env: {
+        NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
+      },
+    },
+    {
       name: 'warforum-indexer',
       script: './warforum-indexer/index.js',
       autorestart: false,

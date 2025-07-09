@@ -331,6 +331,15 @@ importers:
         specifier: catalog:prod
         version: 5.56.1
 
+  apps/workers/webshare:
+    dependencies:
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
+      bullmq:
+        specifier: catalog:prod
+        version: 5.56.1
+
   libs/csfd-scraper:
     dependencies:
       '@repo/shared':

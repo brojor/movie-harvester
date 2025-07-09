@@ -11,3 +11,5 @@ export const tmdbMovieQueue = new Queue('movies', { connection, prefix: 'tmdb' }
 export const csfdTvShowQueue = new Queue('tv-shows', { connection, prefix: 'csfd' })
 export const rtTvShowQueue = new Queue('tv-shows', { connection, prefix: 'rt' })
 export const tmdbTvShowQueue = new Queue('tv-shows', { connection, prefix: 'tmdb' })
+
+export const downloadQueue = new Queue('download', { connection, prefix: 'webshare' })
