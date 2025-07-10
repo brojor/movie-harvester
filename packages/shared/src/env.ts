@@ -23,6 +23,8 @@ const envSchema = z.object({
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string(),
   META_RESOLVER_PORT: z.coerce.number().default(3000),
+  WEBSHARE_USERNAME: z.string(),
+  WEBSHARE_PASSWORD: z.string(),
 })
 
 export const env = envSchema.parse(process.env)
