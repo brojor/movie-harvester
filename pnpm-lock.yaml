@@ -375,6 +375,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../../packages/shared
+      '@repo/webshare-downloader':
+        specifier: workspace:*
+        version: link:../../../libs/webshare-downloader
       bullmq:
         specifier: catalog:prod
         version: 5.56.1
