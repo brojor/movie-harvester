@@ -1,5 +1,5 @@
+/* eslint-disable node/prefer-global/process -- avoid ESM redeclaration in Nuxt */
 import { dirname, resolve } from 'node:path'
-import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import * as dotenv from 'dotenv'
 import { z } from 'zod'
