@@ -13,3 +13,7 @@ export interface ProgressData {
 export interface Threads {
   [key: string]: ProgressData
 }
+
+export interface BulkJobPayload {
+  urls: string[]
+}

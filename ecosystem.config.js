@@ -32,15 +32,15 @@ module.exports = {
         ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
-    {
-      name: 'warforum-indexer',
-      script: './warforum-indexer/index.js',
-      autorestart: false,
-      env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
-      },
-    },
+    // {
+    //   name: 'warforum-indexer',
+    //   script: './warforum-indexer/index.js',
+    //   autorestart: false,
+    //   env: {
+    //     NODE_ENV: 'production',
+    //     ENV_FILE: '/var/www/media-harvester/config/.env',
+    //   },
+    // },
     {
       name: 'download-manager',
       script: './download-manager/.output/server/index.mjs',
