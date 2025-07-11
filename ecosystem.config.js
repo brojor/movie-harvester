@@ -47,6 +47,15 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         ENV_FILE: '/var/www/media-harvester/config/.env',
+        PORT: 3001,
+      },
+    },
+    {
+      name: 'movie-browser',
+      script: './movie-browser/.output/server/index.mjs',
+      env: {
+        NODE_ENV: 'production',
+        ENV_FILE: '/var/www/media-harvester/config/.env',
       },
     },
   ],

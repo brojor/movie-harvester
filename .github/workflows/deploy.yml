@@ -26,18 +26,30 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Verify builds
+        run: |
+          echo "Checking if movie-browser build exists:"
+          ls -la apps/movie-browser/.output/
+          echo "Checking if download-manager build exists:"
+          ls -la apps/download-manager/.output/
+
       - name: Create deployment archive
         run: |
           mkdir -p deployment/workers
           mkdir -p deployment/warforum-indexer
           mkdir -p deployment/download-manager
+          mkdir -p deployment/movie-browser
           cp -r apps/workers/csfd/dist deployment/workers/csfd/
           cp -r apps/workers/rt/dist deployment/workers/rt/
           cp -r apps/workers/tmdb/dist deployment/workers/tmdb/
           cp -r apps/workers/webshare/dist deployment/workers/webshare/
           cp apps/warforum-indexer/dist/* deployment/warforum-indexer/
           cp -r apps/download-manager/.output deployment/download-manager/
+          cp -r apps/movie-browser/.output deployment/movie-browser/
           cp ecosystem.config.js deployment/
+          echo "Verifying deployment structure:"
+          ls -la deployment/
+          ls -la deployment/movie-browser/
           tar czf release.tar.gz deployment/
 
       - name: Connect to Tailscale
@@ -62,6 +74,12 @@ jobs:
             rm -rf /var/www/media-harvester/current && \
             ln -sf $RELEASE_DIR /var/www/media-harvester/current && \
             cd /var/www/media-harvester/current/deployment && \
+            echo 'Deployment structure:' && \
+            ls -la && \
+            echo 'Movie browser structure:' && \
+            ls -la movie-browser/ && \
+            echo 'Checking if movie-browser server file exists:' && \
+            ls -la movie-browser/.output/server/ || echo 'Server directory not found' && \
             pm2 startOrRestart ecosystem.config.js && \
             cd /var/www/media-harvester/releases && \
             ls -1tr | head -n -5 | xargs -d '\n' rm -rf --
