@@ -12,10 +12,17 @@
   "dependencies": {
     "@nuxt/eslint": "catalog:lint",
     "@repo/queues": "workspace:*",
+    "@vueuse/core": "catalog:prod",
+    "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
+    "node-ipc": "catalog:prod",
     "nuxt": "catalog:prod",
     "unocss": "catalog:prod",
     "vue": "catalog:prod",
     "vue-router": "catalog:prod"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:lint",
+    "@types/node-ipc": "catalog:dev"
   }
 }

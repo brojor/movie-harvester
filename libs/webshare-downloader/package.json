@@ -15,15 +15,16 @@
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
-    "@types/progress-stream": "catalog:dev",
     "axios": "catalog:prod",
     "crypt3-md5": "catalog:prod",
+    "node-ipc": "catalog:prod",
     "progress-stream": "catalog:prod",
     "ufo": "catalog:prod",
     "xml2js": "catalog:prod"
   },
   "devDependencies": {
-    "@antfu/nip": "catalog:dev",
+    "@types/node-ipc": "catalog:dev",
+    "@types/progress-stream": "catalog:dev",
     "@types/xml2js": "catalog:dev"
   }
 }

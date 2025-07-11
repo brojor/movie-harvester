@@ -2,9 +2,12 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@unocss/nuxt'],
+  modules: ['@nuxt/eslint', '@unocss/nuxt', '@vueuse/nuxt'],
   nitro: {
     preset: 'node-server',
+    experimental: {
+      websocket: true,
+    },
   },
   eslint: {
     config: {
