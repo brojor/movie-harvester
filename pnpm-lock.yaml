@@ -524,9 +524,6 @@ importers:
       ufo:
         specifier: catalog:prod
         version: 1.6.1
-      xml2js:
-        specifier: catalog:prod
-        version: 0.6.2
     devDependencies:
       '@types/node-ipc':
         specifier: catalog:dev
@@ -534,9 +531,6 @@ importers:
       '@types/progress-stream':
         specifier: catalog:dev
         version: 2.0.5
-      '@types/xml2js':
-        specifier: catalog:dev
-        version: 0.4.14
 
   packages/database:
     dependencies:
@@ -582,9 +576,16 @@ importers:
       tough-cookie:
         specifier: catalog:prod
         version: 5.1.2
+      xml2js:
+        specifier: catalog:prod
+        version: 0.6.2
       zod:
         specifier: catalog:prod
         version: 3.25.76
+    devDependencies:
+      '@types/xml2js':
+        specifier: catalog:dev
+        version: 0.4.14
 
 packages:
 

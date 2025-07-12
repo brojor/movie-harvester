@@ -1,23 +1,22 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { env } from '@repo/shared'
+import { env, webshareApi } from '@repo/shared'
 import axios from 'axios'
 import { crypt as md5crypt } from 'crypt3-md5'
 import ipc from 'node-ipc'
 import progress from 'progress-stream'
-import api from './api.js'
 import { extractFilename, extractIdent } from './url.js'
 
 ipc.config.silent = true
 ipc.connectTo('nuxt-ws')
 
 async function login(user: string, pass: string): Promise<void> {
-  const salt = await api.getSalt(user)
+  const salt = await webshareApi.getSalt(user)
   const password = passwordDigest(pass, salt)
-  const token = await api.login(user, password)
+  const token = await webshareApi.login(user, password)
 
-  api.setCookie(token)
+  webshareApi.setCookie(token)
 }
 
 function passwordDigest(password: string, salt: string): string {
@@ -34,12 +33,12 @@ function passwordDigest(password: string, salt: string): string {
 }
 
 export async function downloadFile(fileUrl: string): Promise<void> {
-  if (!api.isLoggedIn()) {
+  if (!webshareApi.isLoggedIn()) {
     await login(env.WEBSHARE_USERNAME, env.WEBSHARE_PASSWORD)
   }
 
   const ident = extractIdent(fileUrl)
-  const fileLink = await api.getFileLink(ident)
+  const fileLink = await webshareApi.getFileLink(ident)
   const filename = extractFilename(fileLink)
   const filePath = path.join(env.WEBSHARE_DOWNLOAD_DIR, filename)
   const writer = fs.createWriteStream(filePath)

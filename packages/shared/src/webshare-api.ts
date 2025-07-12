@@ -1,6 +1,24 @@
-import type { ApiResponse, ErrorResponse, SuccessResponse } from './types.js'
 import axios from 'axios'
 import { parseStringPromise } from 'xml2js'
+
+export type SuccessResponse<T> = {
+  status: ['OK']
+} & T
+
+export interface ErrorResponse {
+  status: ['FATAL']
+  code: [string]
+  message: [string]
+}
+
+export interface ApiResponse<T> {
+  response: SuccessResponse<T> | ErrorResponse
+}
+
+export interface Credentials {
+  username: string
+  password: string
+}
 
 const api = axios.create({
   baseURL: 'https://webshare.cz',
@@ -34,7 +52,7 @@ async function makeRequest<T>(endpoint: string, params: Record<string, string>):
  * @param password The user's password digest SHA1(MD5_CRYPT(password)).
  * @returns A session security token (WST).
  */
-async function login(usernameOrEmail: string, password: string): Promise<string> {
+export async function login(usernameOrEmail: string, password: string): Promise<string> {
   const response = await makeRequest<{ token: [string] }>('/api/login/', {
     username_or_email: usernameOrEmail,
     password,
@@ -47,7 +65,7 @@ async function login(usernameOrEmail: string, password: string): Promise<string>
  * @param ident The identifier of the file.
  * @returns A direct download link of the given file.
  */
-async function getFileLink(ident: string): Promise<string> {
+export async function getFileLink(ident: string): Promise<string> {
   const response = await makeRequest<{ link: [string] }>('/api/file_link/', {
     ident,
     force_https: '1',
@@ -59,7 +77,7 @@ async function getFileLink(ident: string): Promise<string> {
  * @param usernameOrEmail The username or email address of the user.
  * @returns The given user's password salt.
  */
-async function getSalt(usernameOrEmail: string): Promise<string> {
+export async function getSalt(usernameOrEmail: string): Promise<string> {
   const response = await makeRequest<{ salt: [string] }>('/api/salt/', {
     username_or_email: usernameOrEmail,
   })
@@ -67,17 +85,31 @@ async function getSalt(usernameOrEmail: string): Promise<string> {
 }
 
 /**
+ * @param ident The identifier of the file.
+ * @returns Whether the given file exists.
+ */
+export async function fileExists(ident: string): Promise<boolean> {
+  const response = await makeRequest<{ exists: ['1' | '0'] }>(
+    '/api/file_exists/',
+    {
+      ident,
+    },
+  )
+  return response.exists[0] === '1'
+}
+
+/**
  * @param token The session security token (WST).
  */
-function setCookie(token: string): void {
+export function setCookie(token: string): void {
   api.defaults.headers.Cookie = `WST=${token}`
 }
 
 /**
  * @returns Whether the user is logged in.
  */
-function isLoggedIn(): boolean {
+export function isLoggedIn(): boolean {
   return !!api.defaults.headers.Cookie
 }
 
-export default { getFileLink, getSalt, login, setCookie, isLoggedIn }
+export default { getFileLink, getSalt, login, setCookie, isLoggedIn, fileExists }

@@ -19,12 +19,10 @@
     "crypt3-md5": "catalog:prod",
     "node-ipc": "catalog:prod",
     "progress-stream": "catalog:prod",
-    "ufo": "catalog:prod",
-    "xml2js": "catalog:prod"
+    "ufo": "catalog:prod"
   },
   "devDependencies": {
     "@types/node-ipc": "catalog:dev",
-    "@types/progress-stream": "catalog:dev",
-    "@types/xml2js": "catalog:dev"
+    "@types/progress-stream": "catalog:dev"
   }
 }
