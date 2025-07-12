@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxt/eslint": "catalog:lint",
     "@repo/queues": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",

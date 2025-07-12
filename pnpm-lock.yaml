@@ -203,6 +203,9 @@ importers:
       '@repo/queues':
         specifier: workspace:*
         version: link:../../libs/queues
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@vueuse/core':
         specifier: catalog:prod
         version: 13.5.0(vue@3.5.17(typescript@5.8.3))
@@ -576,6 +579,9 @@ importers:
       tough-cookie:
         specifier: catalog:prod
         version: 5.1.2
+      ufo:
+        specifier: catalog:prod
+        version: 1.6.1
       xml2js:
         specifier: catalog:prod
         version: 0.6.2

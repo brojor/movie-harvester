@@ -19,6 +19,7 @@
     "p-limit": "catalog:prod",
     "php-serialize": "catalog:prod",
     "tough-cookie": "catalog:prod",
+    "ufo": "catalog:prod",
     "xml2js": "catalog:prod",
     "zod": "catalog:prod"
   },

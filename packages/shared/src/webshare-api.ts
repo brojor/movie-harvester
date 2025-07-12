@@ -1,3 +1,4 @@
+import type { AxiosError, AxiosRequestConfig } from 'axios'
 import axios from 'axios'
 import { parseStringPromise } from 'xml2js'
 
@@ -20,6 +21,11 @@ export interface Credentials {
   password: string
 }
 
+const MAX_RETRIES = 3
+const INITIAL_DELAY_MS = 250
+
+const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
+
 const api = axios.create({
   baseURL: 'https://webshare.cz',
   headers: {
@@ -27,6 +33,26 @@ const api = axios.create({
     'Content-Type': 'application/x-www-form-urlencoded',
   },
 })
+
+api.interceptors.response.use(
+  response => response,
+  async (error: AxiosError) => {
+    const config = error.config as AxiosRequestConfig & { _retry?: number }
+
+    if (error.response?.status === 403) {
+      config._retry = (config._retry || 0) + 1
+
+      if (config._retry <= MAX_RETRIES) {
+        const delayMs = INITIAL_DELAY_MS * 2 ** (config._retry - 1)
+        await delay(delayMs)
+
+        return api(config)
+      }
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 function handleResponse<T>(response: SuccessResponse<T> | ErrorResponse): SuccessResponse<T> {
   if (response.status[0] === 'OK') {
