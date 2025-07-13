@@ -128,7 +128,7 @@ export async function fileExists(ident: string): Promise<boolean> {
  * @param token The session security token (WST).
  */
 export function setCookie(token: string): void {
-  api.defaults.headers.Cookie = `WST=${token}`
+  api.defaults.headers.Cookie = `wst=${token}`
 }
 
 /**

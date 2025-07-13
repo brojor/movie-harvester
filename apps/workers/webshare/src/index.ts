@@ -11,5 +11,5 @@ const _downloadWorker = new Worker(
     await downloadFile(url)
     return { success: true }
   },
-  { connection, prefix: 'webshare', concurrency: 2 },
+  { connection, prefix: 'webshare', concurrency: 10 },
 )
