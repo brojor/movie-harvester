@@ -24,6 +24,8 @@ export interface Credentials {
 const MAX_RETRIES = 3
 const INITIAL_DELAY_MS = 250
 
+let wst: string | undefined
+
 const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms))
 
 const api = axios.create({
@@ -94,6 +96,8 @@ export async function login(usernameOrEmail: string, password: string): Promise<
 export async function getFileLink(ident: string): Promise<string> {
   const response = await makeRequest<{ link: [string] }>('/api/file_link/', {
     ident,
+    wst: wst ?? '',
+    download_type: 'file_download',
     force_https: '1',
   })
   return response.link[0]
@@ -128,14 +132,14 @@ export async function fileExists(ident: string): Promise<boolean> {
  * @param token The session security token (WST).
  */
 export function setCookie(token: string): void {
-  api.defaults.headers.Cookie = `wst=${token}`
+  wst = token
 }
 
 /**
  * @returns Whether the user is logged in.
  */
 export function isLoggedIn(): boolean {
-  return !!api.defaults.headers.Cookie
+  return !!wst
 }
 
 export default { getFileLink, getSalt, login, setCookie, isLoggedIn, fileExists }
