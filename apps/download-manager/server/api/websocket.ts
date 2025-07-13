@@ -14,6 +14,10 @@ export default defineWebSocketHandler({
       const payload = JSON.parse(data) as ProgressData
       threads[payload.id] = payload
       peer.send(JSON.stringify(threads))
+
+      if (payload.percentage === 1) {
+        delete threads[payload.id]
+      }
     })
   },
 
