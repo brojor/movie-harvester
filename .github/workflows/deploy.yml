@@ -37,8 +37,7 @@ jobs:
         with:
           oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
-          tags: tag:ci
-          version: latest
+          tags: tag:github-ci
 
       - name: Archive build
         run: tar czf build.tar.gz packages/**/dist
