@@ -42,11 +42,13 @@ jobs:
       - name: Archive build
         run: |
           mkdir -p build-output
-          # Kopírujeme všechny dist složky (warforum-indexer + workers)
           cp -r apps/warforum-indexer/dist build-output/warforum-indexer
-          cp -r apps/workers/*/dist build-output/
-          # Kopírujeme všechny .output složky (Nuxt aplikace)
-          cp -r apps/*/.output build-output/
+          cp -r apps/movie-browser/.output build-output/movie-browser
+          cp -r apps/download-manager/.output build-output/download-manager
+          cp -r apps/workers/csfd/dist build-output/workers-csfd
+          cp -r apps/workers/rt/dist build-output/workers-rt
+          cp -r apps/workers/tmdb/dist build-output/workers-tmdb
+          cp -r apps/workers/webshare/dist build-output/workers-webshare
           tar czf build.tar.gz build-output
 
       - name: Deploy to server
