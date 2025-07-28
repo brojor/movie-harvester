@@ -40,7 +40,7 @@ jobs:
           tags: tag:github-ci
 
       - name: Archive build
-        run: tar czf build.tar.gz packages/**/dist
+        run: tar czf build.tar.gz apps/**/dist
 
       - name: Deploy to server
         run: |
