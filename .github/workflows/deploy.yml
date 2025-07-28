@@ -19,14 +19,12 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      # 3️⃣ Instalace dependencí
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build apps
-        if: github.ref == 'refs/heads/main'
         run: pnpm run build
 
       - name: Tailscale
@@ -37,7 +35,10 @@ jobs:
           tags: tag:ci
           version: latest
 
-      # 5️⃣ Přenos buildu na server (atomic deploy)
+      - name: Archive build
+        run: tar czf build.tar.gz packages/**/dist
+
       - name: Deploy to server
         run: |
-          scp -o StrictHostKeyChecking=no packages/**/dist deploy@prod-01:~/
+          scp -o StrictHostKeyChecking=no build.tar.gz deploy@prod-01:~/
+          ssh deploy@prod-01 "tar xzf build.tar.gz && rm build.tar.gz"
