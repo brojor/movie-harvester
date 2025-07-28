@@ -1,5 +1,5 @@
 import type { MediaType, MovieCoreMeta, TvShowCoreMeta } from '@repo/types'
-import { moveDefiniteArticleToEnd } from 'packages/shared/dist/index.js'
+import { moveDefiniteArticleToEnd } from '@repo/shared'
 
 export function extractTopicId(url: string): number | null {
   const match = url.match(/t=(\d+)/)
