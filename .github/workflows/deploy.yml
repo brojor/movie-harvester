@@ -22,11 +22,6 @@ jobs:
           corepack enable
           corepack prepare pnpm@latest --activate
 
-      - uses: actions/setup-node@v4
-        with:
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build apps
@@ -45,10 +40,10 @@ jobs:
           cp -r apps/warforum-indexer/dist build-output/warforum-indexer
           cp -r apps/movie-browser/.output build-output/movie-browser
           cp -r apps/download-manager/.output build-output/download-manager
-          cp -r apps/workers/csfd/dist build-output/workers-csfd
-          cp -r apps/workers/rt/dist build-output/workers-rt
-          cp -r apps/workers/tmdb/dist build-output/workers-tmdb
-          cp -r apps/workers/webshare/dist build-output/workers-webshare
+          cp -r apps/workers/csfd/dist build-output/csfd-worker
+          cp -r apps/workers/rt/dist build-output/rt-worker
+          cp -r apps/workers/tmdb/dist build-output/tmdb-worker
+          cp -r apps/workers/webshare/dist build-output/webshare-worker
           tar czf build.tar.gz build-output
 
       - name: Deploy to server
