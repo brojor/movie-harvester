@@ -40,7 +40,14 @@ jobs:
           tags: tag:github-ci
 
       - name: Archive build
-        run: tar czf build.tar.gz apps/**/dist
+        run: |
+          mkdir -p build-output
+          # Kopírujeme všechny dist složky (warforum-indexer + workers)
+          cp -r apps/warforum-indexer/dist build-output/warforum-indexer
+          cp -r apps/workers/*/dist build-output/
+          # Kopírujeme všechny .output složky (Nuxt aplikace)
+          cp -r apps/*/.output build-output/
+          tar czf build.tar.gz build-output
 
       - name: Deploy to server
         run: |
