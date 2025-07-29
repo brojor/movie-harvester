@@ -48,5 +48,5 @@ jobs:
 
       - name: Deploy to server
         run: |
-          scp -o StrictHostKeyChecking=no build.tar.gz deploy@prod-01:~/
-          ssh deploy@prod-01 "tar xzf build.tar.gz && rm build.tar.gz"
+          scp -o StrictHostKeyChecking=no build.tar.gz deploy@node-js-staging:~/
+          ssh deploy@node-js-staging "tar xzf build.tar.gz && rm build.tar.gz"
