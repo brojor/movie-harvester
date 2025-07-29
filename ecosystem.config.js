@@ -2,60 +2,53 @@ module.exports = {
   apps: [
     {
       name: 'csfd-worker',
-      script: './workers/csfd/index.js',
+      script: './csfd-worker/index.js',
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
+        ENV_FILE: './.env',
       },
     },
     {
       name: 'rt-worker',
-      script: './workers/rt/index.js',
+      script: './rt-worker/index.js',
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
+        ENV_FILE: './.env',
       },
     },
     {
       name: 'tmdb-worker',
-      script: './workers/tmdb/index.js',
+      script: './tmdb-worker/index.js',
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
+        ENV_FILE: './.env',
       },
     },
     {
       name: 'webshare-worker',
-      script: './workers/webshare/index.js',
+      script: './webshare-worker/index.js',
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
+        ENV_FILE: './.env',
       },
     },
-    // {
-    //   name: 'warforum-indexer',
-    //   script: './warforum-indexer/index.js',
-    //   autorestart: false,
-    //   env: {
-    //     NODE_ENV: 'production',
-    //     ENV_FILE: '/var/www/media-harvester/config/.env',
-    //   },
-    // },
     {
-      name: 'download-manager',
-      script: './download-manager/.output/server/index.mjs',
+      name: 'warforum-indexer',
+      script: './warforum-indexer/index.js',
+      autorestart: false,
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
-        PORT: 3001,
+        ENV_FILE: './.env',
       },
     },
     {
       name: 'movie-browser',
-      script: './movie-browser/.output/server/index.mjs',
+      script: './movie-browser/server/index.mjs',
       env: {
-        NODE_ENV: 'production',
-        ENV_FILE: '/var/www/media-harvester/config/.env',
+        ENV_FILE: './.env',
+      },
+    },
+    {
+      name: 'download-manager',
+      script: './download-manager/server/index.mjs',
+      env: {
+        ENV_FILE: './.env',
+        PORT: 3001,
       },
     },
   ],
