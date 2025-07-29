@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
       csfdData: { with: { genres: { with: { genre: true } } } },
       tmdbData: { with: { genres: { with: { genre: true } } } },
     },
+    where: (movies, { gt }) => gt(movies.createdAt, new Date('2025-07-19')),
   })
 
   const sortedMovies = moviesWithAllData.sort((a, b) => {
