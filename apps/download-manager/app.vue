@@ -21,7 +21,7 @@ function extractWebshareUrls(text: string): string[] {
   return matches ?? []
 }
 
-const { data } = useWebSocket(`wss://dl.brojor.me/api/websocket`)
+const { data } = useWebSocket(`wss://dl-staging.brojor.me/api/websocket`)
 const threads = computed(() => {
   return JSON.parse(data.value) as Threads
 })
