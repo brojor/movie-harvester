@@ -1,3 +1,4 @@
+import type { CancelTokenSource } from 'axios'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -8,69 +9,131 @@ import ipc from 'node-ipc'
 import progress from 'progress-stream'
 
 ipc.config.silent = true
-ipc.connectTo('nuxt-ws')
 
+// Přihlášení k Webshare
 async function login(user: string, pass: string): Promise<void> {
   const salt = await webshareApi.getSalt(user)
   const password = passwordDigest(pass, salt)
   const token = await webshareApi.login(user, password)
-
   webshareApi.setCookie(token)
 }
 
 function passwordDigest(password: string, salt: string): string {
-  // Format the salt to the correct format "$1$salt$"
   const md5Salt = salt.startsWith('$1$') ? salt : `$1$${salt}$`
-
-  // MD5-Crypt (unix crypt(3) variant)
-  const cryptString = md5crypt(password, md5Salt) // "$1$salt$checksum"
-
-  // SHA-1 hex of the MD5-Crypt string
-  const digest = createHash('sha1').update(cryptString).digest('hex')
-
-  return digest
+  const cryptString = md5crypt(password, md5Salt)
+  return createHash('sha1').update(cryptString).digest('hex')
 }
 
-export async function downloadFile(fileUrl: string): Promise<void> {
-  if (!webshareApi.isLoggedIn()) {
-    await login(env.WEBSHARE_USERNAME, env.WEBSHARE_PASSWORD)
-  }
+export class DownloadManager {
+  private cancelTokenSource: CancelTokenSource | null = null
+  private paused = false
+  private pausedResolver: (() => void) | null = null
+  private pausedPromise: Promise<void> | null = null
 
-  const ident = extractIdent(fileUrl)
-  const fileLink = await webshareApi.getFileLink(ident)
-  const filename = extractFilename(fileLink)
-  const filePath = path.join(env.WEBSHARE_DOWNLOAD_DIR, filename)
-  const writer = fs.createWriteStream(filePath)
+  private downloadedBytes = 0
+  private filePath!: string
+  private fileLink!: string
+  private filename!: string
 
-  const { data: dataStream, headers } = await axios.get(fileLink, { responseType: 'stream' })
-
-  const contentLength = Number(headers['content-length'] ?? 0)
-  const progressStream = progress({ length: contentLength, time: 100 })
-
-  progressStream.on('progress', (progress) => {
-    const payload = {
-      id: filename,
-      speed: progress.speed,
-      transferred: progress.transferred,
-      percentage: progress.percentage,
+  async start(fileUrl: string): Promise<void> {
+    // Login pokud nejsme přihlášeni
+    if (!webshareApi.isLoggedIn()) {
+      await login(env.WEBSHARE_USERNAME, env.WEBSHARE_PASSWORD)
     }
 
-    ipc.of['nuxt-ws']?.emit('progress', JSON.stringify(payload))
-  })
+    // Získání odkazu a názvu souboru
+    const ident = extractIdent(fileUrl)
+    this.fileLink = await webshareApi.getFileLink(ident)
+    this.filename = extractFilename(this.fileLink)
+    this.filePath = path.join(env.WEBSHARE_DOWNLOAD_DIR, this.filename)
 
-  return new Promise<void>((resolve, reject) => {
-    writer.on('finish', () => {
-      resolve()
+    // Pokud existuje částečně stažený soubor, nastav offset
+    if (fs.existsSync(this.filePath)) {
+      this.downloadedBytes = fs.statSync(this.filePath).size
+    }
+
+    // Spuštění stahování
+    await this.download()
+  }
+
+  private async download(): Promise<void> {
+    this.cancelTokenSource = axios.CancelToken.source()
+
+    const headers: Record<string, string> = {}
+    if (this.downloadedBytes > 0) {
+      headers.Range = `bytes=${this.downloadedBytes}-`
+    }
+
+    const { data: dataStream, headers: responseHeaders } = await axios.get(this.fileLink, {
+      responseType: 'stream',
+      headers,
+      cancelToken: this.cancelTokenSource.token,
     })
 
-    writer.on('error', (error: Error) => {
-      reject(error)
+    const totalBytes = Number(responseHeaders['content-length'] ?? 0) + this.downloadedBytes
+    const writer = fs.createWriteStream(this.filePath, { flags: this.downloadedBytes > 0 ? 'a' : 'w' })
+    const progressStream = progress({ length: totalBytes, time: 100 })
+
+    // Reportování progresu přes IPC
+    progressStream.on('progress', (p) => {
+      ipc.of['nuxt-ws']?.emit(
+        'progress',
+        JSON.stringify({
+          id: this.filename,
+          speed: p.speed,
+          transferred: p.transferred,
+          percentage: p.percentage,
+        }),
+      )
+      this.downloadedBytes = p.transferred
     })
 
-    dataStream.on('error', (error: Error) => {
-      reject(error)
-    })
+    return new Promise<void>((resolve, reject) => {
+      writer.on('finish', resolve)
+      writer.on('error', reject)
+      dataStream.on('error', reject)
 
-    dataStream.pipe(progressStream).pipe(writer)
-  })
+      dataStream.pipe(progressStream).pipe(writer)
+    })
+  }
+
+  // Pauza
+  pause(): void {
+    if (this.cancelTokenSource && !this.paused) {
+      this.cancelTokenSource.cancel('Download paused')
+      this.paused = true
+      this.pausedPromise = new Promise<void>(res => (this.pausedResolver = res))
+    }
+  }
+
+  // Obnova
+  async resume(): Promise<void> {
+    if (this.paused) {
+      this.paused = false
+      this.pausedResolver?.()
+      await this.download()
+    }
+  }
+
+  // Zrušení (ukončí stahování a smaže částečný soubor)
+  cancel(): void {
+    if (this.cancelTokenSource) {
+      this.cancelTokenSource.cancel('Download canceled')
+    }
+    if (fs.existsSync(this.filePath)) {
+      fs.unlinkSync(this.filePath)
+    }
+  }
+
+  getFilename(): string {
+    return this.filename
+  }
+
+  getDownloadedBytes(): number {
+    return this.downloadedBytes
+  }
+
+  isPaused(): boolean {
+    return this.paused
+  }
 }
