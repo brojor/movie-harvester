@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type FileCheck from './components/FileCheck.vue'
-import type { Threads } from './types'
-import { useWebSocket } from '@vueuse/core'
+import type { CompletedJob, FailedJob, ProgressData } from './types'
+import { useEventSource } from '@vueuse/core'
 
 const clipboardContent = ref('')
 const urlsToCheck = computed(() => extractWebshareUrls(clipboardContent.value))
@@ -21,11 +21,6 @@ function extractWebshareUrls(text: string): string[] {
   return matches ?? []
 }
 
-const { data } = useWebSocket(`wss://dl.brojor.me/api/websocket`)
-const threads = computed(() => {
-  return JSON.parse(data.value) as Threads
-})
-
 async function pasteFromClipboard(): Promise<void> {
   try {
     const text = await navigator.clipboard.readText()
@@ -35,6 +30,45 @@ async function pasteFromClipboard(): Promise<void> {
     console.error('Failed to read clipboard:', error)
   }
 }
+
+const jobIdInput = ref('')
+function pause() {
+  $fetch(`/api/downloads/${jobIdInput.value}/pause`, {
+    method: 'patch',
+  })
+}
+function resume() {
+  $fetch(`/api/downloads/${jobIdInput.value}/resume`, {
+    method: 'patch',
+  })
+}
+function cancel() {
+  $fetch(`/api/downloads/${jobIdInput.value}`, {
+    method: 'delete',
+  })
+}
+
+const { event, data, status, error, close } = useEventSource<['progress', 'completed', 'failed'], ProgressData | CompletedJob | FailedJob>(
+  '/api/downloads/stream',
+  ['progress', 'completed', 'failed'],
+  {
+    autoReconnect: { retries: Infinity, delay: 2000 },
+  },
+)
+const downloads = ref<Record<string, ProgressData>>({})
+
+watch(data, (e) => {
+  if (e && event.value === 'progress') {
+    const { jobId, data } = JSON.parse(e) as ProgressEvent
+    downloads.value[jobId] = data
+  }
+  else if (e && event.value === 'completed') {
+    console.log('completed', e)
+  }
+  else if (e && event.value === 'failed') {
+    console.log('failed', e)
+  }
+})
 </script>
 
 <template>
@@ -46,6 +80,18 @@ async function pasteFromClipboard(): Promise<void> {
       <div>
         <button v-if="urlsToCheck.length === 0" class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="pasteFromClipboard">
           Načíst ze schránky
+        </button>
+      </div>
+      <div>
+        <input v-model="jobIdInput" type="text">
+        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="pause">
+          Pause
+        </button>
+        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="resume">
+          Resume
+        </button>
+        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="cancel">
+          Cancel
         </button>
       </div>
       <div v-if="urlsToCheck.length > 0" class="bg-white/8 rounded-2xl py-5 mb-4">
@@ -64,7 +110,7 @@ async function pasteFromClipboard(): Promise<void> {
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <ThreadCard v-for="thread in threads" :key="thread.id" :thread="thread" />
+        <ThreadCard v-for="(progressData, jobId) in downloads" :key="jobId" :progress-data="progressData" :job-id="jobId" />
       </div>
     </div>
   </div>

@@ -17,12 +17,10 @@
     "@repo/shared": "workspace:*",
     "axios": "catalog:prod",
     "crypt3-md5": "catalog:prod",
-    "node-ipc": "catalog:prod",
     "progress-stream": "catalog:prod",
     "ufo": "catalog:prod"
   },
   "devDependencies": {
-    "@types/node-ipc": "catalog:dev",
     "@types/progress-stream": "catalog:dev"
   }
 }

@@ -8,6 +8,16 @@ export default defineNuxtConfig({
     experimental: {
       websocket: true,
     },
+    routeRules: {
+      '/api/downloads/stream': {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      },
+    },
+    timing: false, // Disable timing for SSE endpoints
   },
   eslint: {
     config: {

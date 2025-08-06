@@ -13,10 +13,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/webshare-downloader": "workspace:*",
-    "@types/node-ipc": "catalog:dev",
-    "bullmq": "catalog:prod",
-    "node-ipc": "catalog:prod"
+    "bullmq": "catalog:prod"
   }
 }

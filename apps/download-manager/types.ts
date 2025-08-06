@@ -1,5 +1,4 @@
 export interface ProgressData {
-  id: string
   transferred: number
   percentage: number
   length: number
@@ -8,10 +7,22 @@ export interface ProgressData {
   runtime: number
   delta: number
   speed: number
+  status: 'active' | 'paused'
 }
 
-export interface Threads {
-  [key: string]: ProgressData
+export interface ProgressEvent {
+  jobId: string
+  data: ProgressData
+}
+
+export interface CompletedJob {
+  jobId: string
+  returnvalue: any
+}
+
+export interface FailedJob {
+  jobId: string
+  failedReason: string
 }
 
 export interface BulkJobPayload {
