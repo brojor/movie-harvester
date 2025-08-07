@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type FileCheck from './components/FileCheck.vue'
-import type { CompletedJob, FailedJob, ProgressData } from './types'
+import type { CompletedJob, FailedJob, ProgressData, ProgressEvent } from './types'
 import { useEventSource } from '@vueuse/core'
 
 const clipboardContent = ref('')
@@ -48,25 +48,89 @@ function cancel() {
   })
 }
 
-const { event, data, status, error, close } = useEventSource<['progress', 'completed', 'failed'], ProgressData | CompletedJob | FailedJob>(
+const { event, data, status, error, close } = useEventSource<['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'], string>(
   '/api/downloads/stream',
-  ['progress', 'completed', 'failed'],
+  ['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'],
   {
     autoReconnect: { retries: Infinity, delay: 2000 },
   },
 )
-const downloads = ref<Record<string, ProgressData>>({})
 
-watch(data, (e) => {
-  if (e && event.value === 'progress') {
-    const { jobId, data } = JSON.parse(e) as ProgressEvent
+type JobStatus = 'active' | 'paused'
+interface PendingAction { next: JobStatus, timeoutId?: ReturnType<typeof setTimeout> }
+
+const downloads = ref<Record<string, ProgressData>>({})
+const downloadStates = ref<Record<string, 'active' | 'paused'>>({})
+const pending = ref<Map<string, PendingAction>>(new Map())
+
+function setOptimisticState(jobId: string, nextState: JobStatus) {
+  const currentState = downloadStates.value[jobId]
+  if (currentState === nextState)
+    return
+  downloadStates.value[jobId] = nextState
+  const timeoutId = setTimeout(() => {
+    downloadStates.value[jobId] = currentState
+    pending.value.delete(jobId)
+  }, 3000)
+  pending.value.set(jobId, { next: nextState, timeoutId })
+}
+
+function clearPending(jobId: string) {
+  const p = pending.value.get(jobId)
+  if (p?.timeoutId)
+    clearTimeout(p.timeoutId)
+  pending.value.delete(jobId)
+}
+
+watch(data, (d) => {
+  if (d && event.value === 'progress') {
+    const { jobId, data } = JSON.parse(d) as ProgressEvent
+    if (downloadStates.value[jobId] === 'paused')
+      return
+
     downloads.value[jobId] = data
   }
-  else if (e && event.value === 'completed') {
-    console.log('completed', e)
+  else if (d && event.value === 'completed') {
+    console.log('completed', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, returnValue: any, prev: string }
+    delete downloads.value[jobId]
   }
-  else if (e && event.value === 'failed') {
-    console.log('failed', e)
+  else if (d && event.value === 'failed') {
+    console.log('failed', d)
+  }
+  else if (d && event.value === 'active') {
+    console.log('active', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'active')
+      clearPending(jobId)
+  }
+  else if (d && event.value === 'added') {
+    console.log('added', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, name: string }
+    downloadStates.value[jobId] = 'active'
+  }
+  else if (d && event.value === 'paused') {
+    console.log('paused', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'paused')
+      clearPending(jobId)
+  }
+  else if (d && event.value === 'delayed') {
+    console.log('delayed', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'paused')
+      clearPending(jobId)
+  }
+  else if (d && event.value === 'resumed') {
+    console.log('resumed', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'active')
+      clearPending(jobId)
+  }
+  else if (d && event.value === 'removed') {
+    console.log('removed', d)
+    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    delete downloads.value[jobId]
   }
 })
 </script>
@@ -110,7 +174,7 @@ watch(data, (e) => {
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <ThreadCard v-for="(progressData, jobId) in downloads" :key="jobId" :progress-data="progressData" :job-id="jobId" />
+        <ThreadCard v-for="(progressData, jobId) in downloads" :key="jobId" :progress-data="progressData" :job-id="jobId" :state="downloadStates[jobId]" @pause="setOptimisticState(jobId, 'paused')" @resume="setOptimisticState(jobId, 'active')" />
       </div>
     </div>
   </div>

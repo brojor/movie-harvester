@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { env, extractFilename, extractIdent, webshareApi } from '@repo/shared'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { crypt as md5crypt } from 'crypt3-md5'
 import progress from 'progress-stream'
 
@@ -67,9 +67,10 @@ export class DownloadManager {
     }
 
     // Získání informací o souboru
-    const { data: fileInfo } = await axios.head(fileLink, { maxRedirects: 5 })
-    const expectedSize = Number(fileInfo.headers['content-length'] ?? 0)
-    const lastModified = fileInfo.headers['last-modified'] ?? ''
+    console.log('fileLink', fileLink)
+    const { headers } = await axios.head(fileLink)
+    const expectedSize = Number(headers['content-length'] ?? 0)
+    const lastModified = headers['last-modified'] ?? ''
 
     this.options.updateData?.({
       expectedSize,
@@ -137,10 +138,17 @@ export class DownloadManager {
   }
 
   cancel(): void {
+    if (this.paused) {
+      console.log('is paused, throwing error')
+      throw new AxiosError('Abcd', 'ERR_CANCELED')
+    }
     if (this.cancelTokenSource) {
+      console.log('has cancel token source')
+
       this.cancelTokenSource.cancel('Download canceled')
     }
     if (fs.existsSync(this.filePath)) {
+      console.log('has file path')
       fs.unlinkSync(this.filePath)
     }
   }

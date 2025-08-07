@@ -4,6 +4,12 @@ import type { ProgressData } from '../types'
 const props = defineProps<{
   progressData: ProgressData
   jobId: string
+  state: 'active' | 'paused'
+}>()
+
+const emit = defineEmits<{
+  (e: 'pause'): void
+  (e: 'resume'): void
 }>()
 
 function formatBytes(bytes: number): string {
@@ -18,11 +24,13 @@ function pause() {
   $fetch(`/api/downloads/${props.jobId}/pause`, {
     method: 'patch',
   })
+  emit('pause')
 }
 function resume() {
   $fetch(`/api/downloads/${props.jobId}/resume`, {
     method: 'patch',
   })
+  emit('resume')
 }
 function cancel() {
   $fetch(`/api/downloads/${props.jobId}`, {
@@ -37,11 +45,11 @@ const { data: filename } = useFetch(`/api/downloads/${props.jobId}/filename`)
   <div class="bg-white/8 rounded-2xl p-5">
     <div class="flex justify-between items-center mb-3">
       <span class="text-sm font-semibold text-blue-400 flex items-center">
-        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': progressData.status === 'active', 'bg-yellow-500': progressData.status === 'paused' }" />{{ filename }}</span>
+        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': state === 'active', 'bg-yellow-500': state === 'paused' }" />{{ filename }}</span>
       <span class="text-xs text-white/80">{{ `${formatBytes(progressData.speed)}/s` }}</span>
     </div>
     <div class="p-0.5 mb-2 flex items-center">
-      <IconPause v-if="progressData.status === 'active'" class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="pause" />
+      <IconPause v-if="state === 'active'" class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="pause" />
       <IconPlay v-else class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="resume" />
       <IconCancel class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="cancel" />
       <div class="bg-black/20 rounded-lg flex-1">

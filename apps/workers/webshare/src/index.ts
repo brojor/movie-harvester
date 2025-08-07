@@ -16,10 +16,14 @@ controlBus.init().then(() => {
       return
     }
 
-    if (cmd.type === 'pause')
+    if (cmd.type === 'pause') {
       mgr.pause()
-    if (cmd.type === 'cancel')
+      activeDownloads.delete(cmd.jobId)
+    }
+    if (cmd.type === 'cancel') {
       mgr.cancel()
+      activeDownloads.delete(cmd.jobId)
+    }
   })
 })
 
