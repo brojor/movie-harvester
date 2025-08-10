@@ -82,6 +82,20 @@ function clearPending(jobId: string) {
   pending.value.delete(jobId)
 }
 
+const isInitializing = ref(true)
+
+const activeDownloads = await $fetch('/api/downloads/active')
+const pausedDownloads = await $fetch('/api/downloads/paused')
+
+for (const job of activeDownloads) {
+  downloadStates.value[job.id!] = 'active'
+}
+for (const job of pausedDownloads) {
+  downloadStates.value[job.id!] = 'paused'
+  downloads.value[job.id!] = job.progress as ProgressData
+}
+isInitializing.value = false
+
 watch(data, (d) => {
   if (d && event.value === 'progress') {
     const { jobId, data } = JSON.parse(d) as ProgressEvent
@@ -173,7 +187,7 @@ watch(data, (d) => {
           <FileCheck v-for="url in urlsToCheck" :key="url" ref="fileCheckRefs" :url="url" />
         </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div v-if="!isInitializing" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <ThreadCard v-for="(progressData, jobId) in downloads" :key="jobId" :progress-data="progressData" :job-id="jobId" :state="downloadStates[jobId]" @pause="setOptimisticState(jobId, 'paused')" @resume="setOptimisticState(jobId, 'active')" />
       </div>
     </div>

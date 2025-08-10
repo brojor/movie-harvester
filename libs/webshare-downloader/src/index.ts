@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { env, extractFilename, extractIdent, webshareApi } from '@repo/shared'
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 import { crypt as md5crypt } from 'crypt3-md5'
 import progress from 'progress-stream'
 
@@ -13,7 +13,7 @@ export interface ProgressData extends Progress {
 }
 
 interface DownloadManagerOptions {
-  onProgress?: (progress: ProgressData) => void
+  onProgress?: (progress: Progress) => void
   updateData?: (data: any) => void
 }
 
@@ -111,11 +111,7 @@ export class DownloadManager {
     const progressStream = progress({ length: totalBytes, time: 100, transferred: this.downloadedBytes })
 
     progressStream.on('progress', (p: Progress) => {
-      this.currentProgress = p
-      this.options.onProgress?.({
-        status: 'active',
-        ...p,
-      })
+      this.options.onProgress?.(p)
     })
 
     return new Promise<void>((resolve, reject) => {
@@ -130,25 +126,14 @@ export class DownloadManager {
     if (this.cancelTokenSource && !this.paused) {
       this.cancelTokenSource.cancel('Download paused')
       this.paused = true
-      this.options.onProgress?.({
-        status: 'paused',
-        ...this.currentProgress,
-      })
     }
   }
 
   cancel(): void {
-    if (this.paused) {
-      console.log('is paused, throwing error')
-      throw new AxiosError('Abcd', 'ERR_CANCELED')
-    }
     if (this.cancelTokenSource) {
-      console.log('has cancel token source')
-
       this.cancelTokenSource.cancel('Download canceled')
     }
     if (fs.existsSync(this.filePath)) {
-      console.log('has file path')
       fs.unlinkSync(this.filePath)
     }
   }

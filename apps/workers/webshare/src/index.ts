@@ -18,7 +18,6 @@ controlBus.init().then(() => {
 
     if (cmd.type === 'pause') {
       mgr.pause()
-      activeDownloads.delete(cmd.jobId)
     }
     if (cmd.type === 'cancel') {
       mgr.cancel()
@@ -30,7 +29,7 @@ controlBus.init().then(() => {
 // BullMQ worker
 const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
   'download',
-  async (job) => {
+  async (job, token) => {
     const { url } = job.data
     const manager = new DownloadManager({
       onProgress: async p => await job.updateProgress(p),
@@ -43,7 +42,7 @@ const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
       const { status } = await manager.start(url, job.id!)
 
       if (status === 'paused') {
-        await job.moveToDelayed(Infinity)
+        await job.moveToDelayed(Infinity, token)
         throw new DelayedError('Paused')
       }
 
