@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@nuxt/eslint": "catalog:lint",
+    "@pinia/nuxt": "catalog:",
     "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
     "nuxt": "catalog:prod",
+    "pinia": "catalog:",
     "unocss": "catalog:prod",
     "vue": "catalog:prod",
     "vue-router": "catalog:prod"

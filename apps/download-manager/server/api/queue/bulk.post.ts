@@ -1,12 +1,21 @@
 import type { BulkJobPayload } from '../../../types'
-import { downloadQueue } from '@repo/queues'
+import { flowProducer } from '@repo/queues'
 
 export default defineEventHandler(async (event) => {
   const { urls } = await readBody<BulkJobPayload>(event)
-  const bulkJobs = urls.map(url => ({
+  const parrentjobName = 'Desperado'
+  const children = urls.map(url => ({
     name: 'download',
     data: { url },
+    queueName: 'download',
   }))
 
-  await downloadQueue.addBulk(bulkJobs)
+  // await downloadQueue.addBulk(bulkJobs)
+  const jobNode = await flowProducer.add({
+    name: parrentjobName,
+    queueName: 'bundle-download',
+    children,
+  })
+
+  return jobNode
 })

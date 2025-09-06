@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@unocss/nuxt', '@vueuse/nuxt'],
+  modules: ['@nuxt/eslint', '@unocss/nuxt', '@vueuse/nuxt', '@pinia/nuxt'],
   nitro: {
     preset: 'node-server',
     experimental: {

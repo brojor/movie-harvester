@@ -1,3 +1,6 @@
+export type JobId = string
+export type BundleId = string
+
 export interface ProgressData {
   transferred: number
   percentage: number
@@ -7,21 +10,20 @@ export interface ProgressData {
   runtime: number
   delta: number
   speed: number
-  status: 'active' | 'paused'
 }
 
 export interface ProgressEvent {
-  jobId: string
+  jobId: JobId
   data: ProgressData
 }
 
 export interface CompletedJob {
-  jobId: string
+  jobId: JobId
   returnvalue: any
 }
 
 export interface FailedJob {
-  jobId: string
+  jobId: JobId
   failedReason: string
 }
 

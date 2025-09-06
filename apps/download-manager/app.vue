@@ -9,11 +9,15 @@ const urlsToCheck = computed(() => extractWebshareUrls(clipboardContent.value))
 const fileCheckRefs = ref<InstanceType<typeof FileCheck>[]>([])
 const aliveUrls = computed(() => fileCheckRefs.value.filter(ref => ref?.state === 'alive').map(ref => ref?.url))
 
+const { registerJobs, upsertFromEvent } = useProgressStore()
+
 async function addToQueue() {
-  await $fetch('/api/queue/bulk', {
+  const jobNode = await $fetch('/api/queue/bulk', {
     method: 'post',
     body: { urls: aliveUrls.value },
   })
+  const { job, children } = jobNode
+  registerJobs(job.id!, children?.map(child => child.job!.id!) ?? [])
 }
 function extractWebshareUrls(text: string): string[] {
   const regex = /https:\/\/webshare\.cz\/#\/file\/\S+/g
@@ -86,14 +90,22 @@ const isInitializing = ref(true)
 
 const activeDownloads = await $fetch('/api/downloads/active')
 const pausedDownloads = await $fetch('/api/downloads/paused')
+const allDownloads = await $fetch('/api/downloads/all')
 
-for (const job of activeDownloads) {
-  downloadStates.value[job.id!] = 'active'
-}
-for (const job of pausedDownloads) {
-  downloadStates.value[job.id!] = 'paused'
-  downloads.value[job.id!] = job.progress as ProgressData
-}
+console.log('allDownloads', allDownloads)
+
+// for (const job of activeDownloads) {
+//   downloadStates.value[job.id!] = 'active'
+//   if (!job.id || !job.parent || !job.parent.id) {
+//     console.error('job has no id or parent', job)
+//     continue
+//   }
+//   registerJob(job.parent.id, job.id)
+// }
+// for (const job of pausedDownloads) {
+//   downloadStates.value[job.id!] = 'paused'
+//   downloads.value[job.id!] = job.progress as ProgressData
+// }
 isInitializing.value = false
 
 watch(data, (d) => {
@@ -102,7 +114,7 @@ watch(data, (d) => {
     if (downloadStates.value[jobId] === 'paused')
       return
 
-    downloads.value[jobId] = data
+    upsertFromEvent({ jobId, data })
   }
   else if (d && event.value === 'completed') {
     console.log('completed', d)
