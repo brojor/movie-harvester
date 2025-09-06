@@ -19,9 +19,11 @@
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "@types/pg": "catalog:dev",
-    "drizzle-kit": "catalog:dev",
     "drizzle-orm": "catalog:prod",
     "pg": "catalog:prod"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:dev",
+    "drizzle-kit": "catalog:dev"
   }
 }

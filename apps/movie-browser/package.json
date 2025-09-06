@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "@repo/media-browser",
   "type": "module",
   "private": true,
   "scripts": {

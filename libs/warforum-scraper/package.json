@@ -16,13 +16,13 @@
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "@types/he": "catalog:dev",
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
     "he": "catalog:prod",
     "iconv-lite": "catalog:prod"
   },
   "devDependencies": {
+    "@types/he": "catalog:dev",
     "domhandler": "catalog:dev",
     "vitest": "catalog:dev"
   }
