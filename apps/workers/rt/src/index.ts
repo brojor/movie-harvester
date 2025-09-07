@@ -4,12 +4,11 @@ import { createAllRepositories, createDatabase } from '@repo/database'
 import { createQueues } from '@repo/queues'
 import { findRtMovieId, findRtTvShowId, getMovieDetails, getTvShowDetails } from '@repo/rt-scraper'
 import { Worker } from 'bullmq'
-import { env } from './env.js'
+import { databaseUrl, redisOptions } from './env.js'
 
-const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
-const db = createDatabase(env.DATABASE_URL)
+const db = createDatabase(databaseUrl)
 const repositories = createAllRepositories(db)
-const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
+const queues = createQueues(redisOptions)
 
 const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
   'movies',
@@ -37,7 +36,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'rt' },
+  { connection: redisOptions, prefix: 'rt' },
 )
 
 const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
@@ -66,5 +65,5 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'rt' },
+  { connection: redisOptions, prefix: 'rt' },
 )

@@ -5,9 +5,6 @@ import { makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
 export interface TmdbConfig {
   baseUrl: string
   apiKey: string
-  userAgent: string
-  delayMin?: number
-  delayMax?: number
 }
 
 export type HttpClient = ReturnType<typeof makeHttpClient>

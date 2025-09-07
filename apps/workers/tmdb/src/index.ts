@@ -7,19 +7,12 @@ import { createQueues } from '@repo/queues'
 import { moveDefiniteArticleToEnd } from '@repo/shared'
 import { createTmdbService } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
-import { env } from './env.js'
+import { databaseUrl, redisOptions, tmdbConfig } from './env.js'
 
-const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
-const db = createDatabase(env.DATABASE_URL)
+const db = createDatabase(databaseUrl)
 const repositories = createAllRepositories(db)
-const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
-const tmdbService = createTmdbService({
-  baseUrl: env.TMDB_BASE_URL,
-  apiKey: env.TMDB_API_KEY,
-  userAgent: env.USER_AGENT,
-  delayMin: env.HTTP_CLIENT_DELAY_MIN,
-  delayMax: env.HTTP_CLIENT_DELAY_MAX,
-})
+const queues = createQueues(redisOptions)
+const tmdbService = createTmdbService(tmdbConfig)
 
 const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
   'movies',
@@ -66,7 +59,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'tmdb' },
+  { connection: redisOptions, prefix: 'tmdb' },
 )
 
 const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
@@ -116,5 +109,5 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         throw new Error(`Unknown action: ${job.name}`)
     }
   },
-  { connection, prefix: 'tmdb' },
+  { connection: redisOptions, prefix: 'tmdb' },
 )

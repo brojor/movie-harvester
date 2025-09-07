@@ -11,4 +11,12 @@ const envSchema = z.object({
   REDIS_PASSWORD: z.string(),
 })
 
-export const env = envSchema.parse(process.env)
+const env = envSchema.parse(process.env)
+
+export const redisOptions = {
+  host: env.REDIS_HOST,
+  port: env.REDIS_PORT,
+  password: env.REDIS_PASSWORD,
+}
+
+export const databaseUrl = env.DATABASE_URL
