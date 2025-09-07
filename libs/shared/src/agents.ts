@@ -1,12 +1,12 @@
 import type { Agent as HttpAgent } from 'node:http'
 import type { Agent as HttpsAgent } from 'node:https'
 import type { Cookie } from 'tough-cookie'
+import type { WarforumEnv } from './types.js'
 import { HttpCookieAgent, HttpsCookieAgent } from 'http-cookie-agent/http'
 import { serialize } from 'php-serialize'
 import { CookieJar } from 'tough-cookie'
-import { env } from './env.js'
 
-export function makeAgents(concurrency: number): {
+export function makeAgents(concurrency: number, env: WarforumEnv): {
   httpAgent: HttpAgent
   httpsAgent: HttpsAgent
 } {

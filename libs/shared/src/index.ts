@@ -8,9 +8,7 @@ export {
   tvShowTopicIdMap,
   type TvShowTopicType,
 } from './constants/topicMaps.js'
-export { env } from './env.js'
 export { makeHttpClient } from './httpClient.js'
-export { redis } from './redisClient.js'
 export { getDelayMs } from './utils/http-utils.js'
 export * from './utils/string.js'
 export * from './utils/url.js'
