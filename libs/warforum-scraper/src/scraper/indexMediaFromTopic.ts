@@ -7,6 +7,7 @@ import { parseTopicPage } from './parseTopicPage.js'
 export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId>(
   topicId: T,
   cutoffDate: Date,
+  deprecatedDate: string,
 ): Promise<MediaTopic<T>[]> {
   const items: (MovieTopic | TvShowTopic)[] = []
   const mediaType = getMediaType(topicId)
@@ -20,8 +21,8 @@ export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId
     const html = await fetchHtml(url)
 
     const result = mediaType === 'movie'
-      ? parseTopicPage(html, topicType, 'movie', cutoffDate)
-      : parseTopicPage(html, topicType, 'tvShow', cutoffDate)
+      ? parseTopicPage(html, topicType, 'movie', cutoffDate, deprecatedDate)
+      : parseTopicPage(html, topicType, 'tvShow', cutoffDate, deprecatedDate)
 
     items.push(...result.mediaItems)
     reachedCutoff = result.reachedCutoff

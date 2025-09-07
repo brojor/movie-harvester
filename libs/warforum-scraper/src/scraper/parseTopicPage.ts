@@ -11,6 +11,7 @@ export function parseTopicPage<T extends MediaType>(
   topicType: TopicType,
   mediaType: T,
   cutoffDate: Date,
+  deprecatedDate: string,
 ): ParseTopicResult<MovieTopic | TvShowTopic> {
   const $ = cheerio.load(html)
   const mediaItems: (MovieTopic | TvShowTopic)[] = []
@@ -38,7 +39,7 @@ export function parseTopicPage<T extends MediaType>(
 
     lastRowDate = date
 
-    if (isOld(date, cutoffDate))
+    if (isOld(date, deprecatedDate, cutoffDate))
       return
 
     const topicTitleText = parseTopicTitleText(row, $)
@@ -63,7 +64,7 @@ export function parseTopicPage<T extends MediaType>(
     }
   })
 
-  const reachedCutoff = isOld(lastRowDate, cutoffDate)
+  const reachedCutoff = isOld(lastRowDate, deprecatedDate, cutoffDate)
 
   return {
     mediaItems,

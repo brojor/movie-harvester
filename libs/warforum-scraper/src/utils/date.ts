@@ -1,6 +1,5 @@
 import { isBefore, isValid, parse } from 'date-fns'
 import { cs } from 'date-fns/locale'
-import { env } from '../env.js'
 
 export function parseDate(raw: string): Date | null {
   const parsed = parse(raw.trim(), 'dd MMMM yyyy, HH:mm', new Date(), { locale: cs })
@@ -11,8 +10,8 @@ export function parseDate(raw: string): Date | null {
   return parsed
 }
 
-export function isOld(date: Date, cutoffDate?: Date): boolean {
-  const isDeprecated = isBefore(date, new Date(env.WARFORUM_INDEXER_DEPRECATED_DATE))
+export function isOld(date: Date, deprecatedDate: string, cutoffDate?: Date): boolean {
+  const isDeprecated = isBefore(date, new Date(deprecatedDate))
   const isBeforeCutoffDate = cutoffDate ? isBefore(date, cutoffDate) : false
 
   return isDeprecated || isBeforeCutoffDate

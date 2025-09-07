@@ -1,13 +1,14 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import { createDatabase, MovieRepo, RtMovieDataRepo, RtTvShowDataRepo, TvShowRepo } from '@repo/database'
-import { rtMovieQueue, rtTvShowQueue } from '@repo/queues'
+import { createQueues } from '@repo/queues'
 import { findRtMovieId, findRtTvShowId, getMovieDetails, getTvShowDetails } from '@repo/rt-scraper'
 import { Worker } from 'bullmq'
 import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
-const db = createDatabase()
+const db = createDatabase(env.DATABASE_URL)
+const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
 
 const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
   'movies',
@@ -21,7 +22,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const movieRepo = new MovieRepo(db)
         await movieRepo.setRtId(movie.id, rtId)
-        rtMovieQueue.add('get-meta', { id: rtId })
+        queues.rtMovieQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
 
@@ -52,7 +53,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const tvShowRepo = new TvShowRepo(db)
         await tvShowRepo.setRtId(tvShow.id, rtId)
-        rtTvShowQueue.add('get-meta', { id: rtId })
+        queues.rtTvShowQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
 

@@ -18,7 +18,9 @@
     "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "@repo/warforum-scraper": "workspace:*"
+    "@repo/warforum-scraper": "workspace:*",
+    "dotenv": "catalog:prod",
+    "zod": "catalog:prod"
   },
   "devDependencies": {
     "tsup": "catalog:dev"

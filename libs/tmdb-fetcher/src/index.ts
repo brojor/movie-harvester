@@ -1,13 +1,32 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TmdbMovieDetails, TmdbTvShowDetails, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from '@repo/types'
 import { makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
-import { env } from './env.js'
 
-// Rate limit is ~50 requests per second
-const httpClient = makeHttpClient(env.TMDB_BASE_URL, {
-  delayBetween: 1000 / 40, // 40 requests per second
-  bearerToken: env.TMDB_API_KEY,
-})
+export interface TmdbConfig {
+  baseUrl: string
+  apiKey: string
+  userAgent: string
+  delayMin?: number
+  delayMax?: number
+}
+
+let httpClient: ReturnType<typeof makeHttpClient> | null = null
+
+export function createTmdbClient(config: TmdbConfig): ReturnType<typeof makeHttpClient> {
+  // Rate limit is ~50 requests per second
+  httpClient = makeHttpClient(config.baseUrl, {
+    delayBetween: 1000 / 40, // 40 requests per second
+    bearerToken: config.apiKey,
+  })
+  return httpClient
+}
+
+function getHttpClient(): ReturnType<typeof makeHttpClient> {
+  if (!httpClient) {
+    throw new Error('TMDB client not initialized. Call createTmdbClient() first.')
+  }
+  return httpClient
+}
 
 function isValidMovieSearchCandidate(candidate: { title: string | null, year: number }): candidate is SearchMovieCandidate {
   return candidate.title != null && candidate.year > 0
@@ -66,7 +85,7 @@ async function searchMovies(title: string, year: number): Promise<MovieSearchRes
     language: 'cs',
   })
 
-  const response = await httpClient.get(`/search/movie?${query}`) as MovieSearchResponse
+  const response = await getHttpClient().get(`/search/movie?${query}`) as MovieSearchResponse
   return response.results
 }
 
@@ -76,7 +95,7 @@ async function searchTvShows(title: string): Promise<TvShowSearchResult[]> {
     language: 'cs',
   })
 
-  const response = await httpClient.get(`/search/tv?${query}`) as TvShowSearchResponse
+  const response = await getHttpClient().get(`/search/tv?${query}`) as TvShowSearchResponse
   return response.results
 }
 
@@ -108,7 +127,7 @@ function findTvShowMatch(searchResults: TvShowSearchResult[], title: string): Tv
 export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
   const query = new URLSearchParams({ language: 'cs' })
 
-  const movieDetails = await httpClient.get(`/movie/${id}?${query}`) as MovieDetailsResponse
+  const movieDetails = await getHttpClient().get(`/movie/${id}?${query}`) as MovieDetailsResponse
 
   return {
     id,
@@ -131,7 +150,7 @@ export async function getMovieDetails(id: number): Promise<TmdbMovieDetails> {
 
 export async function getTvShowDetails(id: number): Promise<TmdbTvShowDetails> {
   const query = new URLSearchParams({ language: 'cs' })
-  const tvShowDetails = await httpClient.get(`/tv/${id}?${query}`) as TvShowDetailsResponse
+  const tvShowDetails = await getHttpClient().get(`/tv/${id}?${query}`) as TvShowDetailsResponse
   return {
     id,
     name: tvShowDetails.name,

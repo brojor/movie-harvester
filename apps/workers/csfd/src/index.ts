@@ -1,13 +1,24 @@
 import type { MovieRecord, TvShowRecord, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import * as csfdScraper from '@repo/csfd-scraper'
 import { createDatabase, CsfdMovieDataRepo, CsfdTvShowDataRepo, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
-import { csfdMovieQueue, csfdTvShowQueue } from '@repo/queues'
-import { findCsfdIdInTopic } from '@repo/warforum-scraper'
+import { createQueues } from '@repo/queues'
+import { createWarforumScraper } from '@repo/warforum-scraper'
 import { Worker } from 'bullmq'
 import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
-const db = createDatabase()
+const db = createDatabase(env.DATABASE_URL)
+const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
+const warforumScraper = createWarforumScraper({
+  baseUrl: env.WARFORUM_BASE_URL,
+  userAgent: env.USER_AGENT,
+  sid: env.WARFORUM_SID,
+  userId: env.WARFORUM_USER_ID,
+  autoLoginId: env.WARFORUM_AUTO_LOGIN_ID,
+  indexerDeprecatedDate: env.WARFORUM_INDEXER_DEPRECATED_DATE,
+  delayMin: env.HTTP_CLIENT_DELAY_MIN,
+  delayMax: env.HTTP_CLIENT_DELAY_MAX,
+})
 
 async function handleFindId<T extends MovieRecord | TvShowRecord>(
   record: T,
@@ -18,11 +29,11 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
   const topicId = await topicsRepo.getTopicId(record.id)
 
   // Try to find CSFD ID in topic
-  let csfdId = await findCsfdIdInTopic(topicId)
+  let csfdId = await warforumScraper.findCsfdIdInTopic(topicId)
 
   if (csfdId) {
     await repo.setCsfdId(record.id, csfdId)
-    isMovie ? csfdMovieQueue.add('get-meta', { id: csfdId }) : csfdTvShowQueue.add('get-meta', { id: csfdId })
+    isMovie ? queues.csfdMovieQueue.add('get-meta', { id: csfdId }) : queues.csfdTvShowQueue.add('get-meta', { id: csfdId })
     return { id: csfdId }
   }
 
@@ -37,7 +48,7 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
 
   await repo.setCsfdId(record.id, csfdId)
 
-  isMovie ? csfdMovieQueue.add('get-meta', { id: csfdId }) : csfdTvShowQueue.add('get-meta', { id: csfdId })
+  isMovie ? queues.csfdMovieQueue.add('get-meta', { id: csfdId }) : queues.csfdTvShowQueue.add('get-meta', { id: csfdId })
   return { id: csfdId }
 }
 

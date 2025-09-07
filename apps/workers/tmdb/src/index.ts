@@ -3,14 +3,22 @@ import type { MovieSearchResult, TvShowSearchResult } from '@repo/tmdb-fetcher'
 import type { MovieTopic, TvShowTopic, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import { createDatabase, MovieRepo, TmdbMovieDataRepo, TmdbTvShowDataRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
-import { tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
+import { createQueues } from '@repo/queues'
 import { moveDefiniteArticleToEnd } from '@repo/shared'
-import { findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
+import { createTmdbClient, findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
 import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
-const db = createDatabase()
+const db = createDatabase(env.DATABASE_URL)
+const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
+const _tmdbClient = createTmdbClient({
+  baseUrl: env.TMDB_BASE_URL,
+  apiKey: env.TMDB_API_KEY,
+  userAgent: env.USER_AGENT,
+  delayMin: env.HTTP_CLIENT_DELAY_MIN,
+  delayMax: env.HTTP_CLIENT_DELAY_MAX,
+})
 
 const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
   'movies',
@@ -21,7 +29,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const tmdbId = await findTmdbMovieId(movie)
         const movieRepo = new MovieRepo(db)
         await movieRepo.setTmdbId(movie.id, tmdbId)
-        tmdbMovieQueue.add('get-meta', { id: tmdbId })
+        queues.tmdbMovieQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
 
@@ -74,7 +82,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         }
         const tvShowRepo = new TvShowRepo(db)
         await tvShowRepo.setTmdbId(tvShow.id, tmdbId)
-        tmdbTvShowQueue.add('get-meta', { id: tmdbId })
+        queues.tmdbTvShowQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
 
