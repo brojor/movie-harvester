@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+**/.nuxt
+**/.output
+.git
+.gitignore
+README.md
+.env*
+.DS_Store
+*.log
+coverage
+.nyc_output

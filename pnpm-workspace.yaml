@@ -2,6 +2,9 @@ packages:
   - apps/**/*
   - libs/*
   - packages/*
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - build
 catalogs:
   dev:
     '@antfu/nip': ^0.1.0
