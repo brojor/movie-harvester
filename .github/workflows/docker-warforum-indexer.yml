@@ -1,0 +1,33 @@
+name: Build & Push Warforum Indexer
+
+on:
+  push:
+    branches: [main, docker]
+    paths:
+      - 'apps/warforum-indexer/**'
+      - Dockerfile
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push-warforum-indexer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push warforum-indexer
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: warforum-indexer
+          push: true
+          tags: ghcr.io/${{ github.repository }}-warforum-indexer:latest
