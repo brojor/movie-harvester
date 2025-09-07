@@ -19,5 +19,8 @@
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/warforum-scraper": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "catalog:dev"
   }
 }

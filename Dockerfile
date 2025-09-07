@@ -21,6 +21,4 @@ CMD ["node", ".output/server/index.mjs"]
 FROM base AS warforum-indexer
 COPY --from=build /prod/warforum-indexer /prod/warforum-indexer
 WORKDIR /prod/warforum-indexer
-RUN pnpm run build
-EXPOSE 3001
 CMD ["node", "dist/index.js"]

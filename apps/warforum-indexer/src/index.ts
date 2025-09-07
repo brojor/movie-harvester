@@ -5,6 +5,7 @@ import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/shared'
 import { indexMediaFromTopic } from '@repo/warforum-scraper'
 
 const db = createDatabase()
+
 export async function parseMovieTopics(): Promise<void> {
   const mediaService = new MediaService(db)
   const movieRepo = new MovieRepo(db)
