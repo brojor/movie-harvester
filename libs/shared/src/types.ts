@@ -10,11 +10,11 @@ export interface HttpClient {
   get: <T = any>(path: string) => Promise<T>
 }
 
-export interface WarforumEnv {
-  WARFORUM_BASE_URL: string
-  WARFORUM_SID: string
-  WARFORUM_USER_ID: number
-  WARFORUM_AUTO_LOGIN_ID: string
+export interface WarforumAgentOpts {
+  baseUrl: string
+  sid: string
+  userId: number
+  autoLoginId: string
 }
 
 export interface HttpClientOpts {

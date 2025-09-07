@@ -1,18 +1,18 @@
 import type { Agent as HttpAgent } from 'node:http'
 import type { Agent as HttpsAgent } from 'node:https'
 import type { Cookie } from 'tough-cookie'
-import type { WarforumEnv } from './types.js'
+import type { WarforumAgentOpts } from './types.js'
 import { HttpCookieAgent, HttpsCookieAgent } from 'http-cookie-agent/http'
 import { serialize } from 'php-serialize'
 import { CookieJar } from 'tough-cookie'
 
-export function createWarforumAgents(concurrency: number, env: WarforumEnv): {
+export function createWarforumAgents(concurrency: number, opts: WarforumAgentOpts): {
   httpAgent: HttpAgent
   httpsAgent: HttpsAgent
 } {
-  const warforumData = buildWarforumData(env.WARFORUM_USER_ID, env.WARFORUM_AUTO_LOGIN_ID)
+  const warforumData = buildWarforumData(opts.userId, opts.autoLoginId)
   const dataCookie = `warforum_data=${warforumData}; Path=/; Domain=.www.warforum.xyz; Max-Age=${60 * 60 * 24 * 365}`
-  const sidCookie = `warforum_sid=${env.WARFORUM_SID}; Path=/; Domain=.www.warforum.xyz; Max-Age=Session`
+  const sidCookie = `warforum_sid=${opts.sid}; Path=/; Domain=.www.warforum.xyz; Max-Age=Session`
   const jar = new CookieJar()
 
   // Filter out warforum_t cookies
@@ -30,8 +30,8 @@ export function createWarforumAgents(concurrency: number, env: WarforumEnv): {
     return originalSetCookie(cookieStr, currentUrl, options, cb)
   }
 
-  jar.setCookie(dataCookie, env.WARFORUM_BASE_URL)
-  jar.setCookie(sidCookie, env.WARFORUM_BASE_URL)
+  jar.setCookie(dataCookie, opts.baseUrl)
+  jar.setCookie(sidCookie, opts.baseUrl)
 
   const common = {
     timeout: 8000,

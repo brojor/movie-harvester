@@ -3,21 +3,12 @@ import { MediaService } from '@repo/media-service'
 import { createQueues } from '@repo/queues'
 import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/shared'
 import { createWarforumScraper } from '@repo/warforum-scraper'
-import { env } from './env.js'
+import { databaseUrl, deprecationDate, redisOptions, warforumAgentOpts } from './env.js'
 
-const db = createDatabase(env.DATABASE_URL)
+const db = createDatabase(databaseUrl)
 const repositories = createAllRepositories(db)
-const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
-const warforumScraper = createWarforumScraper({
-  baseUrl: env.WARFORUM_BASE_URL,
-  userAgent: env.USER_AGENT,
-  sid: env.WARFORUM_SID,
-  userId: env.WARFORUM_USER_ID,
-  autoLoginId: env.WARFORUM_AUTO_LOGIN_ID,
-  indexerDeprecatedDate: env.WARFORUM_INDEXER_DEPRECATED_DATE,
-  delayMin: env.HTTP_CLIENT_DELAY_MIN,
-  delayMax: env.HTTP_CLIENT_DELAY_MAX,
-})
+const queues = createQueues(redisOptions)
+const warforumScraper = createWarforumScraper(warforumAgentOpts, deprecationDate)
 
 export async function parseMovieTopics(): Promise<void> {
   const mediaService = new MediaService(db, queues)

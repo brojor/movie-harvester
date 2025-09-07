@@ -10,6 +10,7 @@ export {
   type TvShowTopicType,
 } from './constants/topicMaps.js'
 export { makeHttpClient } from './httpClient.js'
+export { type WarforumAgentOpts } from './types.js'
 export { getDelayMs } from './utils/http-utils.js'
 export * from './utils/string.js'
 export * from './utils/url.js'

@@ -1,24 +1,14 @@
+import type { WarforumAgentOpts } from '@repo/shared'
 import he from 'he'
 import { createWarforumClient, fetchHtml } from './infra/httpClient.js'
 import { indexMediaFromTopic } from './scraper/indexMediaFromTopic.js'
-
-export interface WarforumConfig {
-  baseUrl: string
-  userAgent: string
-  sid: string
-  userId: number
-  autoLoginId: string
-  indexerDeprecatedDate: string
-  delayMin?: number
-  delayMax?: number
-}
 
 export interface WarforumScraper {
   findCsfdIdInTopic: (topicId: number) => Promise<number | null>
   indexMediaFromTopic: (topicId: any, cutoffDate: Date) => Promise<any>
 }
 
-export function createWarforumScraper(config: WarforumConfig): WarforumScraper {
+export function createWarforumScraper(config: WarforumAgentOpts, deprecatedDate: string): WarforumScraper {
   const httpClient = createWarforumClient(config)
 
   return {
@@ -33,7 +23,7 @@ export function createWarforumScraper(config: WarforumConfig): WarforumScraper {
       return null
     },
     indexMediaFromTopic: async (topicId: any, cutoffDate: Date) => {
-      return indexMediaFromTopic(httpClient, topicId, cutoffDate, config.indexerDeprecatedDate)
+      return indexMediaFromTopic(httpClient, topicId, cutoffDate, deprecatedDate)
     },
   }
 }

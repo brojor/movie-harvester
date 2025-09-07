@@ -1,19 +1,14 @@
-import type { WarforumConfig } from '../index.js'
+import type { WarforumAgentOpts } from '@repo/shared'
 import { Buffer } from 'node:buffer'
 import { createWarforumAgents, makeHttpClient } from '@repo/shared'
 import iconv from 'iconv-lite'
 
 export type HttpClient = ReturnType<typeof makeHttpClient>
 
-export function createWarforumClient(config: WarforumConfig): HttpClient {
-  const agents = createWarforumAgents(1, {
-    WARFORUM_BASE_URL: config.baseUrl,
-    WARFORUM_SID: config.sid,
-    WARFORUM_USER_ID: config.userId,
-    WARFORUM_AUTO_LOGIN_ID: config.autoLoginId,
-  })
+export function createWarforumClient(opts: WarforumAgentOpts): HttpClient {
+  const agents = createWarforumAgents(1, opts)
 
-  return makeHttpClient(config.baseUrl, {
+  return makeHttpClient(opts.baseUrl, {
     responseType: 'arraybuffer',
     httpAgent: agents.httpAgent,
     httpsAgent: agents.httpsAgent,
