@@ -1,0 +1,33 @@
+name: Build & Push CSFD Worker
+
+on:
+  push:
+    branches: [main, docker]
+    paths:
+      - 'apps/workers/csfd/**'
+      - Dockerfile
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push-csfd-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push csfd-worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: csfd-worker
+          push: true
+          tags: ghcr.io/${{ github.repository }}-csfd-worker:latest
