@@ -1,11 +1,23 @@
 import type { Database, Transaction } from '@repo/database'
 import type { MovieTopicType, TvShowTopicType } from '@repo/shared'
 import type { Movie, MovieRecord, TvShow, TvShowRecord } from '@repo/types'
+import type { Queue } from 'bullmq'
 import { MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
-import { csfdMovieQueue, csfdTvShowQueue, rtMovieQueue, rtTvShowQueue, tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
+
+export interface Queues {
+  csfdMovieQueue: Queue
+  rtMovieQueue: Queue
+  tmdbMovieQueue: Queue
+  csfdTvShowQueue: Queue
+  rtTvShowQueue: Queue
+  tmdbTvShowQueue: Queue
+}
 
 export class MediaService {
-  constructor(private readonly db: Database) {}
+  constructor(
+    private readonly db: Database,
+    private readonly queues: Queues,
+  ) {}
 
   async addTvShowWithTopic(tvShow: TvShow, languages: string[], topicId: number, topicType: TvShowTopicType, tmdbId?: number): Promise<number> {
     let tvShowRecord: TvShowRecord
@@ -28,7 +40,7 @@ export class MediaService {
 
         if (tmdbId) {
           await tvShowRepo.setTmdbId(newRecord.id, tmdbId)
-          tmdbTvShowQueue.add('get-meta', { id: tmdbId })
+          this.queues.tmdbTvShowQueue.add('get-meta', { id: tmdbId })
         }
 
         return newRecord
@@ -39,10 +51,10 @@ export class MediaService {
     }
 
     if (wasCreated) {
-      csfdTvShowQueue.add('find-id', tvShowRecord)
-      rtTvShowQueue.add('find-id', tvShowRecord)
+      this.queues.csfdTvShowQueue.add('find-id', tvShowRecord)
+      this.queues.rtTvShowQueue.add('find-id', tvShowRecord)
       if (!tmdbId)
-        tmdbTvShowQueue.add('find-id', tvShowRecord)
+        this.queues.tmdbTvShowQueue.add('find-id', tvShowRecord)
     }
 
     return tvShowRecord.id
@@ -68,7 +80,7 @@ export class MediaService {
 
         if (tmdbId) {
           await movieRepo.setTmdbId(newRecord.id, tmdbId)
-          tmdbMovieQueue.add('get-meta', { id: tmdbId })
+          this.queues.tmdbMovieQueue.add('get-meta', { id: tmdbId })
         }
 
         return newRecord
@@ -79,10 +91,10 @@ export class MediaService {
     }
 
     if (wasCreated) {
-      csfdMovieQueue.add('find-id', movieRecord)
-      rtMovieQueue.add('find-id', movieRecord)
+      this.queues.csfdMovieQueue.add('find-id', movieRecord)
+      this.queues.rtMovieQueue.add('find-id', movieRecord)
       if (!tmdbId)
-        tmdbMovieQueue.add('find-id', movieRecord)
+        this.queues.tmdbMovieQueue.add('find-id', movieRecord)
     }
 
     return movieRecord.id

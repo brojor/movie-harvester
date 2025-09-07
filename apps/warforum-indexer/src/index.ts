@@ -20,7 +20,7 @@ const warforumScraper = createWarforumScraper({
 })
 
 export async function parseMovieTopics(): Promise<void> {
-  const mediaService = new MediaService(db)
+  const mediaService = new MediaService(db, queues)
   const lastRun = await repositories.movieRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(movieTopicIdMap)) {
@@ -41,7 +41,7 @@ export async function parseMovieTopics(): Promise<void> {
 }
 
 export async function parseTvShowTopics(): Promise<void> {
-  const mediaService = new MediaService(db)
+  const mediaService = new MediaService(db, queues)
   const lastRun = await repositories.tvShowRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(tvShowTopicIdMap)) {

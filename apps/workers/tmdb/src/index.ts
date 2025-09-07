@@ -52,7 +52,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         if (!movieSearchResult)
           throw new Error(`TMDB ID for movie ${movieTopic.id} not found`)
 
-        const mediaService = new MediaService(db)
+        const mediaService = new MediaService(db, queues)
         const movie = {
           czechTitle: movieSearchResult.title,
           originalTitle: moveDefiniteArticleToEnd(movieSearchResult.original_title),
@@ -103,7 +103,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         if (!tvShowSearchResult)
           throw new Error(`TMDB ID for tv show ${tvShowTopic.id} not found`)
 
-        const mediaService = new MediaService(db)
+        const mediaService = new MediaService(db, queues)
         const tvShow = {
           czechTitle: tvShowSearchResult.name,
           originalTitle: tvShowSearchResult.original_name,

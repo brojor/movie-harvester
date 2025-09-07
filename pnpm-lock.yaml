@@ -231,6 +231,9 @@ importers:
       vue-router:
         specifier: catalog:prod
         version: 4.5.1(vue@3.5.21(typescript@5.9.2))
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
     devDependencies:
       '@antfu/eslint-config':
         specifier: catalog:lint
@@ -264,7 +267,7 @@ importers:
         version: 4.17.12
       '@unocss/nuxt':
         specifier: catalog:prod
-        version: 66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3)
+        version: 66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3(esbuild@0.25.9))
       '@unocss/preset-icons':
         specifier: catalog:dev
         version: 66.5.0
@@ -288,10 +291,10 @@ importers:
         version: 1.6.1
       unocss:
         specifier: catalog:prod
-        version: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
+        version: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
       unocss-preset-scrollbar-hide:
         specifier: catalog:dev
-        version: 1.0.1(@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3))(unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)))
+        version: 1.0.1(@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3(esbuild@0.25.9)))(unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)))
       vue:
         specifier: catalog:prod
         version: 3.5.21(typescript@5.9.2)
@@ -326,6 +329,12 @@ importers:
       '@repo/warforum-scraper':
         specifier: workspace:*
         version: link:../../libs/warforum-scraper
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
     devDependencies:
       tsup:
         specifier: catalog:dev
@@ -490,6 +499,9 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../types
+      bullmq:
+        specifier: catalog:prod
+        version: 5.58.5
 
   libs/queues:
     dependencies:
@@ -8364,7 +8376,7 @@ snapshots:
       sirv: 3.0.2
       vue-flow-layout: 0.2.0
 
-  '@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3)':
+  '@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3(esbuild@0.25.9))':
     dependencies:
       '@nuxt/kit': 4.1.1(magicast@0.3.5)
       '@unocss/config': 66.5.0
@@ -8378,8 +8390,8 @@ snapshots:
       '@unocss/preset-wind4': 66.5.0
       '@unocss/reset': 66.5.0
       '@unocss/vite': 66.5.0(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
-      '@unocss/webpack': 66.5.0(webpack@5.101.3)
-      unocss: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
+      '@unocss/webpack': 66.5.0(webpack@5.101.3(esbuild@0.25.9))
+      unocss: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
     transitivePeerDependencies:
       - magicast
       - postcss
@@ -8504,21 +8516,6 @@ snapshots:
       unplugin: 2.3.10
       unplugin-utils: 0.3.0
       webpack: 5.101.3(esbuild@0.25.9)
-      webpack-sources: 3.3.3
-    optional: true
-
-  '@unocss/webpack@66.5.0(webpack@5.101.3)':
-    dependencies:
-      '@jridgewell/remapping': 2.3.5
-      '@unocss/config': 66.5.0
-      '@unocss/core': 66.5.0
-      chokidar: 3.6.0
-      magic-string: 0.30.18
-      pathe: 2.0.3
-      tinyglobby: 0.2.14
-      unplugin: 2.3.10
-      unplugin-utils: 0.3.0
-      webpack: 5.101.3
       webpack-sources: 3.3.3
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
@@ -12619,16 +12616,6 @@ snapshots:
       webpack: 5.101.3(esbuild@0.25.9)
     optionalDependencies:
       esbuild: 0.25.9
-    optional: true
-
-  terser-webpack-plugin@5.3.14(webpack@5.101.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.30
-      jest-worker: 27.5.1
-      schema-utils: 4.3.2
-      serialize-javascript: 6.0.2
-      terser: 5.44.0
-      webpack: 5.101.3
 
   terser@5.44.0:
     dependencies:
@@ -12869,10 +12856,10 @@ snapshots:
       unist-util-is: 6.0.0
       unist-util-visit-parents: 6.0.1
 
-  unocss-preset-scrollbar-hide@1.0.1(@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3))(unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))):
+  unocss-preset-scrollbar-hide@1.0.1(@unocss/nuxt@66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3(esbuild@0.25.9)))(unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))):
     optionalDependencies:
-      '@unocss/nuxt': 66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3)
-      unocss: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
+      '@unocss/nuxt': 66.5.0(magicast@0.3.5)(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))(webpack@5.101.3(esbuild@0.25.9))
+      unocss: 66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
 
   unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3(esbuild@0.25.9)))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)):
     dependencies:
@@ -12897,34 +12884,6 @@ snapshots:
       '@unocss/vite': 66.5.0(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
     optionalDependencies:
       '@unocss/webpack': 66.5.0(webpack@5.101.3(esbuild@0.25.9))
-      vite: 7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)
-    transitivePeerDependencies:
-      - postcss
-      - supports-color
-
-  unocss@66.5.0(@unocss/webpack@66.5.0(webpack@5.101.3))(postcss@8.5.6)(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)):
-    dependencies:
-      '@unocss/astro': 66.5.0(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
-      '@unocss/cli': 66.5.0
-      '@unocss/core': 66.5.0
-      '@unocss/postcss': 66.5.0(postcss@8.5.6)
-      '@unocss/preset-attributify': 66.5.0
-      '@unocss/preset-icons': 66.5.0
-      '@unocss/preset-mini': 66.5.0
-      '@unocss/preset-tagify': 66.5.0
-      '@unocss/preset-typography': 66.5.0
-      '@unocss/preset-uno': 66.5.0
-      '@unocss/preset-web-fonts': 66.5.0
-      '@unocss/preset-wind': 66.5.0
-      '@unocss/preset-wind3': 66.5.0
-      '@unocss/preset-wind4': 66.5.0
-      '@unocss/transformer-attributify-jsx': 66.5.0
-      '@unocss/transformer-compile-class': 66.5.0
-      '@unocss/transformer-directives': 66.5.0
-      '@unocss/transformer-variant-group': 66.5.0
-      '@unocss/vite': 66.5.0(vite@7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1))
-    optionalDependencies:
-      '@unocss/webpack': 66.5.0(webpack@5.101.3)
       vite: 7.1.4(@types/node@24.3.1)(jiti@2.5.1)(terser@5.44.0)(tsx@4.20.5)(yaml@2.8.1)
     transitivePeerDependencies:
       - postcss
@@ -13316,38 +13275,6 @@ snapshots:
 
   webpack-virtual-modules@0.6.2: {}
 
-  webpack@5.101.3:
-    dependencies:
-      '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.8
-      '@types/json-schema': 7.0.15
-      '@webassemblyjs/ast': 1.14.1
-      '@webassemblyjs/wasm-edit': 1.14.1
-      '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.15.0
-      acorn-import-phases: 1.0.4(acorn@8.15.0)
-      browserslist: 4.25.4
-      chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.18.3
-      es-module-lexer: 1.7.0
-      eslint-scope: 5.1.1
-      events: 3.3.0
-      glob-to-regexp: 0.4.1
-      graceful-fs: 4.2.11
-      json-parse-even-better-errors: 2.3.1
-      loader-runner: 4.3.0
-      mime-types: 2.1.35
-      neo-async: 2.6.2
-      schema-utils: 4.3.2
-      tapable: 2.2.3
-      terser-webpack-plugin: 5.3.14(webpack@5.101.3)
-      watchpack: 2.4.4
-      webpack-sources: 3.3.3
-    transitivePeerDependencies:
-      - '@swc/core'
-      - esbuild
-      - uglify-js
-
   webpack@5.101.3(esbuild@0.25.9):
     dependencies:
       '@types/eslint-scope': 3.7.7
@@ -13379,7 +13306,6 @@ snapshots:
       - '@swc/core'
       - esbuild
       - uglify-js
-    optional: true
 
   whatwg-encoding@3.1.1:
     dependencies:

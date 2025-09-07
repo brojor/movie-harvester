@@ -7,9 +7,7 @@ export interface RedisConfig {
   password: string
 }
 
-let connection: ConnectionOptions | null = null
-
-export function createQueues(config: RedisConfig): {
+export interface Queues {
   csfdMovieQueue: Queue
   rtMovieQueue: Queue
   tmdbMovieQueue: Queue
@@ -17,8 +15,14 @@ export function createQueues(config: RedisConfig): {
   rtTvShowQueue: Queue
   tmdbTvShowQueue: Queue
   downloadQueue: Queue
-} {
-  connection = { host: config.host, port: config.port, password: config.password }
+}
+
+export function createQueues(config: RedisConfig): Queues {
+  const connection: ConnectionOptions = {
+    host: config.host,
+    port: config.port,
+    password: config.password,
+  }
 
   return {
     csfdMovieQueue: new Queue('movies', { connection, prefix: 'csfd' }),
@@ -30,19 +34,3 @@ export function createQueues(config: RedisConfig): {
     downloadQueue: new Queue('download', { connection, prefix: 'webshare' }),
   }
 }
-
-export function getConnection(): ConnectionOptions {
-  if (!connection) {
-    throw new Error('Queues not initialized. Call createQueues() first.')
-  }
-  return connection
-}
-
-// Legacy exports for backward compatibility - will be removed
-export const csfdMovieQueue = new Queue('movies', { connection: getConnection(), prefix: 'csfd' })
-export const rtMovieQueue = new Queue('movies', { connection: getConnection(), prefix: 'rt' })
-export const tmdbMovieQueue = new Queue('movies', { connection: getConnection(), prefix: 'tmdb' })
-export const csfdTvShowQueue = new Queue('tv-shows', { connection: getConnection(), prefix: 'csfd' })
-export const rtTvShowQueue = new Queue('tv-shows', { connection: getConnection(), prefix: 'rt' })
-export const tmdbTvShowQueue = new Queue('tv-shows', { connection: getConnection(), prefix: 'tmdb' })
-export const downloadQueue = new Queue('download', { connection: getConnection(), prefix: 'webshare' })
