@@ -5,7 +5,7 @@ import { createAllRepositories, createDatabase } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { createQueues } from '@repo/queues'
 import { moveDefiniteArticleToEnd } from '@repo/shared'
-import { createTmdbClient, findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
+import { createTmdbService } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
 import { env } from './env.js'
 
@@ -13,7 +13,7 @@ const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.R
 const db = createDatabase(env.DATABASE_URL)
 const repositories = createAllRepositories(db)
 const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
-const _tmdbClient = createTmdbClient({
+const tmdbService = createTmdbService({
   baseUrl: env.TMDB_BASE_URL,
   apiKey: env.TMDB_API_KEY,
   userAgent: env.USER_AGENT,
@@ -27,7 +27,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
     switch (job.name) {
       case 'find-id': {
         const movie = job.data as MovieRecord
-        const tmdbId = await findTmdbMovieId(movie)
+        const tmdbId = await tmdbService.findTmdbMovieId(movie)
         await repositories.movieRepo.setTmdbId(movie.id, tmdbId)
         queues.tmdbMovieQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
@@ -35,7 +35,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
 
       case 'get-meta': {
         const { id: tmdbId } = job.data as { id: number }
-        const movieDetails = await getMovieDetails(tmdbId)
+        const movieDetails = await tmdbService.getMovieDetails(tmdbId)
         await repositories.tmdbMovieDataRepo.save(movieDetails)
         return { id: tmdbId }
       }
@@ -44,7 +44,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const movieTopic = job.data as MovieTopic
         let movieSearchResult: MovieSearchResult | null = null
         for (const title of movieTopic.titles) {
-          movieSearchResult = await searchMovie({ title, year: movieTopic.year })
+          movieSearchResult = await tmdbService.searchMovie({ title, year: movieTopic.year })
           if (movieSearchResult)
             break
         }
@@ -75,7 +75,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
     switch (job.name) {
       case 'find-id': {
         const tvShow = job.data as TvShowRecord
-        const tmdbId = await findTmdbTvShowId(tvShow)
+        const tmdbId = await tmdbService.findTmdbTvShowId(tvShow)
         if (!tmdbId) {
           throw new Error(`TMDB ID for tv show ${tvShow.id} not found`)
         }
@@ -86,7 +86,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
 
       case 'get-meta': {
         const { id: tmdbId } = job.data as { id: number }
-        const meta = await getTvShowDetails(tmdbId)
+        const meta = await tmdbService.getTvShowDetails(tmdbId)
         await repositories.tmdbTvShowDataRepo.save(meta)
         return { id: tmdbId }
       }
@@ -95,7 +95,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         const tvShowTopic = job.data as TvShowTopic
         let tvShowSearchResult: TvShowSearchResult | null = null
         for (const title of tvShowTopic.titles) {
-          tvShowSearchResult = await searchTvShow({ title })
+          tvShowSearchResult = await tmdbService.searchTvShow({ title })
           if (tvShowSearchResult)
             break
         }
