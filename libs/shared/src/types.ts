@@ -1,4 +1,6 @@
 import type { InternalAxiosRequestConfig } from 'axios'
+import type { Agent as HttpAgent } from 'node:http'
+import type { Agent as HttpsAgent } from 'node:https'
 
 export interface RetryConfig extends InternalAxiosRequestConfig {
   retryCount?: number
@@ -22,6 +24,6 @@ export interface HttpClientOpts {
   bearerToken?: string
   responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream'
   userAgent?: string
-  useAgents?: boolean
-  warforumEnv?: WarforumEnv
+  httpAgent?: HttpAgent
+  httpsAgent?: HttpsAgent
 }

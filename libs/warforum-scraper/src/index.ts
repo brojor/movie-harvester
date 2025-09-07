@@ -13,14 +13,17 @@ export interface WarforumConfig {
   delayMax?: number
 }
 
-export function createWarforumScraper(config: WarforumConfig): {
+export interface WarforumScraper {
   findCsfdIdInTopic: (topicId: number) => Promise<number | null>
   indexMediaFromTopic: (topicId: any, cutoffDate: Date) => Promise<any>
-} {
-  createWarforumClient(config)
+}
+
+export function createWarforumScraper(config: WarforumConfig): WarforumScraper {
+  const httpClient = createWarforumClient(config)
+
   return {
     findCsfdIdInTopic: async (topicId: number): Promise<number | null> => {
-      const html = await fetchHtml(`viewtopic.php?t=${topicId}`)
+      const html = await fetchHtml(httpClient, `viewtopic.php?t=${topicId}`)
       const decodedHtml = he.decode(html)
       const match = decodedHtml.match(/(?:www\.)?csfd\.cz\/film\/(\d+)/)
       if (match) {
@@ -30,7 +33,7 @@ export function createWarforumScraper(config: WarforumConfig): {
       return null
     },
     indexMediaFromTopic: async (topicId: any, cutoffDate: Date) => {
-      return indexMediaFromTopic(topicId, cutoffDate, config.indexerDeprecatedDate)
+      return indexMediaFromTopic(httpClient, topicId, cutoffDate, config.indexerDeprecatedDate)
     },
   }
 }

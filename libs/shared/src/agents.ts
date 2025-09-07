@@ -6,7 +6,7 @@ import { HttpCookieAgent, HttpsCookieAgent } from 'http-cookie-agent/http'
 import { serialize } from 'php-serialize'
 import { CookieJar } from 'tough-cookie'
 
-export function makeAgents(concurrency: number, env: WarforumEnv): {
+export function createWarforumAgents(concurrency: number, env: WarforumEnv): {
   httpAgent: HttpAgent
   httpsAgent: HttpsAgent
 } {

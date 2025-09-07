@@ -1,10 +1,12 @@
 import type { MovieTopicId, TvShowTopicId } from '@repo/shared'
 import type { MediaTopic, MovieTopic, TvShowTopic } from '@repo/types'
+import type { HttpClient } from '../infra/httpClient.js'
 import { fetchHtml } from '../infra/httpClient.js'
 import { buildTopicUrl, getMediaType, getTopicType } from '../utils/topicHelpers.js'
 import { parseTopicPage } from './parseTopicPage.js'
 
 export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId>(
+  httpClient: HttpClient,
   topicId: T,
   cutoffDate: Date,
   deprecatedDate: string,
@@ -18,7 +20,7 @@ export async function indexMediaFromTopic<T extends MovieTopicId | TvShowTopicId
 
   while (!reachedCutoff) {
     const url = buildTopicUrl(topicId, page)
-    const html = await fetchHtml(url)
+    const html = await fetchHtml(httpClient, url)
 
     const result = mediaType === 'movie'
       ? parseTopicPage(html, topicType, 'movie', cutoffDate, deprecatedDate)

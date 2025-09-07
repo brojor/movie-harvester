@@ -1,7 +1,6 @@
 import type { HttpClient, HttpClientOpts } from './types.js'
 import axios from 'axios'
 import pLimit from 'p-limit'
-import { makeAgents } from './agents.js'
 import { getDelayMs, wait } from './utils/http-utils.js'
 import { createRetryInterceptor, logOutgoingRequest } from './utils/interceptors.js'
 
@@ -18,11 +17,9 @@ export function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): Http
     bearerToken,
     responseType,
     userAgent = USER_AGENT,
-    useAgents = false,
-    warforumEnv,
+    httpAgent,
+    httpsAgent,
   } = opts
-
-  const agents = useAgents && warforumEnv ? makeAgents(concurrency, warforumEnv) : { httpAgent: undefined, httpsAgent: undefined }
 
   const headers: Record<string, string> = {
     'User-Agent': userAgent,
@@ -34,8 +31,8 @@ export function makeHttpClient(baseURL: string, opts: HttpClientOpts = {}): Http
 
   const client = axios.create({
     baseURL,
-    ...(agents.httpAgent && { httpAgent: agents.httpAgent }),
-    ...(agents.httpsAgent && { httpsAgent: agents.httpsAgent }),
+    httpAgent,
+    httpsAgent,
     withCredentials: true, // needed for cookies
     headers,
     timeout: TIMEOUT_MS,

@@ -1,3 +1,4 @@
+export { createWarforumAgents } from './agents.js'
 // Export topic maps and types
 export {
   type MovieTopicId,
