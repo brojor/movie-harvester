@@ -3,8 +3,8 @@ import type { WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import { createDatabase, MovieRepo, RtMovieDataRepo, RtTvShowDataRepo, TvShowRepo } from '@repo/database'
 import { rtMovieQueue, rtTvShowQueue } from '@repo/queues'
 import { findRtMovieId, findRtTvShowId, getMovieDetails, getTvShowDetails } from '@repo/rt-scraper'
-import { env } from '@repo/shared'
 import { Worker } from 'bullmq'
+import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase()

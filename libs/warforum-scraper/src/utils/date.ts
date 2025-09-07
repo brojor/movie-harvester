@@ -1,6 +1,6 @@
-import { env } from '@repo/shared'
 import { isBefore, isValid, parse } from 'date-fns'
 import { cs } from 'date-fns/locale'
+import { env } from '../env.js'
 
 export function parseDate(raw: string): Date | null {
   const parsed = parse(raw.trim(), 'dd MMMM yyyy, HH:mm', new Date(), { locale: cs })

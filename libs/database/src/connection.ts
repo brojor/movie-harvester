@@ -1,5 +1,5 @@
-import { env } from '@repo/shared'
 import { drizzle } from 'drizzle-orm/node-postgres'
+import { env } from './env.js'
 import * as commonSchema from './schemas/common.js'
 import * as moviesSchema from './schemas/movies.js'
 import * as tvShowsSchema from './schemas/tv-shows.js'
@@ -10,7 +10,7 @@ const schema = {
   ...commonSchema,
 }
 
-const db = drizzle(env.DATABASE_URL!, {
+const db = drizzle(env.DATABASE_URL, {
   schema,
 })
 

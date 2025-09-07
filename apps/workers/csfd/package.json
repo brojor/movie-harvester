@@ -19,6 +19,8 @@
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/warforum-scraper": "workspace:*",
-    "bullmq": "catalog:prod"
+    "bullmq": "catalog:prod",
+    "dotenv": "catalog:prod",
+    "zod": "catalog:prod"
   }
 }

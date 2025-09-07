@@ -350,6 +350,12 @@ importers:
       bullmq:
         specifier: catalog:prod
         version: 5.58.5
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   apps/workers/rt:
     dependencies:
@@ -371,6 +377,12 @@ importers:
       bullmq:
         specifier: catalog:prod
         version: 5.58.5
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   apps/workers/tmdb:
     dependencies:
@@ -395,6 +407,12 @@ importers:
       bullmq:
         specifier: catalog:prod
         version: 5.58.5
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   apps/workers/webshare:
     dependencies:
@@ -407,6 +425,12 @@ importers:
       bullmq:
         specifier: catalog:prod
         version: 5.58.5
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   libs/csfd-scraper:
     dependencies:
@@ -428,12 +452,18 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../types
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
       drizzle-orm:
         specifier: catalog:prod
         version: 0.43.1(@types/pg@8.15.5)(pg@8.16.3)
       pg:
         specifier: catalog:prod
         version: 8.16.3
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
     devDependencies:
       '@types/pg':
         specifier: catalog:dev
@@ -465,6 +495,12 @@ importers:
       bullmq:
         specifier: catalog:prod
         version: 5.58.5
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   libs/rt-scraper:
     dependencies:
@@ -529,6 +565,12 @@ importers:
       '@repo/types':
         specifier: workspace:*
         version: link:../types
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
 
   libs/types:
     dependencies:
@@ -550,12 +592,18 @@ importers:
       date-fns:
         specifier: catalog:prod
         version: 4.1.0
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
       he:
         specifier: catalog:prod
         version: 1.2.0
       iconv-lite:
         specifier: catalog:prod
         version: 0.6.3
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
     devDependencies:
       '@types/he':
         specifier: catalog:dev
@@ -578,6 +626,9 @@ importers:
       crypt3-md5:
         specifier: catalog:prod
         version: 1.1.1
+      dotenv:
+        specifier: catalog:prod
+        version: 16.6.1
       node-ipc:
         specifier: catalog:prod
         version: 12.0.0
@@ -587,6 +638,9 @@ importers:
       ufo:
         specifier: catalog:prod
         version: 1.6.1
+      zod:
+        specifier: catalog:prod
+        version: 3.25.76
     devDependencies:
       '@types/node-ipc':
         specifier: catalog:dev
@@ -7862,8 +7916,10 @@ snapshots:
     dependencies:
       '@repo/shared': file:libs/shared(undici@7.15.0)
       '@repo/types': file:libs/types(undici@7.15.0)
+      dotenv: 16.6.1
       drizzle-orm: 0.43.1(@types/pg@8.15.5)(pg@8.16.3)
       pg: 8.16.3
+      zod: 3.25.76
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@cloudflare/workers-types'

@@ -5,13 +5,6 @@ import { z } from 'zod'
 dotenv.config()
 
 const envSchema = z.object({
-  WARFORUM_BASE_URL: z.string().url(),
-  USER_AGENT: z.string(),
-  WARFORUM_SID: z.string(),
-  WARFORUM_USER_ID: z.coerce.number(),
-  WARFORUM_AUTO_LOGIN_ID: z.string(),
-  HTTP_CLIENT_DELAY_MIN: z.coerce.number().default(10000),
-  HTTP_CLIENT_DELAY_MAX: z.coerce.number().default(20000),
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.coerce.number().default(6379),
   REDIS_PASSWORD: z.string(),

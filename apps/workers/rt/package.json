@@ -18,6 +18,8 @@
     "@repo/rt-scraper": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "bullmq": "catalog:prod"
+    "bullmq": "catalog:prod",
+    "dotenv": "catalog:prod",
+    "zod": "catalog:prod"
   }
 }

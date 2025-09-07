@@ -4,9 +4,10 @@ import type { MovieTopic, TvShowTopic, WorkerAction, WorkerInputData, WorkerResu
 import { createDatabase, MovieRepo, TmdbMovieDataRepo, TmdbTvShowDataRepo, TvShowRepo } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { tmdbMovieQueue, tmdbTvShowQueue } from '@repo/queues'
-import { env, moveDefiniteArticleToEnd } from '@repo/shared'
+import { moveDefiniteArticleToEnd } from '@repo/shared'
 import { findTmdbMovieId, findTmdbTvShowId, getMovieDetails, getTvShowDetails, searchMovie, searchTvShow } from '@repo/tmdb-fetcher'
 import { Worker } from 'bullmq'
+import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase()

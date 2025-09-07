@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { env, extractFilename, extractIdent, webshareApi } from '@repo/shared'
+import { extractFilename, extractIdent, webshareApi } from '@repo/shared'
 import axios from 'axios'
 import { crypt as md5crypt } from 'crypt3-md5'
 import ipc from 'node-ipc'
 import progress from 'progress-stream'
+import { env } from './env.js'
 
 ipc.config.silent = true
 ipc.connectTo('nuxt-ws')

@@ -18,8 +18,10 @@
     "@repo/types": "workspace:*",
     "cheerio": "catalog:prod",
     "date-fns": "catalog:prod",
+    "dotenv": "catalog:prod",
     "he": "catalog:prod",
-    "iconv-lite": "catalog:prod"
+    "iconv-lite": "catalog:prod",
+    "zod": "catalog:prod"
   },
   "devDependencies": {
     "@types/he": "catalog:dev",

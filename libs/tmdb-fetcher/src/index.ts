@@ -1,6 +1,7 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { MovieDetailsResponse, MovieSearchResponse, MovieSearchResult, SearchMovieCandidate, SearchTvShowCandidate, TmdbMovieDetails, TmdbTvShowDetails, TvShowDetailsResponse, TvShowSearchResponse, TvShowSearchResult } from '@repo/types'
-import { env, makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
+import { makeHttpClient, moveDefiniteArticleToFront } from '@repo/shared'
+import { env } from './env.js'
 
 // Rate limit is ~50 requests per second
 const httpClient = makeHttpClient(env.TMDB_BASE_URL, {

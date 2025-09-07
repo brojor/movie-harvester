@@ -1,6 +1,6 @@
-import { env } from '@repo/shared'
 import { downloadFile } from '@repo/webshare-downloader'
 import { Worker } from 'bullmq'
+import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 

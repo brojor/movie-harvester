@@ -19,6 +19,8 @@
     "@repo/shared": "workspace:*",
     "@repo/tmdb-fetcher": "workspace:*",
     "@repo/types": "workspace:*",
-    "bullmq": "catalog:prod"
+    "bullmq": "catalog:prod",
+    "dotenv": "catalog:prod",
+    "zod": "catalog:prod"
   }
 }

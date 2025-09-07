@@ -2,9 +2,9 @@ import type { MovieRecord, TvShowRecord, WorkerAction, WorkerInputData, WorkerRe
 import * as csfdScraper from '@repo/csfd-scraper'
 import { createDatabase, CsfdMovieDataRepo, CsfdTvShowDataRepo, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
 import { csfdMovieQueue, csfdTvShowQueue } from '@repo/queues'
-import { env } from '@repo/shared'
 import { findCsfdIdInTopic } from '@repo/warforum-scraper'
 import { Worker } from 'bullmq'
+import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase()
