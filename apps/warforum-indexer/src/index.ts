@@ -1,4 +1,4 @@
-import { createDatabase, MovieRepo, TvShowRepo } from '@repo/database'
+import { createAllRepositories, createDatabase } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { createQueues } from '@repo/queues'
 import { movieTopicIdMap, tvShowTopicIdMap } from '@repo/shared'
@@ -6,6 +6,7 @@ import { createWarforumScraper } from '@repo/warforum-scraper'
 import { env } from './env.js'
 
 const db = createDatabase(env.DATABASE_URL)
+const repositories = createAllRepositories(db)
 const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
 const warforumScraper = createWarforumScraper({
   baseUrl: env.WARFORUM_BASE_URL,
@@ -20,8 +21,7 @@ const warforumScraper = createWarforumScraper({
 
 export async function parseMovieTopics(): Promise<void> {
   const mediaService = new MediaService(db)
-  const movieRepo = new MovieRepo(db)
-  const lastRun = await movieRepo.getLastUpdateDate()
+  const lastRun = await repositories.movieRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(movieTopicIdMap)) {
     const movieTopics = await warforumScraper.indexMediaFromTopic(topicId, lastRun)
@@ -42,8 +42,7 @@ export async function parseMovieTopics(): Promise<void> {
 
 export async function parseTvShowTopics(): Promise<void> {
   const mediaService = new MediaService(db)
-  const tvShowRepo = new TvShowRepo(db)
-  const lastRun = await tvShowRepo.getLastUpdateDate()
+  const lastRun = await repositories.tvShowRepo.getLastUpdateDate()
 
   for (const [topicId, topicType] of objectEntries(tvShowTopicIdMap)) {
     const tvShowsTopics = await warforumScraper.indexMediaFromTopic(topicId, lastRun)

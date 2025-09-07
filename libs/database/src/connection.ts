@@ -9,22 +9,10 @@ const schema = {
   ...commonSchema,
 }
 
-let dbInstance: ReturnType<typeof drizzle> | null = null
-
 export function createDatabase(databaseUrl: string): ReturnType<typeof drizzle> {
-  if (!dbInstance) {
-    dbInstance = drizzle(databaseUrl, {
-      schema,
-    })
-  }
-  return dbInstance
-}
-
-export function getDatabase(): ReturnType<typeof drizzle> {
-  if (!dbInstance) {
-    throw new Error('Database not initialized. Call createDatabase() first.')
-  }
-  return dbInstance
+  return drizzle(databaseUrl, {
+    schema,
+  })
 }
 
 export type Database = ReturnType<typeof drizzle>

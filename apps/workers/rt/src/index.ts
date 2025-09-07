@@ -1,6 +1,6 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
-import { createDatabase, MovieRepo, RtMovieDataRepo, RtTvShowDataRepo, TvShowRepo } from '@repo/database'
+import { createAllRepositories, createDatabase } from '@repo/database'
 import { createQueues } from '@repo/queues'
 import { findRtMovieId, findRtTvShowId, getMovieDetails, getTvShowDetails } from '@repo/rt-scraper'
 import { Worker } from 'bullmq'
@@ -8,6 +8,7 @@ import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase(env.DATABASE_URL)
+const repositories = createAllRepositories(db)
 const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
 
 const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
@@ -20,8 +21,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         if (!rtId) {
           throw new Error(`RT ID for movie ${movie.id} not found`)
         }
-        const movieRepo = new MovieRepo(db)
-        await movieRepo.setRtId(movie.id, rtId)
+        await repositories.movieRepo.setRtId(movie.id, rtId)
         queues.rtMovieQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
@@ -29,8 +29,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
       case 'get-meta': {
         const { id: rtId } = job.data as { id: string }
         const movieDetails = await getMovieDetails(rtId)
-        const rtMovieRepo = new RtMovieDataRepo(db)
-        await rtMovieRepo.save(movieDetails)
+        await repositories.rtMovieDataRepo.save(movieDetails)
         return { id: rtId }
       }
 
@@ -51,8 +50,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         if (!rtId) {
           throw new Error(`RT ID for tv show ${tvShow.id} not found`)
         }
-        const tvShowRepo = new TvShowRepo(db)
-        await tvShowRepo.setRtId(tvShow.id, rtId)
+        await repositories.tvShowRepo.setRtId(tvShow.id, rtId)
         queues.rtTvShowQueue.add('get-meta', { id: rtId })
         return { id: rtId }
       }
@@ -60,8 +58,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
       case 'get-meta': {
         const { id: rtId } = job.data as { id: string }
         const meta = await getTvShowDetails(rtId)
-        const rtTvShowRepo = new RtTvShowDataRepo(db)
-        await rtTvShowRepo.save(meta)
+        await repositories.rtTvShowDataRepo.save(meta)
         return { id: rtId }
       }
 

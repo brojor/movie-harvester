@@ -1,7 +1,7 @@
 import type { MovieRecord, TvShowRecord } from '@repo/database'
 import type { MovieSearchResult, TvShowSearchResult } from '@repo/tmdb-fetcher'
 import type { MovieTopic, TvShowTopic, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
-import { createDatabase, MovieRepo, TmdbMovieDataRepo, TmdbTvShowDataRepo, TvShowRepo } from '@repo/database'
+import { createAllRepositories, createDatabase } from '@repo/database'
 import { MediaService } from '@repo/media-service'
 import { createQueues } from '@repo/queues'
 import { moveDefiniteArticleToEnd } from '@repo/shared'
@@ -11,6 +11,7 @@ import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase(env.DATABASE_URL)
+const repositories = createAllRepositories(db)
 const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
 const _tmdbClient = createTmdbClient({
   baseUrl: env.TMDB_BASE_URL,
@@ -27,8 +28,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
       case 'find-id': {
         const movie = job.data as MovieRecord
         const tmdbId = await findTmdbMovieId(movie)
-        const movieRepo = new MovieRepo(db)
-        await movieRepo.setTmdbId(movie.id, tmdbId)
+        await repositories.movieRepo.setTmdbId(movie.id, tmdbId)
         queues.tmdbMovieQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
@@ -36,8 +36,7 @@ const _movieWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
       case 'get-meta': {
         const { id: tmdbId } = job.data as { id: number }
         const movieDetails = await getMovieDetails(tmdbId)
-        const tmdbMovieRepo = new TmdbMovieDataRepo(db)
-        await tmdbMovieRepo.save(movieDetails)
+        await repositories.tmdbMovieDataRepo.save(movieDetails)
         return { id: tmdbId }
       }
 
@@ -80,8 +79,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
         if (!tmdbId) {
           throw new Error(`TMDB ID for tv show ${tvShow.id} not found`)
         }
-        const tvShowRepo = new TvShowRepo(db)
-        await tvShowRepo.setTmdbId(tvShow.id, tmdbId)
+        await repositories.tvShowRepo.setTmdbId(tvShow.id, tmdbId)
         queues.tmdbTvShowQueue.add('get-meta', { id: tmdbId })
         return { id: tmdbId }
       }
@@ -89,8 +87,7 @@ const _tvShowWorker = new Worker<WorkerInputData, WorkerResult, WorkerAction>(
       case 'get-meta': {
         const { id: tmdbId } = job.data as { id: number }
         const meta = await getTvShowDetails(tmdbId)
-        const tmdbTvShowRepo = new TmdbTvShowDataRepo(db)
-        await tmdbTvShowRepo.save(meta)
+        await repositories.tmdbTvShowDataRepo.save(meta)
         return { id: tmdbId }
       }
 

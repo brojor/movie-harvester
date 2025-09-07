@@ -1,3 +1,5 @@
+import type * as movieRepos from './repositories/movies/index.js'
+import type * as tvShowRepos from './repositories/tv-shows/index.js'
 import type * as moviesSchema from './schemas/movies.js'
 import type * as tvShowsSchema from './schemas/tv-shows.js'
 
@@ -36,3 +38,21 @@ export type UnprocessedSources = UnprocessedTmdbMovies | UnprocessedCsfdMovies |
 export type SourceTable = typeof moviesSchema.movies | typeof tvShowsSchema.tvShows
 
 export type { Database } from './connection.js'
+
+export interface MovieRepositories {
+  movieRepo: movieRepos.MovieRepo
+  movieTopicsRepo: movieRepos.MovieTopicsRepo
+  csfdMovieDataRepo: movieRepos.CsfdMovieDataRepo
+  rtMovieDataRepo: movieRepos.RtMovieDataRepo
+  tmdbMovieDataRepo: movieRepos.TmdbMovieDataRepo
+}
+
+export interface TvShowRepositories {
+  tvShowRepo: tvShowRepos.TvShowRepo
+  tvShowTopicsRepo: tvShowRepos.TvShowTopicsRepo
+  csfdTvShowDataRepo: tvShowRepos.CsfdTvShowDataRepo
+  rtTvShowDataRepo: tvShowRepos.RtTvShowDataRepo
+  tmdbTvShowDataRepo: tvShowRepos.TmdbTvShowDataRepo
+}
+
+export type AllRepositories = MovieRepositories & TvShowRepositories

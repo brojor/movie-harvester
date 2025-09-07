@@ -1,6 +1,6 @@
 import type { MovieRecord, TvShowRecord, WorkerAction, WorkerInputData, WorkerResult } from '@repo/types'
 import * as csfdScraper from '@repo/csfd-scraper'
-import { createDatabase, CsfdMovieDataRepo, CsfdTvShowDataRepo, MovieRepo, MovieTopicsRepo, TvShowRepo, TvShowTopicsRepo } from '@repo/database'
+import { createAllRepositories, createDatabase } from '@repo/database'
 import { createQueues } from '@repo/queues'
 import { createWarforumScraper } from '@repo/warforum-scraper'
 import { Worker } from 'bullmq'
@@ -8,6 +8,7 @@ import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const db = createDatabase(env.DATABASE_URL)
+const repositories = createAllRepositories(db)
 const queues = createQueues({ host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD })
 const warforumScraper = createWarforumScraper({
   baseUrl: env.WARFORUM_BASE_URL,
@@ -24,8 +25,8 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
   record: T,
   isMovie: boolean,
 ): Promise<{ id: number }> {
-  const repo = isMovie ? new MovieRepo(db) : new TvShowRepo(db)
-  const topicsRepo = isMovie ? new MovieTopicsRepo(db) : new TvShowTopicsRepo(db)
+  const repo = isMovie ? repositories.movieRepo : repositories.tvShowRepo
+  const topicsRepo = isMovie ? repositories.movieTopicsRepo : repositories.tvShowTopicsRepo
   const topicId = await topicsRepo.getTopicId(record.id)
 
   // Try to find CSFD ID in topic
@@ -55,13 +56,11 @@ async function handleFindId<T extends MovieRecord | TvShowRecord>(
 async function handleGetMeta(csfdId: number, isMovie: boolean): Promise<{ id: number }> {
   if (isMovie) {
     const movieDetails = await csfdScraper.getMovieDetails(csfdId)
-    const csfdMovieRepo = new CsfdMovieDataRepo(db)
-    await csfdMovieRepo.save(movieDetails)
+    await repositories.csfdMovieDataRepo.save(movieDetails)
   }
   else {
     const tvShowDetails = await csfdScraper.getTvShowDetails(csfdId)
-    const csfdTvShowRepo = new CsfdTvShowDataRepo(db)
-    await csfdTvShowRepo.save(tvShowDetails)
+    await repositories.csfdTvShowDataRepo.save(tvShowDetails)
   }
 
   return { id: csfdId }
