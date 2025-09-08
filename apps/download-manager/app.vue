@@ -20,8 +20,8 @@ function extractWebshareUrls(text: string): string[] {
   const matches = text.match(regex)
   return matches ?? []
 }
-
-const { data } = useWebSocket(`wss://dl.brojor.me/api/websocket`)
+const config = useRuntimeConfig()
+const { data } = useWebSocket(`wss://${config.public.wssHost}/api/websocket`)
 const threads = computed(() => {
   return JSON.parse(data.value) as Threads
 })

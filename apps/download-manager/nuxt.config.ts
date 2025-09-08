@@ -15,4 +15,9 @@ export default defineNuxtConfig({
     },
   },
   css: ['@unocss/reset/tailwind.css'],
+  runtimeConfig: {
+    public: {
+      wssHost: 'localhost:3000',
+    },
+  },
 })

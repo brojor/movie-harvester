@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "@repo/download-manager",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,6 +13,7 @@
     "@nuxt/eslint": "catalog:lint",
     "@repo/queues": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@unocss/nuxt": "catalog:prod",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
     "eslint": "catalog:lint",
