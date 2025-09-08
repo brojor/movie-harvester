@@ -13,6 +13,8 @@ RUN pnpm deploy --filter=@repo/warforum-indexer --prod /prod/warforum-indexer
 RUN pnpm deploy --filter=@repo/csfd-worker --prod /prod/csfd-worker
 RUN pnpm deploy --filter=@repo/rt-worker --prod /prod/rt-worker
 RUN pnpm deploy --filter=@repo/tmdb-worker --prod /prod/tmdb-worker
+RUN pnpm deploy --filter=@repo/webshare-worker --prod /prod/webshare-worker
+RUN pnpm deploy --filter=@repo/download-manager --prod /prod/download-manager
 
 
 FROM base AS media-browser
@@ -41,3 +43,15 @@ FROM base AS tmdb-worker
 COPY --from=build /prod/tmdb-worker /prod/tmdb-worker
 WORKDIR /prod/tmdb-worker
 CMD ["node", "dist/index.js"]
+
+FROM base AS webshare-worker
+COPY --from=build /prod/webshare-worker /prod/webshare-worker
+WORKDIR /prod/webshare-worker
+CMD ["node", "dist/index.js"]
+
+FROM base AS download-manager
+COPY --from=build /prod/download-manager /prod/download-manager
+WORKDIR /prod/download-manager
+RUN pnpm run build
+EXPOSE 3000
+CMD ["node", ".output/server/index.mjs"]
