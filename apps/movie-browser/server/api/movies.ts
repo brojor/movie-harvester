@@ -1,7 +1,8 @@
 import type { SearchParams } from '../../types'
 import { createDatabase } from '@repo/database'
 
-const db = createDatabase()
+const config = useRuntimeConfig()
+const db = createDatabase(config.dbUrl)
 
 function getRatingValue(movie: any, ratingSource: string): number {
   switch (ratingSource) {
@@ -24,6 +25,8 @@ function getSortValue(movie: any, sortBy: string): string | number {
       return movie.tmdbData?.releaseDate ?? ''
     case 'title':
       return movie.tmdbData?.title ?? ''
+    case 'addedDate':
+      return movie.createdAt ?? ''
     default:
       throw new Error(`Invalid sortBy: ${sortBy}`)
   }

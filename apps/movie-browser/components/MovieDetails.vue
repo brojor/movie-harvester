@@ -42,6 +42,10 @@ function formatMinutesVerbose(totalMinutes: number): string {
   }
 }
 
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString('cs-CZ')
+}
+
 const additionalInfo = computed(() => {
   const items = []
 
@@ -50,6 +54,9 @@ const additionalInfo = computed(() => {
   }
   if (currentMovie.value?.tmdbData?.runtime) {
     items.push(formatMinutesVerbose(currentMovie.value.tmdbData.runtime))
+  }
+  if (currentMovie.value?.createdAt) {
+    items.push(formatDate(currentMovie.value.createdAt))
   }
   return items
 })

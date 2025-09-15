@@ -2,6 +2,7 @@ export const SORT_BY_OPTIONS = [
   { label: 'Název', value: 'title' },
   { label: 'Hodnocení', value: 'rating' },
   { label: 'Datum vydání', value: 'releaseDate' },
+  { label: 'Datum přidání', value: 'addedDate' },
 ] as const
 
 export const RATING_SOURCE_OPTIONS = [
