@@ -16,6 +16,7 @@
     "@repo/shared": "workspace:*",
     "@vueuse/core": "catalog:prod",
     "@vueuse/nuxt": "catalog:prod",
+    "bullmq": "catalog:prod",
     "eslint": "catalog:lint",
     "nuxt": "catalog:prod",
     "pinia": "catalog:",

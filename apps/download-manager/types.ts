@@ -17,9 +17,15 @@ export interface ProgressEvent {
   data: ProgressData
 }
 
-export interface CompletedJob {
+export interface CompletedEvent {
   jobId: JobId
   returnvalue: any
+  prev: string
+}
+
+export interface RemovedEvent {
+  jobId: JobId
+  prev: string
 }
 
 export interface FailedJob {
@@ -29,4 +35,5 @@ export interface FailedJob {
 
 export interface BulkJobPayload {
   urls: string[]
+  name: string
 }

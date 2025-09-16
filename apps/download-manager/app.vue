@@ -1,23 +1,24 @@
 <script setup lang="ts">
+import type { Job, JobNode } from 'bullmq'
 import type FileCheck from './components/FileCheck.vue'
-import type { CompletedJob, FailedJob, ProgressData, ProgressEvent } from './types'
+import type { CompletedEvent, CompletedJob, FailedJob, ProgressData, ProgressEvent, RemovedEvent } from './types'
 import { useEventSource } from '@vueuse/core'
 
 const clipboardContent = ref('')
+const bundleName = ref('')
 const urlsToCheck = computed(() => extractWebshareUrls(clipboardContent.value))
 
 const fileCheckRefs = ref<InstanceType<typeof FileCheck>[]>([])
 const aliveUrls = computed(() => fileCheckRefs.value.filter(ref => ref?.state === 'alive').map(ref => ref?.url))
 
-const { registerJobs, upsertFromEvent } = useProgressStore()
+const { addBundleJob, handleProgressEvent, bundles, partsByBundle, registerPartJob, registerBundleJob, removePartJob } = useDownloadsStore()
 
 async function addToQueue() {
-  const jobNode = await $fetch('/api/queue/bulk', {
+  const jobNode = await $fetch<JobNode>('/api/queue/bulk', {
     method: 'post',
-    body: { urls: aliveUrls.value },
+    body: { urls: aliveUrls.value, name: bundleName.value },
   })
-  const { job, children } = jobNode
-  registerJobs(job.id!, children?.map(child => child.job!.id!) ?? [])
+  addBundleJob(jobNode)
 }
 function extractWebshareUrls(text: string): string[] {
   const regex = /https:\/\/webshare\.cz\/#\/file\/\S+/g
@@ -33,23 +34,6 @@ async function pasteFromClipboard(): Promise<void> {
   catch (error) {
     console.error('Failed to read clipboard:', error)
   }
-}
-
-const jobIdInput = ref('')
-function pause() {
-  $fetch(`/api/downloads/${jobIdInput.value}/pause`, {
-    method: 'patch',
-  })
-}
-function resume() {
-  $fetch(`/api/downloads/${jobIdInput.value}/resume`, {
-    method: 'patch',
-  })
-}
-function cancel() {
-  $fetch(`/api/downloads/${jobIdInput.value}`, {
-    method: 'delete',
-  })
 }
 
 const { event, data, status, error, close } = useEventSource<['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'], string>(
@@ -88,38 +72,45 @@ function clearPending(jobId: string) {
 
 const isInitializing = ref(true)
 
-const activeDownloads = await $fetch('/api/downloads/active')
-const pausedDownloads = await $fetch('/api/downloads/paused')
-const allDownloads = await $fetch('/api/downloads/all')
+const allBundleJobs = await $fetch<Job[]>('/api/bundles/all')
+console.log('allBundleJobs', allBundleJobs)
+for (const bundleJob of allBundleJobs) {
+  registerBundleJob(bundleJob)
+}
 
-console.log('allDownloads', allDownloads)
+const activeDownloads = await $fetch<Job[]>('/api/downloads/active')
+const pausedDownloads = await $fetch<Job[]>('/api/downloads/paused')
 
-// for (const job of activeDownloads) {
-//   downloadStates.value[job.id!] = 'active'
-//   if (!job.id || !job.parent || !job.parent.id) {
-//     console.error('job has no id or parent', job)
-//     continue
-//   }
-//   registerJob(job.parent.id, job.id)
-// }
-// for (const job of pausedDownloads) {
-//   downloadStates.value[job.id!] = 'paused'
-//   downloads.value[job.id!] = job.progress as ProgressData
-// }
+console.log('activeDownloads', activeDownloads)
+console.log('pausedDownloads', pausedDownloads)
+
+for (const job of activeDownloads) {
+  downloadStates.value[job.id!] = 'active'
+  if (!job.id || !job.parent || !job.parent.id) {
+    console.error('job has no id or parent', job)
+    continue
+  }
+  registerPartJob(job)
+}
+for (const job of pausedDownloads) {
+  downloadStates.value[job.id!] = 'paused'
+  registerPartJob(job)
+}
 isInitializing.value = false
 
 watch(data, (d) => {
   if (d && event.value === 'progress') {
-    const { jobId, data } = JSON.parse(d) as ProgressEvent
-    if (downloadStates.value[jobId] === 'paused')
+    // const { jobId, data } = JSON.parse(d) as ProgressEvent
+    const progressEvent = JSON.parse(d) as ProgressEvent
+    if (downloadStates.value[progressEvent.jobId] === 'paused')
       return
 
-    upsertFromEvent({ jobId, data })
+    handleProgressEvent(progressEvent)
   }
   else if (d && event.value === 'completed') {
     console.log('completed', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, returnValue: any, prev: string }
-    delete downloads.value[jobId]
+    const completedEvent = JSON.parse(d) as CompletedEvent
+    removePartJob(completedEvent.jobId)
   }
   else if (d && event.value === 'failed') {
     console.log('failed', d)
@@ -155,8 +146,8 @@ watch(data, (d) => {
   }
   else if (d && event.value === 'removed') {
     console.log('removed', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    delete downloads.value[jobId]
+    const removedEvent = JSON.parse(d) as RemovedEvent
+    removePartJob(removedEvent.jobId)
   }
 })
 </script>
@@ -172,19 +163,10 @@ watch(data, (d) => {
           Načíst ze schránky
         </button>
       </div>
-      <div>
-        <input v-model="jobIdInput" type="text">
-        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="pause">
-          Pause
-        </button>
-        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="resume">
-          Resume
-        </button>
-        <button class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8" @click="cancel">
-          Cancel
-        </button>
-      </div>
       <div v-if="urlsToCheck.length > 0" class="bg-white/8 rounded-2xl py-5 mb-4">
+        <div class="mx-5">
+          <input id="name" v-model="bundleName" type="text" name="name" class="text-white/80 hover:text-white/100 transition-colors duration-200 text-sm border border-white/20 rounded-lg px-2 py-1 mb-4 bg-white/8">
+        </div>
         <div class="flex justify-between items-center mx-5 pb-4 mb-4 border-b border-white/20">
           <h2 class="text-white/80 text-sm">
             <span>Live links:&nbsp;</span>
@@ -199,8 +181,13 @@ watch(data, (d) => {
           <FileCheck v-for="url in urlsToCheck" :key="url" ref="fileCheckRefs" :url="url" />
         </div>
       </div>
-      <div v-if="!isInitializing" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <ThreadCard v-for="(progressData, jobId) in downloads" :key="jobId" :progress-data="progressData" :job-id="jobId" :state="downloadStates[jobId]" @pause="setOptimisticState(jobId, 'paused')" @resume="setOptimisticState(jobId, 'active')" />
+      <div v-for="bundle in bundles" :key="bundle.id">
+        <h3 class="text-white/80 text-sm">
+          {{ bundle.name }}
+        </h3>
+        <div v-if="!isInitializing" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :progress-data="part.progress" :job-id="part.id" :state="downloadStates[part.id]" @pause="setOptimisticState(part.id, 'paused')" @resume="setOptimisticState(part.id, 'active')" />
+        </div>
       </div>
     </div>
   </div>

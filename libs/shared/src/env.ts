@@ -1,11 +1,8 @@
 /* eslint-disable node/prefer-global/process -- avoid ESM redeclaration in Nuxt */
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import * as dotenv from 'dotenv'
 import { z } from 'zod'
 
-const envPath = process.env.ENV_FILE || resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env')
-dotenv.config({ path: envPath })
+dotenv.config({ path: '/Users/brojor/dev/2025/movie-harvester/.env' })
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
@@ -25,7 +22,7 @@ const envSchema = z.object({
   META_RESOLVER_PORT: z.coerce.number().default(3000),
   WEBSHARE_USERNAME: z.string(),
   WEBSHARE_PASSWORD: z.string(),
-  WEBSHARE_DOWNLOAD_DIR: z.string().default(resolve(process.cwd(), 'webshare-downloads')),
+  WEBSHARE_DOWNLOAD_DIR: z.string().default(process.cwd()),
 })
 
 export const env = envSchema.parse(process.env)

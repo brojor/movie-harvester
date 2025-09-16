@@ -2,7 +2,7 @@
 import type { ProgressData } from '../types'
 
 const props = defineProps<{
-  progressData: ProgressData
+  progressData: ProgressData | 0
   jobId: string
   state: 'active' | 'paused'
 }>()
@@ -42,7 +42,7 @@ const { data: filename } = useFetch(`/api/downloads/${props.jobId}/filename`)
 </script>
 
 <template>
-  <div class="bg-white/8 rounded-2xl p-5">
+  <div v-if="progressData" class="bg-white/8 rounded-2xl p-5">
     <div class="flex justify-between items-center mb-3">
       <span class="text-sm font-semibold text-blue-400 flex items-center">
         <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': state === 'active', 'bg-yellow-500': state === 'paused' }" />{{ filename }}</span>
