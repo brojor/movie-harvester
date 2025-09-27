@@ -17,11 +17,8 @@
     "@repo/shared": "workspace:*",
     "axios": "catalog:prod",
     "crypt3-md5": "catalog:prod",
-    "dotenv": "catalog:prod",
     "node-ipc": "catalog:prod",
-    "progress-stream": "catalog:prod",
-    "ufo": "catalog:prod",
-    "zod": "catalog:prod"
+    "progress-stream": "catalog:prod"
   },
   "devDependencies": {
     "@types/node-ipc": "catalog:dev",

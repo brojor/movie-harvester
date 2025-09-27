@@ -13,9 +13,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/shared": "workspace:*",
-    "bullmq": "catalog:prod",
-    "dotenv": "catalog:prod",
-    "zod": "catalog:prod"
+    "bullmq": "catalog:prod"
   }
 }

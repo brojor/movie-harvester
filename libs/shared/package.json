@@ -13,15 +13,12 @@
   },
   "dependencies": {
     "axios": "catalog:prod",
-    "dotenv": "catalog:prod",
     "http-cookie-agent": "catalog:prod",
-    "ioredis": "catalog:prod",
     "p-limit": "catalog:prod",
     "php-serialize": "catalog:prod",
     "tough-cookie": "catalog:prod",
     "ufo": "catalog:prod",
-    "xml2js": "catalog:prod",
-    "zod": "catalog:prod"
+    "xml2js": "catalog:prod"
   },
   "devDependencies": {
     "@types/xml2js": "catalog:dev"

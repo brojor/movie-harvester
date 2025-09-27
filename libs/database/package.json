@@ -19,7 +19,6 @@
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
-    "dotenv": "catalog:prod",
     "drizzle-orm": "catalog:prod",
     "pg": "catalog:prod",
     "zod": "catalog:prod"

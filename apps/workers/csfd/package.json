@@ -16,7 +16,6 @@
     "@repo/csfd-scraper": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/queues": "workspace:*",
-    "@repo/shared": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/warforum-scraper": "workspace:*",
     "bullmq": "catalog:prod",

@@ -15,8 +15,6 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
-    "@repo/types": "workspace:*",
-    "dotenv": "catalog:prod",
-    "zod": "catalog:prod"
+    "@repo/types": "workspace:*"
   }
 }
