@@ -37,6 +37,12 @@ const additionalInfo = computed(() => {
   if (currentTvShow.value?.tmdbData?.genres?.length) {
     items.push(currentTvShow.value.tmdbData.genres.map((genre: any) => genre.genre.name).join(', '))
   }
+  if (currentTvShow.value?.tmdbData?.numberOfEpisodes) {
+    items.push(`${currentTvShow.value.tmdbData.numberOfEpisodes} epizod`)
+  }
+  if (currentTvShow.value?.createdAt) {
+    items.push(new Date(currentTvShow.value.createdAt).toLocaleDateString('cs-CZ'))
+  }
   return items
 })
 

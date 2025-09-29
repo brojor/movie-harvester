@@ -11,5 +11,6 @@ const { sortOptions, mediaType } = useVModels(props, emit)
   <header class="flex gap-2 items-center">
     <SourceControl v-model="mediaType" />
     <SortControl v-model="sortOptions" />
+    <FilterControl v-model="sortOptions" :media-type="mediaType" />
   </header>
 </template>

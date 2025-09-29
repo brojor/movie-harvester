@@ -1,8 +1,10 @@
 import type { SearchParams } from '../../types'
-import { createDatabase } from '@repo/database'
+import { createDatabase, moviesSchema } from '@repo/database'
+import { and, eq, exists } from 'drizzle-orm'
 
-const config = useRuntimeConfig()
-const db = createDatabase(config.dbUrl)
+const { tmdbMoviesToGenres, movies } = moviesSchema
+
+const db = createDatabase()
 
 function getRatingValue(movie: any, ratingSource: string): number {
   switch (ratingSource) {
@@ -40,16 +42,52 @@ function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): 
   return order === 'asc' ? comparison : -comparison
 }
 
-export default defineEventHandler(async (event) => {
-  const { sortBy, ratingSource, order } = getQuery(event) as SearchParams
+async function getMoviesByGenre(genreId: number): Promise<any[]> {
+  const moviesWithGenre = await db
+    .select({ movieId: movies.id })
+    .from(movies)
+    .where(
+      exists(
+        db
+          .select()
+          .from(tmdbMoviesToGenres)
+          .where(
+            and(
+              eq(tmdbMoviesToGenres.movieId, movies.tmdbId),
+              eq(tmdbMoviesToGenres.genreId, genreId),
+            ),
+          ),
+      ),
+    )
 
-  const moviesWithAllData = await db.query.movies.findMany({
+  const movieIds = moviesWithGenre.map(m => m.movieId)
+
+  return await db.query.movies.findMany({
+    where: (movies, { inArray }) => inArray(movies.id, movieIds),
     with: {
       rtData: true,
       csfdData: { with: { genres: { with: { genre: true } } } },
       tmdbData: { with: { genres: { with: { genre: true } } } },
     },
   })
+}
+
+async function getAllMovies(): Promise<any[]> {
+  return await db.query.movies.findMany({
+    with: {
+      rtData: true,
+      csfdData: { with: { genres: { with: { genre: true } } } },
+      tmdbData: { with: { genres: { with: { genre: true } } } },
+    },
+  })
+}
+
+export default defineEventHandler(async (event) => {
+  const { sortBy, ratingSource, order, genreId } = getQuery(event) as SearchParams
+
+  const moviesWithAllData = genreId
+    ? await getMoviesByGenre(genreId)
+    : await getAllMovies()
 
   const sortedMovies = moviesWithAllData.sort((a, b) => {
     if (sortBy === 'rating') {

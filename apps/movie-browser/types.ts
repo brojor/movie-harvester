@@ -24,6 +24,12 @@ export interface SearchParams {
   sortBy: ValueOf<typeof SORT_BY_OPTIONS>
   ratingSource: ValueOf<typeof RATING_SOURCE_OPTIONS>
   order: typeof ORDER_OPTIONS[number]
+  genreId?: number
 }
 
 export type MediaType = ValueOf<typeof MEDIA_TYPE_OPTIONS>
+
+export interface Genre {
+  id: number
+  name: string
+}

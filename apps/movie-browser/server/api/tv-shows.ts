@@ -1,5 +1,8 @@
 import type { SearchParams } from '../../types'
-import { createDatabase } from '@repo/database'
+import { createDatabase, tvShowsSchema } from '@repo/database'
+import { and, eq, exists } from 'drizzle-orm'
+
+const { tmdbTvShowsToGenres, tvShows } = tvShowsSchema
 
 const db = createDatabase()
 
@@ -37,16 +40,52 @@ function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): 
   return order === 'asc' ? comparison : -comparison
 }
 
-export default defineEventHandler(async (event) => {
-  const { sortBy, ratingSource, order } = getQuery(event) as SearchParams
+async function getTvShowsByGenre(genreId: number): Promise<any[]> {
+  const tvShowsWithGenre = await db
+    .select({ tvShowId: tvShows.id })
+    .from(tvShows)
+    .where(
+      exists(
+        db
+          .select()
+          .from(tmdbTvShowsToGenres)
+          .where(
+            and(
+              eq(tmdbTvShowsToGenres.tvShowId, tvShows.tmdbId),
+              eq(tmdbTvShowsToGenres.genreId, genreId),
+            ),
+          ),
+      ),
+    )
 
-  const tvShowsWithAllData = await db.query.tvShows.findMany({
+  const tvShowIds = tvShowsWithGenre.map(t => t.tvShowId)
+
+  return await db.query.tvShows.findMany({
+    where: (tvShows, { inArray }) => inArray(tvShows.id, tvShowIds),
     with: {
       rtData: true,
       csfdData: { with: { genres: { with: { genre: true } } } },
       tmdbData: { with: { genres: { with: { genre: true } }, seasons: true, networks: { with: { network: true } } } },
     },
   })
+}
+
+async function getAllTvShows(): Promise<any[]> {
+  return await db.query.tvShows.findMany({
+    with: {
+      rtData: true,
+      csfdData: { with: { genres: { with: { genre: true } } } },
+      tmdbData: { with: { genres: { with: { genre: true } }, seasons: true, networks: { with: { network: true } } } },
+    },
+  })
+}
+
+export default defineEventHandler(async (event) => {
+  const { sortBy, ratingSource, order, genreId } = getQuery(event) as SearchParams
+
+  const tvShowsWithAllData = genreId
+    ? await getTvShowsByGenre(genreId)
+    : await getAllTvShows()
 
   const sortedTvShows = tvShowsWithAllData.sort((a, b) => {
     if (sortBy === 'rating') {
