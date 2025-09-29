@@ -1,6 +1,6 @@
 import { createDatabase, moviesSchema, tvShowsSchema } from '@repo/database'
 
-const db = createDatabase()
+const db = createDatabase(useRuntimeConfig().dbUrl)
 
 const { tmdbMovieGenres } = moviesSchema
 const { tmdbTvShowGenres } = tvShowsSchema
