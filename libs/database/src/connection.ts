@@ -9,11 +9,12 @@ const schema = {
   ...commonSchema,
 }
 
-export function createDatabase(databaseUrl: string): ReturnType<typeof drizzle> {
+// eslint-disable-next-line ts/explicit-function-return-type
+export function createDatabase(databaseUrl: string) {
   return drizzle(databaseUrl, {
     schema,
   })
 }
 
-export type Database = ReturnType<typeof drizzle>
+export type Database = ReturnType<typeof createDatabase>
 export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0]
