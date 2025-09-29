@@ -4,7 +4,7 @@ import { and, eq, exists } from 'drizzle-orm'
 
 const { tmdbMoviesToGenres, movies } = moviesSchema
 
-const db = createDatabase()
+const db = createDatabase(useRuntimeConfig().dbUrl)
 
 function getRatingValue(movie: any, ratingSource: string): number {
   switch (ratingSource) {
@@ -42,6 +42,13 @@ function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): 
   return order === 'asc' ? comparison : -comparison
 }
 
+const movieWithRelations = {
+  rtData: true,
+  csfdData: { with: { genres: { with: { genre: true } } } },
+  tmdbData: { with: { genres: { with: { genre: true } } } },
+  topics: true,
+} as const
+
 async function getMoviesByGenre(genreId: number): Promise<any[]> {
   const moviesWithGenre = await db
     .select({ movieId: movies.id })
@@ -64,26 +71,18 @@ async function getMoviesByGenre(genreId: number): Promise<any[]> {
 
   return await db.query.movies.findMany({
     where: (movies, { inArray }) => inArray(movies.id, movieIds),
-    with: {
-      rtData: true,
-      csfdData: { with: { genres: { with: { genre: true } } } },
-      tmdbData: { with: { genres: { with: { genre: true } } } },
-    },
+    with: movieWithRelations,
   })
 }
 
 async function getAllMovies(): Promise<any[]> {
   return await db.query.movies.findMany({
-    with: {
-      rtData: true,
-      csfdData: { with: { genres: { with: { genre: true } } } },
-      tmdbData: { with: { genres: { with: { genre: true } } } },
-    },
+    with: movieWithRelations,
   })
 }
 
 export default defineEventHandler(async (event) => {
-  const { sortBy, ratingSource, order, genreId } = getQuery(event) as SearchParams
+  const { sortBy = 'title', ratingSource = 'tmdb', order = 'asc', genreId } = getQuery(event) as SearchParams
 
   const moviesWithAllData = genreId
     ? await getMoviesByGenre(genreId)

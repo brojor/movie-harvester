@@ -78,6 +78,7 @@ const title = computed(() => {
           <MainHeader :title="title" :year="currentMovie.year" />
           <OriginCountry v-if="currentMovie.tmdbData?.originalLanguage && currentMovie.tmdbData?.originalTitle" :origin-country="currentMovie.tmdbData.originalLanguage" :origin-title="currentMovie.tmdbData.originalTitle" />
           <AdditionalInfo :items="additionalInfo" />
+          <SourceTopics :topics="currentMovie.topics" />
           <MediaOverview v-if="currentMovie.tmdbData?.overview" :overview="currentMovie.tmdbData.overview" />
         </div>
       </div>

@@ -56,3 +56,6 @@ export interface TvShowRepositories {
 }
 
 export type AllRepositories = MovieRepositories & TvShowRepositories
+
+export type MovieTopic = typeof moviesSchema.movieTopics.$inferSelect
+export type TvShowTopic = typeof tvShowsSchema.tvShowTopics.$inferSelect

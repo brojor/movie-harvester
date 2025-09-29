@@ -90,6 +90,7 @@ function getColor(value: number): string {
           <MainHeader :title="title" :year="Number(currentTvShow.tmdbData?.firstAirDate?.split('-')[0])" :network-logo="currentTvShow.tmdbData?.networks?.[0]?.network?.logoPath" />
           <OriginCountry v-if="currentTvShow.tmdbData?.originalLanguage && currentTvShow.tmdbData?.originalName" :origin-country="currentTvShow.tmdbData.originalLanguage" :origin-title="currentTvShow.tmdbData.originalName" />
           <AdditionalInfo :items="additionalInfo" />
+          <SourceTopics :topics="currentTvShow.topics" />
           <div class="grid grid-cols-2 gap-x-16 w-max">
             <div v-for="season in sortedSeasons" :key="season.id" class="">
               <div v-if="season.airDate && season.episodeCount" class="flex gap-2">
