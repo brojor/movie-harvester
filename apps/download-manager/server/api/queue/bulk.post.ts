@@ -1,6 +1,6 @@
 import type { BulkJobPayload } from '../../../types'
 import process from 'node:process'
-import { createQueues } from '@repo/queues'
+import { FlowProducer } from '@repo/queues'
 import { z } from 'zod'
 
 const envSchema = z.object({
@@ -11,18 +11,32 @@ const envSchema = z.object({
 
 const env = envSchema.parse(process.env)
 
-const queues = createQueues({
-  host: env.REDIS_HOST,
-  port: env.REDIS_PORT,
-  password: env.REDIS_PASSWORD,
+const flowProducer = new FlowProducer({
+  connection: {
+    host: env.REDIS_HOST,
+    port: env.REDIS_PORT,
+    password: env.REDIS_PASSWORD,
+  },
+  prefix: 'webshare',
 })
 
 export default defineEventHandler(async (event) => {
-  const { urls } = await readBody<BulkJobPayload>(event)
-  const bulkJobs = urls.map(url => ({
-    name: 'download',
-    data: { url },
-  }))
+  const { urls, name } = await readBody<BulkJobPayload>(event)
 
-  await queues.downloadQueue.addBulk(bulkJobs)
+  const children = urls.map((url) => {
+    return {
+      name: url.split('/').pop() ?? 'Unknown',
+      data: { url },
+      queueName: 'download',
+    }
+  })
+
+  // await downloadQueue.addBulk(bulkJobs)
+  const jobNode = await flowProducer.add({
+    name,
+    queueName: 'bundle-download',
+    children,
+  })
+
+  return jobNode
 })

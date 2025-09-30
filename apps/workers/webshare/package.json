@@ -13,6 +13,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/queues": "workspace:*",
+    "@repo/shared": "workspace:*",
     "@repo/webshare-downloader": "workspace:*",
     "bullmq": "catalog:prod",
     "dotenv": "catalog:prod",

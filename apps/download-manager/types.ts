@@ -1,5 +1,7 @@
+export type JobId = string
+export type BundleId = string
+
 export interface ProgressData {
-  id: string
   transferred: number
   percentage: number
   length: number
@@ -10,10 +12,28 @@ export interface ProgressData {
   speed: number
 }
 
-export interface Threads {
-  [key: string]: ProgressData
+export interface ProgressEvent {
+  jobId: JobId
+  data: ProgressData
+}
+
+export interface CompletedEvent {
+  jobId: JobId
+  returnvalue: any
+  prev: string
+}
+
+export interface RemovedEvent {
+  jobId: JobId
+  prev: string
+}
+
+export interface FailedJob {
+  jobId: JobId
+  failedReason: string
 }
 
 export interface BulkJobPayload {
   urls: string[]
+  name: string
 }
