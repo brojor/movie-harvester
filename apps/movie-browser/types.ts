@@ -1,10 +1,16 @@
 // Import all types from database
 import type {
   CsfdMovieData,
+  CsfdTvShowData,
   MovieRecord,
   MovieTopic,
   RtMovieData,
+  RtTvShowData,
   TmdbMovieData,
+  TmdbSeason,
+  TmdbTvShowData,
+  TvShowRecord,
+  TvShowTopic,
 } from '@repo/database'
 
 // UI-specific types
@@ -65,4 +71,18 @@ export type Movie = MovieRecord & {
   }) | null
   rtData: RtMovieData | null
   topics: MovieTopic[]
+}
+
+// Complete tv show type with relations (as returned by API)
+export type TvShow = TvShowRecord & {
+  tmdbData: (TmdbTvShowData & {
+    genres: Array<GenreWithRelation>
+    networks: Array<{ network: { logoPath: string | null } | null }>
+    seasons: Array<TmdbSeason>
+  }) | null
+  csfdData: (CsfdTvShowData & {
+    genres: Array<GenreWithRelation>
+  }) | null
+  rtData: RtTvShowData | null
+  topics: TvShowTopic[]
 }

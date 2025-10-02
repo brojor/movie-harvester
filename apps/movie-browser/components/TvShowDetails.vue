@@ -1,197 +1,154 @@
 <script setup lang="ts">
 import type { TmdbSeason } from '@repo/database'
-import type { MediaType, SearchParams } from '../types'
+import type { GenreWithRelation, MediaType, SearchParams, TvShow } from '../types'
+import { usePageCache } from '@/composables/usePageCache'
 
-const props = defineProps<{
-  mediaType: MediaType
-}>()
-
+/** Props / emits */
+const props = defineProps<{ mediaType: MediaType }>()
 const emit = defineEmits(['update:mediaType'])
-
 defineExpose({ incrementIndex, decrementIndex })
 
+/** Stav */
 const mediaType = useVModel(props, 'mediaType', emit)
-
-const currentIndex = ref(0)
+const tvShowIndex = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
 
-// Cache pro načtené stránky
-const tvShowsCache = ref<Map<number, any[]>>(new Map())
-const paginationCache = ref<Map<number, any>>(new Map())
-
-const query = ref<SearchParams>({
+/** Filtry – bez page/limit */
+const filters = ref<Omit<SearchParams, 'page' | 'limit'>>({
   sortBy: 'title',
   ratingSource: 'csfd',
   order: 'asc',
-  page: currentPage.value,
-  limit: pageSize,
 })
 
-const { data: tvShowsResponse, refresh: refreshTvShows } = await useFetch('/api/tv-shows', { query })
-
-// Uložíme první stránku do cache
-watch(tvShowsResponse, (newResponse) => {
-  if (newResponse?.data && newResponse?.pagination) {
-    tvShowsCache.value.set(currentPage.value, newResponse.data)
-    paginationCache.value.set(currentPage.value, newResponse.pagination)
-  }
-}, { immediate: true })
-
-const tvShows = computed(() => tvShowsCache.value.get(currentPage.value) ?? [])
-const pagination = computed(() => paginationCache.value.get(currentPage.value) ?? { page: 1, limit: pageSize, total: 0, hasMore: false })
-
-const currentTvShow = computed(() => tvShows.value?.[currentIndex.value])
-const tvShowsCount = computed(() => tvShows.value?.length ?? 0)
-
-// Správná logika pro nextTvShow - zohledňuje přechody mezi stránkami
-const nextTvShow = computed(() => {
-  const nextIndex = currentIndex.value + 1
-
-  // Pokud je další seriál na stejné stránce
-  if (nextIndex < tvShowsCount.value) {
-    return tvShows.value?.[nextIndex]
-  }
-
-  // Pokud je další seriál na další stránce (pokud existuje v cache)
-  if (tvShowsCache.value.has(currentPage.value + 1)) {
-    const nextPageTvShows = tvShowsCache.value.get(currentPage.value + 1) ?? []
-    return nextPageTvShows[0]
-  }
-
-  // Pokud je další seriál na další stránce (pokud existuje další stránka)
-  if (pagination.value.hasMore) {
-    return null // Bude načteno při přechodu
-  }
-
-  // Pokud jsme na konci, vraťme první seriál ze současné stránky
-  return tvShows.value?.[0]
-})
-
-useImagePreloader(nextTvShow)
-
-// Funkce pro přednačítání stránky
-async function preloadPage(pageNumber: number) {
-  if (tvShowsCache.value.has(pageNumber)) {
-    return // Stránka už je v cache
-  }
-
-  try {
-    const response = await $fetch('/api/tv-shows', {
-      query: {
-        ...query.value,
-        page: pageNumber,
-      },
-    })
-
-    if (response?.data && response?.pagination) {
-      tvShowsCache.value.set(pageNumber, response.data)
-      paginationCache.value.set(pageNumber, response.pagination)
-    }
-  }
-  catch (error) {
-    console.warn(`Failed to preload page ${pageNumber}:`, error)
-  }
+/** Klíč a fetcher */
+function keyFor(p: number) {
+  return ['tv-shows', filters.value.sortBy, filters.value.ratingSource, filters.value.order, p, pageSize].join(':')
 }
 
-// Funkce pro detekci blížení se ke konci stránky
-function checkAndPreload() {
-  const remainingItems = tvShowsCount.value - currentIndex.value - 1
-  const preloadThreshold = 3 // Přednačteme, když zbývají 3 nebo méně položek
-
-  // Přednačteme další stránku, pokud se blížíme ke konci
-  if (remainingItems <= preloadThreshold && pagination.value.hasMore) {
-    const nextPage = currentPage.value + 1
-    if (!tvShowsCache.value.has(nextPage)) {
-      preloadPage(nextPage)
-    }
-  }
-
-  // Přednačteme předchozí stránku, pokud jsme na začátku a existuje
-  if (currentIndex.value <= preloadThreshold && currentPage.value > 1) {
-    const prevPage = currentPage.value - 1
-    if (!tvShowsCache.value.has(prevPage)) {
-      preloadPage(prevPage)
-    }
-  }
+interface TvShowsResponse {
+  data: TvShow[]
+  pagination: { page: number, limit: number, total: number, hasMore: boolean }
 }
 
-async function incrementIndex() {
-  const nextIndex = currentIndex.value + 1
-
-  // Pokud jsme na konci stránky a existuje další stránka v cache
-  if (nextIndex >= tvShowsCount.value && tvShowsCache.value.has(currentPage.value + 1)) {
-    currentPage.value++
-    currentIndex.value = 0
-    // Přednačteme další stránku pro plynulou navigaci
-    checkAndPreload()
-    // Spustíme přednačítání obrázků pro novou stránku
-    await nextTick()
-  }
-  // Pokud jsme na konci stránky a existuje další stránka, načteme ji
-  else if (nextIndex >= tvShowsCount.value && pagination.value.hasMore) {
-    currentPage.value++
-    query.value.page = currentPage.value
-    currentIndex.value = 0
-    await refreshTvShows()
-    // Spustíme přednačítání obrázků pro novou stránku
-    await nextTick()
-  }
-  // Jinak normální navigace v rámci stránky
-  else if (nextIndex < tvShowsCount.value) {
-    currentIndex.value = nextIndex
-    checkAndPreload()
-  }
-  // Pokud jsme na konci a není další stránka, zůstaneme na posledním seriálu
+function fetchTvShows(p: number) {
+  return $fetch<TvShowsResponse>('/api/tv-shows', { query: { ...filters.value, page: p, limit: pageSize } })
 }
 
-async function decrementIndex() {
-  const prevIndex = currentIndex.value - 1
+/** Page cache (cache-first) */
+const { value: activePageData, loadPage, peekPage } = usePageCache<TvShowsResponse>(keyFor, fetchTvShows)
 
-  // Pokud jsme na začátku stránky a existuje předchozí stránka v cache
-  if (prevIndex < 0 && tvShowsCache.value.has(currentPage.value - 1)) {
-    currentPage.value--
-    currentIndex.value = tvShowsCache.value.get(currentPage.value)!.length - 1
-    // Přednačteme předchozí stránku pro plynulou navigaci
-    checkAndPreload()
-    // Spustíme přednačítání obrázků pro novou stránku
-    await nextTick()
-  }
-  // Pokud jsme na začátku stránky a existuje předchozí stránka, načteme ji
-  else if (prevIndex < 0 && currentPage.value > 1) {
-    currentPage.value--
-    query.value.page = currentPage.value
-    await refreshTvShows()
-    currentIndex.value = tvShowsCount.value - 1
-    // Spustíme přednačítání obrázků pro novou stránku
-    await nextTick()
-  }
-  // Jinak normální navigace v rámci stránky
-  else if (prevIndex >= 0) {
-    currentIndex.value = prevIndex
-    checkAndPreload()
-  }
-  // Pokud jsme na začátku a není předchozí stránka, zůstaneme na prvním seriálu
+/** Derivace pro UI */
+const activeTvShows = computed(() => activePageData.value?.data ?? [])
+const activePagination = computed(() =>
+  activePageData.value?.pagination ?? { page: 1, limit: pageSize, total: 0, hasMore: false },
+)
+const tvShowsCount = computed(() => activeTvShows.value.length)
+const currentTvShow = computed(() => activeTvShows.value?.[tvShowIndex.value])
+
+/** Props do template */
+const title = computed<string>(() =>
+  (currentTvShow.value?.tmdbData?.name || currentTvShow.value?.tmdbData?.originalName) ?? '',
+)
+
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString('cs-CZ')
 }
 
-const additionalInfo = computed(() => {
-  const items = []
+const additionalInfo = computed<string[]>(() => {
+  const tvShow = currentTvShow.value
+  if (!tvShow)
+    return []
 
-  if (currentTvShow.value?.tmdbData?.genres?.length) {
-    items.push(currentTvShow.value.tmdbData.genres.map((genre: any) => genre.genre.name).join(', '))
+  const items: string[] = []
+
+  if (tvShow.tmdbData?.genres?.length) {
+    items.push(tvShow.tmdbData.genres.map((g: GenreWithRelation) => g.genre.name).join(', '))
   }
-  if (currentTvShow.value?.tmdbData?.numberOfEpisodes) {
-    items.push(`${currentTvShow.value.tmdbData.numberOfEpisodes} epizod`)
+  if (tvShow.tmdbData?.numberOfEpisodes) {
+    items.push(`${tvShow.tmdbData.numberOfEpisodes} epizod`)
   }
-  if (currentTvShow.value?.createdAt) {
-    items.push(new Date(currentTvShow.value.createdAt).toLocaleDateString('cs-CZ'))
+  if (tvShow.createdAt) {
+    items.push(formatDate(tvShow.createdAt.toString()))
   }
   return items
 })
 
-const title = computed(() => {
-  return (currentTvShow.value?.tmdbData?.name || currentTvShow.value?.tmdbData?.originalName)!
+/** Prefetch sousedních stránek */
+const PREFETCH_THRESHOLD = 3
+
+function preloadAdjacentPages() {
+  const remainingTvShows = tvShowsCount.value - tvShowIndex.value - 1
+  if (remainingTvShows <= PREFETCH_THRESHOLD && activePagination.value.hasMore) {
+    void loadPage(currentPage.value + 1)
+  }
+  if (tvShowIndex.value <= PREFETCH_THRESHOLD && currentPage.value > 1) {
+    void loadPage(currentPage.value - 1)
+  }
+}
+
+/** Navigace */
+async function incrementIndex() {
+  const nextIndex = tvShowIndex.value + 1
+
+  if (nextIndex >= tvShowsCount.value && activePagination.value.hasMore) {
+    const page = currentPage.value + 1
+    await loadPage(page, { activate: true })
+    currentPage.value = page
+    tvShowIndex.value = 0
+  }
+  else if (nextIndex < tvShowsCount.value) {
+    tvShowIndex.value = nextIndex
+  }
+
+  preloadAdjacentPages()
+}
+
+async function decrementIndex() {
+  const prevIndex = tvShowIndex.value - 1
+
+  if (prevIndex < 0 && currentPage.value > 1) {
+    const page = currentPage.value - 1
+    await loadPage(page, { activate: true })
+    currentPage.value = page
+    tvShowIndex.value = Math.max(0, (activeTvShows.value?.length ?? 1) - 1)
+  }
+  else if (prevIndex >= 0) {
+    tvShowIndex.value = prevIndex
+  }
+
+  preloadAdjacentPages()
+}
+
+/** Přednačítání obrázků (bez composables v computed) */
+const prefetchedFirstTvShow = ref<TvShow | null>(null)
+watchEffect(() => {
+  prefetchedFirstTvShow.value = peekPage(currentPage.value + 1).value?.data?.[0] ?? null
 })
+
+const nextTvShow = computed(() => {
+  const nextIndex = tvShowIndex.value + 1
+  if (nextIndex < tvShowsCount.value)
+    return activeTvShows.value?.[nextIndex]
+  if (prefetchedFirstTvShow.value)
+    return prefetchedFirstTvShow.value
+  if (activePagination.value.hasMore)
+    return undefined
+  return activeTvShows.value?.[0]
+})
+useImagePreloader(nextTvShow)
+
+/** Změna filtrů */
+watch(
+  filters,
+  async () => {
+    tvShowIndex.value = 0
+    currentPage.value = 1
+
+    await loadPage(1, { activate: true })
+  },
+  { deep: true, immediate: true },
+)
 
 function getReleaseYear(date: string | null) {
   if (!date)
@@ -219,27 +176,13 @@ function getColor(value: number): string {
     return 'text-blue-500'
   return 'text-red-500'
 }
-
-// Sledování změn v query parametrech pro automatické načítání
-watch(query, async () => {
-  try {
-    // Vymažeme cache při změně query parametrů
-    tvShowsCache.value.clear()
-    paginationCache.value.clear()
-    currentIndex.value = 0
-    currentPage.value = 1
-    await refreshTvShows()
-  } catch (error) {
-    console.warn('Failed to refresh tv shows:', error)
-  }
-}, { deep: true })
 </script>
 
 <template>
   <div v-if="currentTvShow" class="text-white">
     <NuxtImg v-if="currentTvShow.tmdbData?.backdropPath" provider="tmdbBackdrop" :src="currentTvShow.tmdbData.backdropPath" class="h-screen w-full object-cover" />
     <div class="absolute top-0 left-0 w-full h-full bg-black/70 flex flex-col px-[5vw] justify-center">
-      <ControlPanel v-model:sort-options="query" v-model:media-type="mediaType" class="py-4" />
+      <ControlPanel v-model:sort-options="filters" v-model:media-type="mediaType" class="py-4" />
       <div class="flex gap-[5vw] my-auto">
         <NuxtImg v-if="currentTvShow.tmdbData?.posterPath" provider="tmdbPoster" :src="currentTvShow.tmdbData.posterPath" class="h-[60vh]" />
         <div class="space-y-4 max-h-[60vh] flex flex-col">
@@ -263,9 +206,8 @@ watch(query, async () => {
       <div class="h-[72px]" />
       <!-- Indikátor stránkování -->
       <div class="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded text-sm">
-        Stránka {{ pagination.page }} | {{ currentIndex + 1 }}/{{ tvShowsCount }}
-        <span v-if="pagination.hasMore" class="text-green-400">• Další dostupné</span>
-        <span v-if="tvShowsCache.has(currentPage + 1)" class="text-blue-400">• Přednačteno</span>
+        Stránka {{ activePagination.page }} | {{ tvShowIndex + 1 }}/{{ tvShowsCount }}
+        <span v-if="activePagination.hasMore" class="text-green-400">• Další dostupné</span>
       </div>
     </div>
   </div>
