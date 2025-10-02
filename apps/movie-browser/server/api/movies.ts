@@ -1,45 +1,28 @@
+import type { SQL } from 'drizzle-orm'
 import type { SearchParams } from '../../types'
 import { createDatabase, moviesSchema } from '@repo/database'
-import { and, eq, exists } from 'drizzle-orm'
+import { and, asc, desc, eq, exists } from 'drizzle-orm'
 
 const { tmdbMoviesToGenres, movies } = moviesSchema
 
 const db = createDatabase(useRuntimeConfig().dbUrl)
 
-function getRatingValue(movie: any, ratingSource: string): number {
-  switch (ratingSource) {
-    case 'csfd':
-      return movie.csfdData?.voteAverage ?? 0
-    case 'tmdb':
-      return movie.tmdbData?.voteAverage ?? 0
-    case 'rt':
-      return movie.rtData?.criticsScore ?? 0
-    default:
-      throw new Error(`Invalid ratingSource: ${ratingSource}`)
-  }
-}
+function getOrderByClause(sortBy: string, order: 'asc' | 'desc'): SQL | null {
+  const direction = order === 'asc' ? asc : desc
 
-function getSortValue(movie: any, sortBy: string): string | number {
   switch (sortBy) {
-    case 'rating':
-      throw new Error('Use getRatingValue for rating sorting')
-    case 'releaseDate':
-      return movie.tmdbData?.releaseDate ?? ''
     case 'title':
-      return movie.tmdbData?.title ?? ''
+      return direction(movies.czechTitle)
+    case 'releaseDate':
+      return direction(movies.year)
     case 'addedDate':
-      return movie.createdAt ?? ''
+      return direction(movies.createdAt)
+    case 'rating':
+      // Pro rating vrátíme null - budeme používat speciální JOIN dotazy
+      return null
     default:
-      throw new Error(`Invalid sortBy: ${sortBy}`)
+      return direction(movies.czechTitle)
   }
-}
-
-function compareValues(a: any, b: any, order: 'asc' | 'desc', sortBy?: string): number {
-  const comparison = sortBy === 'title'
-    ? String(a).localeCompare(String(b), 'cs')
-    : a < b ? -1 : a > b ? 1 : 0
-
-  return order === 'asc' ? comparison : -comparison
 }
 
 const movieWithRelations = {
@@ -49,7 +32,7 @@ const movieWithRelations = {
   topics: true,
 } as const
 
-async function getMoviesByGenre(genreId: number): Promise<any[]> {
+async function getMoviesByGenre(genreId: number, limit?: number, offset?: number, orderBy?: any): Promise<any[]> {
   const moviesWithGenre = await db
     .select({ movieId: movies.id })
     .from(movies)
@@ -72,34 +55,152 @@ async function getMoviesByGenre(genreId: number): Promise<any[]> {
   return await db.query.movies.findMany({
     where: (movies, { inArray }) => inArray(movies.id, movieIds),
     with: movieWithRelations,
+    limit,
+    offset,
+    orderBy,
   })
 }
 
-async function getAllMovies(): Promise<any[]> {
+async function getAllMovies(limit?: number, offset?: number, orderBy?: any): Promise<any[]> {
   return await db.query.movies.findMany({
     with: movieWithRelations,
+    limit,
+    offset,
+    orderBy,
   })
+}
+
+async function getAllMoviesByRating(ratingSource: string, order: 'asc' | 'desc', limit?: number, offset?: number): Promise<any[]> {
+  // Nejdříve načteme všechny filmy s relations
+  const allMovies = await db.query.movies.findMany({
+    with: movieWithRelations,
+  })
+
+  // Pak je seřadíme podle ratingu v paměti
+  const sortedMovies = allMovies.sort((a, b) => {
+    let aValue = 0
+    let bValue = 0
+
+    switch (ratingSource) {
+      case 'tmdb':
+        aValue = a.tmdbData?.voteAverage ?? 0
+        bValue = b.tmdbData?.voteAverage ?? 0
+        break
+      case 'csfd':
+        aValue = a.csfdData?.voteAverage ?? 0
+        bValue = b.csfdData?.voteAverage ?? 0
+        break
+      case 'rt':
+        aValue = a.rtData?.criticsScore ?? 0
+        bValue = b.rtData?.criticsScore ?? 0
+        break
+    }
+
+    const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+    return order === 'asc' ? comparison : -comparison
+  })
+
+  // Aplikujeme limit a offset
+  const startIndex = offset ?? 0
+  const endIndex = startIndex + (limit ?? 20)
+  return sortedMovies.slice(startIndex, endIndex)
+}
+
+async function getMoviesByGenreByRating(genreId: number, ratingSource: string, order: 'asc' | 'desc', limit?: number, offset?: number): Promise<any[]> {
+  // Nejdříve najdeme filmy s daným žánrem
+  const moviesWithGenre = await db
+    .select({ movieId: movies.id })
+    .from(movies)
+    .where(
+      exists(
+        db
+          .select()
+          .from(tmdbMoviesToGenres)
+          .where(
+            and(
+              eq(tmdbMoviesToGenres.movieId, movies.tmdbId),
+              eq(tmdbMoviesToGenres.genreId, genreId),
+            ),
+          ),
+      ),
+    )
+
+  const movieIds = moviesWithGenre.map(m => m.movieId)
+
+  // Načteme filmy s relations
+  const moviesWithData = await db.query.movies.findMany({
+    where: (movies, { inArray }) => inArray(movies.id, movieIds),
+    with: movieWithRelations,
+  })
+
+  // Seřadíme podle ratingu v paměti
+  const sortedMovies = moviesWithData.sort((a, b) => {
+    let aValue = 0
+    let bValue = 0
+
+    switch (ratingSource) {
+      case 'tmdb':
+        aValue = a.tmdbData?.voteAverage ?? 0
+        bValue = b.tmdbData?.voteAverage ?? 0
+        break
+      case 'csfd':
+        aValue = a.csfdData?.voteAverage ?? 0
+        bValue = b.csfdData?.voteAverage ?? 0
+        break
+      case 'rt':
+        aValue = a.rtData?.criticsScore ?? 0
+        bValue = b.rtData?.criticsScore ?? 0
+        break
+    }
+
+    const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+    return order === 'asc' ? comparison : -comparison
+  })
+
+  // Aplikujeme limit a offset
+  const startIndex = offset ?? 0
+  const endIndex = startIndex + (limit ?? 20)
+  return sortedMovies.slice(startIndex, endIndex)
 }
 
 export default defineEventHandler(async (event) => {
-  const { sortBy = 'title', ratingSource = 'tmdb', order = 'asc', genreId } = getQuery(event) as SearchParams
+  const {
+    sortBy = 'title',
+    ratingSource = 'tmdb',
+    order = 'asc',
+    genreId,
+    page = 1,
+    limit = 20,
+  } = getQuery(event) as SearchParams
 
-  const moviesWithAllData = genreId
-    ? await getMoviesByGenre(genreId)
-    : await getAllMovies()
+  const pageNumber = Number(page)
+  const limitNumber = Number(limit)
+  const offset = (pageNumber - 1) * limitNumber
 
-  const sortedMovies = moviesWithAllData.sort((a, b) => {
-    if (sortBy === 'rating') {
-      const aValue = getRatingValue(a, ratingSource)
-      const bValue = getRatingValue(b, ratingSource)
-      return compareValues(aValue, bValue, order)
-    }
-    else {
-      const aValue = getSortValue(a, sortBy)
-      const bValue = getSortValue(b, sortBy)
-      return compareValues(aValue, bValue, order, sortBy)
-    }
-  })
+  const orderByClause = getOrderByClause(sortBy, order)
 
-  return sortedMovies
+  let moviesWithAllData: any[]
+
+  if (sortBy === 'rating') {
+    // Pro rating používáme speciální JOIN dotazy
+    moviesWithAllData = genreId
+      ? await getMoviesByGenreByRating(genreId, ratingSource, order, limitNumber, offset)
+      : await getAllMoviesByRating(ratingSource, order, limitNumber, offset)
+  }
+  else {
+    // Pro ostatní kritéria používáme standardní dotazy
+    moviesWithAllData = genreId
+      ? await getMoviesByGenre(genreId, limitNumber, offset, orderByClause)
+      : await getAllMovies(limitNumber, offset, orderByClause)
+  }
+
+  return {
+    data: moviesWithAllData,
+    pagination: {
+      page: pageNumber,
+      limit: limitNumber,
+      total: moviesWithAllData.length,
+      hasMore: moviesWithAllData.length === limitNumber,
+    },
+  }
 })

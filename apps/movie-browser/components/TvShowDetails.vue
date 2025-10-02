@@ -13,9 +13,21 @@ defineExpose({ incrementIndex, decrementIndex })
 const mediaType = useVModel(props, 'mediaType', emit)
 
 const currentIndex = ref(0)
+const currentPage = ref(1)
+const pageSize = 20
 
-const query = ref<SearchParams>({ sortBy: 'title', ratingSource: 'csfd', order: 'asc' })
-const { data: tvShows } = await useFetch('/api/tv-shows', { query })
+const query = ref<SearchParams>({
+  sortBy: 'title',
+  ratingSource: 'csfd',
+  order: 'asc',
+  page: currentPage.value,
+  limit: pageSize,
+})
+
+const { data: tvShowsResponse, refresh: refreshTvShows } = await useFetch('/api/tv-shows', { query })
+
+const tvShows = computed(() => tvShowsResponse.value?.data ?? [])
+const pagination = computed(() => tvShowsResponse.value?.pagination ?? { page: 1, limit: pageSize, total: 0, hasMore: false })
 
 const currentTvShow = computed(() => tvShows.value?.[currentIndex.value])
 const tvShowsCount = computed(() => tvShows.value?.length ?? 0)
@@ -23,12 +35,38 @@ const nextTvShow = computed(() => (tvShows.value?.[(currentIndex.value + 1) % tv
 
 useImagePreloader(nextTvShow)
 
-function incrementIndex() {
-  currentIndex.value = (currentIndex.value + 1) % tvShowsCount.value
+async function incrementIndex() {
+  const nextIndex = currentIndex.value + 1
+
+  // Pokud jsme na konci stránky a existuje další stránka, načteme ji
+  if (nextIndex >= tvShowsCount.value && pagination.value.hasMore) {
+    currentPage.value++
+    query.value.page = currentPage.value
+    currentIndex.value = 0
+    await refreshTvShows()
+  }
+  // Jinak normální navigace v rámci stránky
+  else if (nextIndex < tvShowsCount.value) {
+    currentIndex.value = nextIndex
+  }
+  // Pokud jsme na konci a není další stránka, zůstaneme na posledním seriálu
 }
 
-function decrementIndex() {
-  currentIndex.value = (currentIndex.value - 1 + tvShowsCount.value) % tvShowsCount.value
+async function decrementIndex() {
+  const prevIndex = currentIndex.value - 1
+
+  // Pokud jsme na začátku stránky a existuje předchozí stránka, načteme ji
+  if (prevIndex < 0 && currentPage.value > 1) {
+    currentPage.value--
+    query.value.page = currentPage.value
+    await refreshTvShows()
+    currentIndex.value = tvShowsCount.value - 1
+  }
+  // Jinak normální navigace v rámci stránky
+  else if (prevIndex >= 0) {
+    currentIndex.value = prevIndex
+  }
+  // Pokud jsme na začátku a není předchozí stránka, zůstaneme na prvním seriálu
 }
 
 const additionalInfo = computed(() => {
@@ -76,6 +114,12 @@ function getColor(value: number): string {
     return 'text-blue-500'
   return 'text-red-500'
 }
+
+// Sledování změn v query parametrech pro automatické načítání
+watch(query, async () => {
+  currentIndex.value = 0
+  await refreshTvShows()
+}, { deep: true })
 </script>
 
 <template>
@@ -104,6 +148,11 @@ function getColor(value: number): string {
         </div>
       </div>
       <div class="h-[72px]" />
+      <!-- Indikátor stránkování -->
+      <div class="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded text-sm">
+        Stránka {{ pagination.page }} | {{ currentIndex + 1 }}/{{ tvShowsCount }}
+        <span v-if="pagination.hasMore" class="text-green-400">• Další dostupné</span>
+      </div>
     </div>
   </div>
 </template>

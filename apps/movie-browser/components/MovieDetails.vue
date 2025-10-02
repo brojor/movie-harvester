@@ -12,9 +12,21 @@ defineExpose({ incrementIndex, decrementIndex })
 const mediaType = useVModel(props, 'mediaType', emit)
 
 const currentIndex = ref(0)
+const currentPage = ref(1)
+const pageSize = 20
 
-const query = ref<SearchParams>({ sortBy: 'title', ratingSource: 'csfd', order: 'asc' })
-const { data: movies } = await useFetch('/api/movies', { query })
+const query = ref<SearchParams>({
+  sortBy: 'title',
+  ratingSource: 'csfd',
+  order: 'asc',
+  page: currentPage.value,
+  limit: pageSize,
+})
+
+const { data: moviesResponse, refresh: refreshMovies } = await useFetch('/api/movies', { query })
+
+const movies = computed(() => moviesResponse.value?.data ?? [])
+const pagination = computed(() => moviesResponse.value?.pagination ?? { page: 1, limit: pageSize, total: 0, hasMore: false })
 
 const currentMovie = computed(() => movies.value?.[currentIndex.value])
 const moviesCount = computed(() => movies.value?.length ?? 0)
@@ -22,12 +34,38 @@ const nextMovie = computed(() => (movies.value?.[(currentIndex.value + 1) % movi
 
 useImagePreloader(nextMovie)
 
-function incrementIndex() {
-  currentIndex.value = (currentIndex.value + 1) % moviesCount.value
+async function incrementIndex() {
+  const nextIndex = currentIndex.value + 1
+
+  // Pokud jsme na konci stránky a existuje další stránka, načteme ji
+  if (nextIndex >= moviesCount.value && pagination.value.hasMore) {
+    currentPage.value++
+    query.value.page = currentPage.value
+    currentIndex.value = 0
+    await refreshMovies()
+  }
+  // Jinak normální navigace v rámci stránky
+  else if (nextIndex < moviesCount.value) {
+    currentIndex.value = nextIndex
+  }
+  // Pokud jsme na konci a není další stránka, zůstaneme na posledním filmu
 }
 
-function decrementIndex() {
-  currentIndex.value = (currentIndex.value - 1 + moviesCount.value) % moviesCount.value
+async function decrementIndex() {
+  const prevIndex = currentIndex.value - 1
+
+  // Pokud jsme na začátku stránky a existuje předchozí stránka, načteme ji
+  if (prevIndex < 0 && currentPage.value > 1) {
+    currentPage.value--
+    query.value.page = currentPage.value
+    await refreshMovies()
+    currentIndex.value = moviesCount.value - 1
+  }
+  // Jinak normální navigace v rámci stránky
+  else if (prevIndex >= 0) {
+    currentIndex.value = prevIndex
+  }
+  // Pokud jsme na začátku a není předchozí stránka, zůstaneme na prvním filmu
 }
 
 function formatMinutesVerbose(totalMinutes: number): string {
@@ -64,6 +102,12 @@ const additionalInfo = computed(() => {
 const title = computed(() => {
   return (currentMovie.value?.tmdbData?.title || currentMovie.value?.tmdbData?.originalTitle)!
 })
+
+// Sledování změn v query parametrech pro automatické načítání
+watch(query, async () => {
+  currentIndex.value = 0
+  await refreshMovies()
+}, { deep: true })
 </script>
 
 <template>
@@ -83,6 +127,11 @@ const title = computed(() => {
         </div>
       </div>
       <div class="h-[72px]" />
+      <!-- Indikátor stránkování -->
+      <div class="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded text-sm">
+        Stránka {{ pagination.page }} | {{ currentIndex + 1 }}/{{ moviesCount }}
+        <span v-if="pagination.hasMore" class="text-green-400">• Další dostupné</span>
+      </div>
     </div>
   </div>
 </template>

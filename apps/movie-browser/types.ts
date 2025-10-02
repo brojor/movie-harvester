@@ -25,6 +25,8 @@ export interface SearchParams {
   ratingSource: ValueOf<typeof RATING_SOURCE_OPTIONS>
   order: typeof ORDER_OPTIONS[number]
   genreId?: number
+  page?: number
+  limit?: number
 }
 
 export type MediaType = ValueOf<typeof MEDIA_TYPE_OPTIONS>
