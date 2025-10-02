@@ -12,7 +12,7 @@ function getOrderByClause(sortBy: string, order: 'asc' | 'desc'): SQL | null {
 
   switch (sortBy) {
     case 'title':
-      return direction(tvShows.originalTitle)
+      return direction(tvShows.czechTitle)
     case 'releaseDate':
       return direction(tvShows.createdAt) // Použijeme createdAt jako proxy pro release date
     case 'addedDate':
