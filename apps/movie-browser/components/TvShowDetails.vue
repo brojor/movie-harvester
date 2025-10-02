@@ -16,6 +16,10 @@ const currentIndex = ref(0)
 const currentPage = ref(1)
 const pageSize = 20
 
+// Cache pro načtené stránky
+const tvShowsCache = ref<Map<number, any[]>>(new Map())
+const paginationCache = ref<Map<number, any>>(new Map())
+
 const query = ref<SearchParams>({
   sortBy: 'title',
   ratingSource: 'csfd',
@@ -26,28 +30,117 @@ const query = ref<SearchParams>({
 
 const { data: tvShowsResponse, refresh: refreshTvShows } = await useFetch('/api/tv-shows', { query })
 
-const tvShows = computed(() => tvShowsResponse.value?.data ?? [])
-const pagination = computed(() => tvShowsResponse.value?.pagination ?? { page: 1, limit: pageSize, total: 0, hasMore: false })
+// Uložíme první stránku do cache
+watch(tvShowsResponse, (newResponse) => {
+  if (newResponse?.data && newResponse?.pagination) {
+    tvShowsCache.value.set(currentPage.value, newResponse.data)
+    paginationCache.value.set(currentPage.value, newResponse.pagination)
+  }
+}, { immediate: true })
+
+const tvShows = computed(() => tvShowsCache.value.get(currentPage.value) ?? [])
+const pagination = computed(() => paginationCache.value.get(currentPage.value) ?? { page: 1, limit: pageSize, total: 0, hasMore: false })
 
 const currentTvShow = computed(() => tvShows.value?.[currentIndex.value])
 const tvShowsCount = computed(() => tvShows.value?.length ?? 0)
-const nextTvShow = computed(() => (tvShows.value?.[(currentIndex.value + 1) % tvShowsCount.value]))
+
+// Správná logika pro nextTvShow - zohledňuje přechody mezi stránkami
+const nextTvShow = computed(() => {
+  const nextIndex = currentIndex.value + 1
+
+  // Pokud je další seriál na stejné stránce
+  if (nextIndex < tvShowsCount.value) {
+    return tvShows.value?.[nextIndex]
+  }
+
+  // Pokud je další seriál na další stránce (pokud existuje v cache)
+  if (tvShowsCache.value.has(currentPage.value + 1)) {
+    const nextPageTvShows = tvShowsCache.value.get(currentPage.value + 1) ?? []
+    return nextPageTvShows[0]
+  }
+
+  // Pokud je další seriál na další stránce (pokud existuje další stránka)
+  if (pagination.value.hasMore) {
+    return null // Bude načteno při přechodu
+  }
+
+  // Pokud jsme na konci, vraťme první seriál ze současné stránky
+  return tvShows.value?.[0]
+})
 
 useImagePreloader(nextTvShow)
+
+// Funkce pro přednačítání stránky
+async function preloadPage(pageNumber: number) {
+  if (tvShowsCache.value.has(pageNumber)) {
+    return // Stránka už je v cache
+  }
+
+  try {
+    const response = await $fetch('/api/tv-shows', {
+      query: {
+        ...query.value,
+        page: pageNumber,
+      },
+    })
+
+    if (response?.data && response?.pagination) {
+      tvShowsCache.value.set(pageNumber, response.data)
+      paginationCache.value.set(pageNumber, response.pagination)
+    }
+  }
+  catch (error) {
+    console.warn(`Failed to preload page ${pageNumber}:`, error)
+  }
+}
+
+// Funkce pro detekci blížení se ke konci stránky
+function checkAndPreload() {
+  const remainingItems = tvShowsCount.value - currentIndex.value - 1
+  const preloadThreshold = 3 // Přednačteme, když zbývají 3 nebo méně položek
+
+  // Přednačteme další stránku, pokud se blížíme ke konci
+  if (remainingItems <= preloadThreshold && pagination.value.hasMore) {
+    const nextPage = currentPage.value + 1
+    if (!tvShowsCache.value.has(nextPage)) {
+      preloadPage(nextPage)
+    }
+  }
+
+  // Přednačteme předchozí stránku, pokud jsme na začátku a existuje
+  if (currentIndex.value <= preloadThreshold && currentPage.value > 1) {
+    const prevPage = currentPage.value - 1
+    if (!tvShowsCache.value.has(prevPage)) {
+      preloadPage(prevPage)
+    }
+  }
+}
 
 async function incrementIndex() {
   const nextIndex = currentIndex.value + 1
 
+  // Pokud jsme na konci stránky a existuje další stránka v cache
+  if (nextIndex >= tvShowsCount.value && tvShowsCache.value.has(currentPage.value + 1)) {
+    currentPage.value++
+    currentIndex.value = 0
+    // Přednačteme další stránku pro plynulou navigaci
+    checkAndPreload()
+    // Spustíme přednačítání obrázků pro novou stránku
+    await nextTick()
+  }
   // Pokud jsme na konci stránky a existuje další stránka, načteme ji
-  if (nextIndex >= tvShowsCount.value && pagination.value.hasMore) {
+  else if (nextIndex >= tvShowsCount.value && pagination.value.hasMore) {
     currentPage.value++
     query.value.page = currentPage.value
     currentIndex.value = 0
     await refreshTvShows()
+    // Spustíme přednačítání obrázků pro novou stránku
+    await nextTick()
   }
   // Jinak normální navigace v rámci stránky
   else if (nextIndex < tvShowsCount.value) {
     currentIndex.value = nextIndex
+    checkAndPreload()
   }
   // Pokud jsme na konci a není další stránka, zůstaneme na posledním seriálu
 }
@@ -55,16 +148,28 @@ async function incrementIndex() {
 async function decrementIndex() {
   const prevIndex = currentIndex.value - 1
 
+  // Pokud jsme na začátku stránky a existuje předchozí stránka v cache
+  if (prevIndex < 0 && tvShowsCache.value.has(currentPage.value - 1)) {
+    currentPage.value--
+    currentIndex.value = tvShowsCache.value.get(currentPage.value)!.length - 1
+    // Přednačteme předchozí stránku pro plynulou navigaci
+    checkAndPreload()
+    // Spustíme přednačítání obrázků pro novou stránku
+    await nextTick()
+  }
   // Pokud jsme na začátku stránky a existuje předchozí stránka, načteme ji
-  if (prevIndex < 0 && currentPage.value > 1) {
+  else if (prevIndex < 0 && currentPage.value > 1) {
     currentPage.value--
     query.value.page = currentPage.value
     await refreshTvShows()
     currentIndex.value = tvShowsCount.value - 1
+    // Spustíme přednačítání obrázků pro novou stránku
+    await nextTick()
   }
   // Jinak normální navigace v rámci stránky
   else if (prevIndex >= 0) {
     currentIndex.value = prevIndex
+    checkAndPreload()
   }
   // Pokud jsme na začátku a není předchozí stránka, zůstaneme na prvním seriálu
 }
@@ -117,8 +222,16 @@ function getColor(value: number): string {
 
 // Sledování změn v query parametrech pro automatické načítání
 watch(query, async () => {
-  currentIndex.value = 0
-  await refreshTvShows()
+  try {
+    // Vymažeme cache při změně query parametrů
+    tvShowsCache.value.clear()
+    paginationCache.value.clear()
+    currentIndex.value = 0
+    currentPage.value = 1
+    await refreshTvShows()
+  } catch (error) {
+    console.warn('Failed to refresh tv shows:', error)
+  }
 }, { deep: true })
 </script>
 
@@ -152,6 +265,7 @@ watch(query, async () => {
       <div class="absolute bottom-4 right-4 bg-black/50 px-3 py-1 rounded text-sm">
         Stránka {{ pagination.page }} | {{ currentIndex + 1 }}/{{ tvShowsCount }}
         <span v-if="pagination.hasMore" class="text-green-400">• Další dostupné</span>
+        <span v-if="tvShowsCache.has(currentPage + 1)" class="text-blue-400">• Přednačteno</span>
       </div>
     </div>
   </div>

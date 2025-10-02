@@ -7,7 +7,10 @@ const emit = defineEmits(['update:modelValue'])
 
 const modelValue = useVModel(props, 'modelValue', emit)
 
-const label = computed<Item['label']>(() => props.options.find(option => option.value === modelValue.value)!.label)
+const label = computed<Item['label']>(() => {
+  const option = props.options.find(option => option.value === modelValue.value)
+  return option?.label || ''
+})
 </script>
 
 <template>
