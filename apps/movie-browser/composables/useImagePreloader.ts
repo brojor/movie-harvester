@@ -2,7 +2,7 @@ interface MediaItem {
   tmdbData: {
     posterPath: string | null
     backdropPath: string | null
-    networks: {
+    networks?: {
       network: {
         logoPath: string | null
       } | null

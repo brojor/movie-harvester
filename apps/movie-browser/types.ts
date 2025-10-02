@@ -1,3 +1,13 @@
+// Import all types from database
+import type {
+  CsfdMovieData,
+  MovieRecord,
+  MovieTopic,
+  RtMovieData,
+  TmdbMovieData,
+} from '@repo/database'
+
+// UI-specific types
 export const SORT_BY_OPTIONS = [
   { label: 'Název', value: 'title' },
   { label: 'Hodnocení', value: 'rating' },
@@ -34,4 +44,25 @@ export type MediaType = ValueOf<typeof MEDIA_TYPE_OPTIONS>
 export interface Genre {
   id: number
   name: string
+}
+
+export interface PageCache<T> {
+  value: Ref<T | null>
+  loadPage: (page: number, opts?: { activate?: boolean }) => Promise<void>
+  peekPage: (page: number) => Ref<T | null>
+}
+
+// Genre type for relations
+export interface GenreWithRelation { genre: { id: number, name: string } }
+
+// Complete movie type with relations (as returned by API)
+export type Movie = MovieRecord & {
+  tmdbData: (TmdbMovieData & {
+    genres: Array<GenreWithRelation>
+  }) | null
+  csfdData: (CsfdMovieData & {
+    genres: Array<GenreWithRelation>
+  }) | null
+  rtData: RtMovieData | null
+  topics: MovieTopic[]
 }
