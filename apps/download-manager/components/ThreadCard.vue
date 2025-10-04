@@ -4,6 +4,7 @@ import type { ProgressData } from '../types'
 const props = defineProps<{
   progressData: ProgressData | 0
   jobId: string
+  name: string
   state: 'active' | 'paused'
 }>()
 
@@ -38,14 +39,14 @@ function cancel() {
   })
 }
 
-const { data: filename } = useFetch(`/api/downloads/${props.jobId}/filename`)
+// const { data: filename } = useFetch(`/api/downloads/${props.jobId}/filename`)
 </script>
 
 <template>
   <div v-if="progressData" class="bg-white/8 rounded-2xl p-5">
     <div class="flex justify-between items-center mb-3">
       <span class="text-sm font-semibold text-blue-400 flex items-center">
-        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': state === 'active', 'bg-yellow-500': state === 'paused' }" />{{ filename }}</span>
+        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': state === 'active', 'bg-yellow-500': state === 'paused' }" />{{ name }}</span>
       <span class="text-xs text-white/80">{{ `${formatBytes(progressData.speed)}/s` }}</span>
     </div>
     <div class="p-0.5 mb-2 flex items-center">

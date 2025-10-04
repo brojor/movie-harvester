@@ -73,12 +73,16 @@ export const useActiveDownloadsStore = defineStore('activeDownloads', {
       this.addPart(part)
     },
 
+    registerJobs(jobs: Job[]) {
+      for (const job of jobs) {
+        this.registerJob(job)
+      }
+    },
+
     async initialize() {
       try {
         const jobs = await $fetch<Job[]>('/api/downloads/active')
-        for (const job of jobs) {
-          this.registerJob(job)
-        }
+        this.registerJobs(jobs)
         this.isInitialized = true
       }
       catch (error) {

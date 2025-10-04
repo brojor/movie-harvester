@@ -33,6 +33,21 @@ export interface FailedJob {
   failedReason: string
 }
 
+export interface AddedEvent {
+  jobId: JobId
+  name: string
+}
+
+export interface ActiveEvent {
+  jobId: JobId
+  prev: string
+}
+
+export interface DelayedEvent {
+  jobId: JobId
+  prev: string
+}
+
 export interface BulkJobPayload {
   urls: string[]
   bundleName: string

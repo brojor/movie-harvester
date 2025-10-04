@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { JobNode } from 'bullmq'
 import type FileCheck from './components/FileCheck.vue'
-import type { CompletedEvent, Part, ProgressEvent, RemovedEvent } from './types'
+import type { ActiveEvent, CompletedEvent, DelayedEvent, Part, ProgressEvent } from './types'
 import { useEventSource } from '@vueuse/core'
 import { useOptimisticUpdate } from './composables/useOptimisticUpdate'
 
@@ -25,6 +25,7 @@ async function addToQueue() {
   const { job: bundleJob, children } = jobNode
 
   await bundlesStore.addBundleJob(bundleJob, children?.map(child => child.job.id!))
+  activeDownloadsStore.registerJobs(children?.map(child => child.job) ?? [])
 }
 function extractWebshareUrls(text: string): string[] {
   const regex = /https:\/\/webshare\.cz\/#\/file\/\S+/g
@@ -50,18 +51,15 @@ const { event, data } = useEventSource<['progress', 'completed', 'failed', 'acti
   },
 )
 
-// Zjednodušený optimistic update
 const { update, confirm, isPending } = useOptimisticUpdate(3000)
 
 function pause(part: Part) {
   update(
     part.id,
-    // Optimistic akce - okamžitě přesune do paused
     () => {
       activeDownloadsStore.removePart(part.id)
       pausedDownloadsStore.addPart(part)
     },
-    // Rollback akce - vrátí zpět do active
     () => {
       pausedDownloadsStore.removePart(part.id)
       activeDownloadsStore.addPart(part)
@@ -72,12 +70,10 @@ function pause(part: Part) {
 function resume(part: Part) {
   update(
     part.id,
-    // Optimistic akce - okamžitě přesune do active
     () => {
       pausedDownloadsStore.removePart(part.id)
       activeDownloadsStore.addPart(part)
     },
-    // Rollback akce - vrátí zpět do paused
     () => {
       activeDownloadsStore.removePart(part.id)
       pausedDownloadsStore.addPart(part)
@@ -91,6 +87,9 @@ onMounted(async () => {
   await activeDownloadsStore.initialize()
 })
 
+const partsByBundle = (bundleId: string) => [...activeDownloadsStore.partsByBundle(bundleId), ...pausedDownloadsStore.partsByBundle(bundleId)].sort((a, b) => a.name.localeCompare(b.name))
+
+/* eslint-disable no-console */
 watch(data, (d) => {
   if (d && event.value === 'progress') {
     const progressEvent = JSON.parse(d) as ProgressEvent
@@ -100,49 +99,28 @@ watch(data, (d) => {
     activeDownloadsStore.handleProgressEvent(progressEvent)
   }
   else if (d && event.value === 'completed') {
-    console.log('completed', d)
+    console.log('completed', JSON.parse(d))
     const completedEvent = JSON.parse(d) as CompletedEvent
     activeDownloadsStore.removePart(completedEvent.jobId)
   }
-  else if (d && event.value === 'failed') {
-    console.log('failed', d)
-  }
   else if (d && event.value === 'active') {
-    console.log('active', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    // Potvrdí optimistic update pokud je pending
+    console.log('active', JSON.parse(d))
+    const { jobId } = JSON.parse(d) as ActiveEvent
     if (isPending(jobId)) {
       confirm(jobId)
     }
   }
   else if (d && event.value === 'added') {
-    console.log('added', d)
-    // const { jobId } = JSON.parse(d) as { jobId: string, name: string }
+    console.log('added', JSON.parse(d))
   }
   else if (d && event.value === 'delayed') {
-    console.log('delayed', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    // Potvrdí optimistic update pokud je pending
+    console.log('delayed', JSON.parse(d))
+    const { jobId } = JSON.parse(d) as DelayedEvent
     if (isPending(jobId)) {
       confirm(jobId)
     }
-  }
-  else if (d && event.value === 'resumed') {
-    console.log('resumed', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    // Potvrdí optimistic update pokud je pending
-    if (isPending(jobId)) {
-      confirm(jobId)
-    }
-  }
-  else if (d && event.value === 'removed') {
-    console.log('removed', d)
-    const removedEvent = JSON.parse(d) as RemovedEvent
-    activeDownloadsStore.removePart(removedEvent.jobId)
   }
 })
-
-const partsByBundle = (bundleId: string) => [...activeDownloadsStore.partsByBundle(bundleId), ...pausedDownloadsStore.partsByBundle(bundleId)].sort((a, b) => a.name.localeCompare(b.name))
 </script>
 
 <template>
@@ -179,7 +157,7 @@ const partsByBundle = (bundleId: string) => [...activeDownloadsStore.partsByBund
           {{ bundle.name }}
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :progress-data="part.progress" :job-id="part.id" :state="part.state" @pause="pause(part)" @resume="resume(part)" />
+          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :name="part.name" :progress-data="part.progress" :job-id="part.id" :state="part.state" @pause="pause(part)" @resume="resume(part)" />
         </div>
       </div>
     </div>
