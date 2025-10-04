@@ -12,12 +12,13 @@ export interface ProgressData extends Progress {
   status: 'active' | 'paused'
 }
 
-interface DownloadManagerOptions {
+export interface DownloadManagerOptions {
   onProgress?: (progress: Progress) => void
   updateData?: (data: any) => void
   username: string
   password: string
   downloadDir: string
+  bundleName?: string
 }
 
 // Přihlášení k Webshare
@@ -62,7 +63,17 @@ export class DownloadManager {
     const ident = extractIdent(fileUrl)
     const fileLink = await webshareApi.getFileLink(ident)
     const filename = extractFilename(fileLink)
-    this.filePath = path.join(this.options.downloadDir, filename)
+
+    // Validace bundleName - použijeme fallback pokud je undefined nebo prázdný
+    const bundleName = this.options.bundleName || 'default-bundle'
+    const bundleDir = path.join(this.options.downloadDir, bundleName)
+
+    console.log('bundleDir', bundleDir)
+
+    if (!fs.existsSync(bundleDir)) {
+      fs.mkdirSync(bundleDir, { recursive: true })
+    }
+    this.filePath = path.join(bundleDir, filename)
 
     // Kontrola existujícího souboru
     if (fs.existsSync(this.filePath)) {
@@ -80,6 +91,7 @@ export class DownloadManager {
       lastModified,
       filename,
       url: fileUrl,
+      bundleName,
     })
 
     // Stahování

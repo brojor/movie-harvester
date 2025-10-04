@@ -8,7 +8,7 @@ dotenv.config()
 const envSchema = z.object({
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z.coerce.number().default(6379),
-  REDIS_PASSWORD: z.string(),
+  REDIS_PASSWORD: z.string().optional(),
   WEBSHARE_USERNAME: z.string(),
   WEBSHARE_PASSWORD: z.string(),
   WEBSHARE_DOWNLOAD_DIR: z.string().default(resolve(process.cwd(), 'webshare-downloads')),

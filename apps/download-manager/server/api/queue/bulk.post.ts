@@ -21,19 +21,20 @@ const flowProducer = new FlowProducer({
 })
 
 export default defineEventHandler(async (event) => {
-  const { urls, name } = await readBody<BulkJobPayload>(event)
+  const { urls, bundleName } = await readBody<BulkJobPayload>(event)
 
   const children = urls.map((url) => {
+    const childData = { url, bundleName }
     return {
       name: url.split('/').pop() ?? 'Unknown',
-      data: { url },
+      data: childData,
       queueName: 'download',
     }
   })
 
   // await downloadQueue.addBulk(bulkJobs)
   const jobNode = await flowProducer.add({
-    name,
+    name: bundleName,
     queueName: 'bundle-download',
     children,
   })

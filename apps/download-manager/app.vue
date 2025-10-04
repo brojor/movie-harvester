@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { Job, JobNode } from 'bullmq'
+import type { JobNode } from 'bullmq'
 import type FileCheck from './components/FileCheck.vue'
-import type { CompletedEvent, CompletedJob, FailedJob, ProgressData, ProgressEvent, RemovedEvent } from './types'
+import type { CompletedEvent, Part, ProgressEvent, RemovedEvent } from './types'
 import { useEventSource } from '@vueuse/core'
 
 const clipboardContent = ref('')
@@ -11,14 +11,19 @@ const urlsToCheck = computed(() => extractWebshareUrls(clipboardContent.value))
 const fileCheckRefs = ref<InstanceType<typeof FileCheck>[]>([])
 const aliveUrls = computed(() => fileCheckRefs.value.filter(ref => ref?.state === 'alive').map(ref => ref?.url))
 
-const { addBundleJob, handleProgressEvent, bundles, partsByBundle, registerPartJob, registerBundleJob, removePartJob } = useDownloadsStore()
+const activeDownloadsStore = useActiveDownloadsStore()
+const pausedDownloadsStore = usePausedDownloadsStore()
+const bundlesStore = useBundlesStore()
 
 async function addToQueue() {
   const jobNode = await $fetch<JobNode>('/api/queue/bulk', {
     method: 'post',
-    body: { urls: aliveUrls.value, name: bundleName.value },
+    body: { urls: aliveUrls.value, bundleName: bundleName.value },
   })
-  addBundleJob(jobNode)
+
+  const { job: bundleJob, children } = jobNode
+
+  await bundlesStore.addBundleJob(bundleJob, children?.map(child => child.job.id!))
 }
 function extractWebshareUrls(text: string): string[] {
   const regex = /https:\/\/webshare\.cz\/#\/file\/\S+/g
@@ -36,7 +41,7 @@ async function pasteFromClipboard(): Promise<void> {
   }
 }
 
-const { event, data, status, error, close } = useEventSource<['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'], string>(
+const { event, data } = useEventSource<['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'], string>(
   '/api/downloads/stream',
   ['progress', 'completed', 'failed', 'active', 'added', 'paused', 'delayed', 'resumed', 'removed'],
   {
@@ -44,23 +49,31 @@ const { event, data, status, error, close } = useEventSource<['progress', 'compl
   },
 )
 
-type JobStatus = 'active' | 'paused'
-interface PendingAction { next: JobStatus, timeoutId?: ReturnType<typeof setTimeout> }
+type JobStatus = 'active' | 'delayed'
+interface PendingAction { timeoutId?: ReturnType<typeof setTimeout>, next: JobStatus }
 
-const downloads = ref<Record<string, ProgressData>>({})
-const downloadStates = ref<Record<string, 'active' | 'paused'>>({})
 const pending = ref<Map<string, PendingAction>>(new Map())
 
-function setOptimisticState(jobId: string, nextState: JobStatus) {
-  const currentState = downloadStates.value[jobId]
-  if (currentState === nextState)
-    return
-  downloadStates.value[jobId] = nextState
+function pause(part: Part) {
+  activeDownloadsStore.removePart(part.id)
+  pausedDownloadsStore.addPart(part)
+
   const timeoutId = setTimeout(() => {
-    downloadStates.value[jobId] = currentState
-    pending.value.delete(jobId)
+    pausedDownloadsStore.removePart(part.id)
+    activeDownloadsStore.addPart(part)
   }, 3000)
-  pending.value.set(jobId, { next: nextState, timeoutId })
+  pending.value.set(part.id, { timeoutId, next: 'delayed' })
+}
+
+function resume(part: Part) {
+  pausedDownloadsStore.removePart(part.id)
+  activeDownloadsStore.addPart(part)
+
+  const timeoutId = setTimeout(() => {
+    activeDownloadsStore.removePart(part.id)
+    pausedDownloadsStore.addPart(part)
+  }, 3000)
+  pending.value.set(part.id, { timeoutId, next: 'active' })
 }
 
 function clearPending(jobId: string) {
@@ -70,47 +83,24 @@ function clearPending(jobId: string) {
   pending.value.delete(jobId)
 }
 
-const isInitializing = ref(true)
-
-const allBundleJobs = await $fetch<Job[]>('/api/bundles/all')
-console.log('allBundleJobs', allBundleJobs)
-for (const bundleJob of allBundleJobs) {
-  registerBundleJob(bundleJob)
-}
-
-const activeDownloads = await $fetch<Job[]>('/api/downloads/active')
-const pausedDownloads = await $fetch<Job[]>('/api/downloads/paused')
-
-console.log('activeDownloads', activeDownloads)
-console.log('pausedDownloads', pausedDownloads)
-
-for (const job of activeDownloads) {
-  downloadStates.value[job.id!] = 'active'
-  if (!job.id || !job.parent || !job.parent.id) {
-    console.error('job has no id or parent', job)
-    continue
-  }
-  registerPartJob(job)
-}
-for (const job of pausedDownloads) {
-  downloadStates.value[job.id!] = 'paused'
-  registerPartJob(job)
-}
-isInitializing.value = false
+onMounted(async () => {
+  await bundlesStore.initialize()
+  await pausedDownloadsStore.initialize()
+  await activeDownloadsStore.initialize()
+})
 
 watch(data, (d) => {
   if (d && event.value === 'progress') {
-    // const { jobId, data } = JSON.parse(d) as ProgressEvent
     const progressEvent = JSON.parse(d) as ProgressEvent
-    if (downloadStates.value[progressEvent.jobId] === 'paused')
+    if (pausedDownloadsStore.ids.includes(progressEvent.jobId))
       return
 
-    handleProgressEvent(progressEvent)
+    activeDownloadsStore.handleProgressEvent(progressEvent)
   }
   else if (d && event.value === 'completed') {
     console.log('completed', d)
     const completedEvent = JSON.parse(d) as CompletedEvent
-    removePartJob(completedEvent.jobId)
+    activeDownloadsStore.removePart(completedEvent.jobId)
   }
   else if (d && event.value === 'failed') {
     console.log('failed', d)
@@ -118,24 +108,18 @@ watch(data, (d) => {
   else if (d && event.value === 'active') {
     console.log('active', d)
     const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
+    // activeDownloadsStore.addPart(jobId)
     if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'active')
       clearPending(jobId)
   }
   else if (d && event.value === 'added') {
     console.log('added', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, name: string }
-    downloadStates.value[jobId] = 'active'
-  }
-  else if (d && event.value === 'paused') {
-    console.log('paused', d)
-    const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'paused')
-      clearPending(jobId)
+    // const { jobId } = JSON.parse(d) as { jobId: string, name: string }
   }
   else if (d && event.value === 'delayed') {
     console.log('delayed', d)
     const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'paused')
+    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'delayed')
       clearPending(jobId)
   }
   else if (d && event.value === 'resumed') {
@@ -147,9 +131,11 @@ watch(data, (d) => {
   else if (d && event.value === 'removed') {
     console.log('removed', d)
     const removedEvent = JSON.parse(d) as RemovedEvent
-    removePartJob(removedEvent.jobId)
+    activeDownloadsStore.removePart(removedEvent.jobId)
   }
 })
+
+const partsByBundle = (bundleId: string) => [...activeDownloadsStore.partsByBundle(bundleId), ...pausedDownloadsStore.partsByBundle(bundleId)].sort((a, b) => a.name.localeCompare(b.name))
 </script>
 
 <template>
@@ -181,12 +167,12 @@ watch(data, (d) => {
           <FileCheck v-for="url in urlsToCheck" :key="url" ref="fileCheckRefs" :url="url" />
         </div>
       </div>
-      <div v-for="bundle in bundles" :key="bundle.id">
+      <div v-for="bundle in bundlesStore.bundles" :key="bundle.id">
         <h3 class="text-white/80 text-sm">
           {{ bundle.name }}
         </h3>
-        <div v-if="!isInitializing" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :progress-data="part.progress" :job-id="part.id" :state="downloadStates[part.id]" @pause="setOptimisticState(part.id, 'paused')" @resume="setOptimisticState(part.id, 'active')" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :progress-data="part.progress" :job-id="part.id" :state="part.state" @pause="pause(part)" @resume="resume(part)" />
         </div>
       </div>
     </div>

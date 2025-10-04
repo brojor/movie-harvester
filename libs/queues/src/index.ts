@@ -6,6 +6,7 @@ import { ControlBus } from './control-bus.js'
 // Define types for download jobs
 export interface DownloadJobData {
   url: string
+  name: string
 }
 
 export interface DownloadJobResult {

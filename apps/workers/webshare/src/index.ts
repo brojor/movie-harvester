@@ -31,13 +31,15 @@ controlBus.init().then(() => {
 const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
   'download',
   async (job, token) => {
-    const { url } = job.data
+    const { url, bundleName } = job.data
+    console.log('[worker] bundleName:', bundleName)
     const manager = new DownloadManager({
       onProgress: async p => await job.updateProgress(p),
       updateData: async data => await job.updateData(data),
       username: env.WEBSHARE_USERNAME,
       password: env.WEBSHARE_PASSWORD,
       downloadDir: env.WEBSHARE_DOWNLOAD_DIR,
+      bundleName,
     })
 
     activeDownloads.set(job.id!, manager)

@@ -1,4 +1,4 @@
-import { queues } from '../../utils/redis'
+import { queues } from '../../utils/redis.js'
 
 const { downloadQueue } = queues
 

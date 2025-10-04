@@ -35,5 +35,18 @@ export interface FailedJob {
 
 export interface BulkJobPayload {
   urls: string[]
+  bundleName: string
+}
+
+export interface Bundle {
+  id: string
   name: string
+  partIds: Set<string>
+}
+
+export interface Part {
+  id: string
+  name: string
+  progress: ProgressData
+  state: 'active' | 'paused'
 }
