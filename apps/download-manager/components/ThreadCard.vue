@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import type { ProgressData } from '../types'
+import type { Part } from '../types'
+import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 
 const props = defineProps<{
-  progressData: ProgressData | 0
-  jobId: string
-  name: string
-  state: 'active' | 'paused'
+  part: Part
 }>()
 
-const emit = defineEmits<{
-  (e: 'pause'): void
-  (e: 'resume'): void
-}>()
+const activeDownloadsStore = useActiveDownloadsStore()
+const pausedDownloadsStore = usePausedDownloadsStore()
+const { update } = useOptimisticUpdate(3000)
 
 function formatBytes(bytes: number): string {
   if (bytes === 0)
@@ -22,19 +19,42 @@ function formatBytes(bytes: number): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`
 }
 function pause() {
-  $fetch(`/api/downloads/${props.jobId}/pause`, {
+  update(
+    props.part.id,
+    () => {
+      activeDownloadsStore.removePart(props.part.id)
+      pausedDownloadsStore.addPart(props.part)
+    },
+    () => {
+      pausedDownloadsStore.removePart(props.part.id)
+      activeDownloadsStore.addPart(props.part)
+    },
+  )
+
+  $fetch(`/api/downloads/${props.part.id}/pause`, {
     method: 'patch',
   })
-  emit('pause')
 }
+
 function resume() {
-  $fetch(`/api/downloads/${props.jobId}/resume`, {
+  update(
+    props.part.id,
+    () => {
+      pausedDownloadsStore.removePart(props.part.id)
+      activeDownloadsStore.addPart(props.part)
+    },
+    () => {
+      activeDownloadsStore.removePart(props.part.id)
+      pausedDownloadsStore.addPart(props.part)
+    },
+  )
+
+  $fetch(`/api/downloads/${props.part.id}/resume`, {
     method: 'patch',
   })
-  emit('resume')
 }
 function cancel() {
-  $fetch(`/api/downloads/${props.jobId}`, {
+  $fetch(`/api/downloads/${props.part.id}`, {
     method: 'delete',
   })
 }
@@ -43,26 +63,26 @@ function cancel() {
 </script>
 
 <template>
-  <div v-if="progressData" class="bg-white/8 rounded-2xl p-5">
+  <div v-if="part.progress" class="bg-white/8 rounded-2xl p-5">
     <div class="flex justify-between items-center mb-3">
       <span class="text-sm font-semibold text-blue-400 flex items-center">
-        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': state === 'active', 'bg-yellow-500': state === 'paused' }" />{{ name }}</span>
-      <span class="text-xs text-white/80">{{ `${formatBytes(progressData.speed)}/s` }}</span>
+        <span class="w-2 h-2 rounded-full mr-2" :class="{ 'bg-green-500': part.state === 'active', 'bg-yellow-500': part.state === 'paused' }" />{{ part.name }}</span>
+      <span class="text-xs text-white/80">{{ `${formatBytes(part.progress.speed)}/s` }}</span>
     </div>
     <div class="p-0.5 mb-2 flex items-center">
-      <IconPause v-if="state === 'active'" class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="pause" />
+      <IconPause v-if="part.state === 'active'" class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="pause" />
       <IconPlay v-else class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="resume" />
       <IconCancel class="w-6 h-6 mr-2 text-white/80 border-white/20 border-2 rounded-full p-1 hover:bg-white/10 transition-colors duration-200 cursor-pointer" @click="cancel" />
       <div class="bg-black/20 rounded-lg flex-1">
         <div
           class="h-2 rounded-md transition-all duration-300 bg-gradient-to-r from-green-600/50 to-green-400/50"
-          :style="{ width: `${progressData.percentage}%` }"
+          :style="{ width: `${part.progress.percentage}%` }"
         />
       </div>
     </div>
     <div class="flex justify-between text-xs text-white/80">
-      <span>{{ formatBytes(progressData.transferred) }}</span>
-      <span>{{ (progressData.percentage).toFixed(1) }}%</span>
+      <span>{{ formatBytes(part.progress.transferred) }}</span>
+      <span>{{ (part.progress.percentage).toFixed(1) }}%</span>
     </div>
   </div>
 </template>

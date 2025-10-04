@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { JobNode } from 'bullmq'
 import type FileCheck from './components/FileCheck.vue'
-import type { ActiveEvent, CompletedEvent, DelayedEvent, Part, ProgressEvent } from './types'
+import type { ActiveEvent, CompletedEvent, DelayedEvent, ProgressEvent } from './types'
 import { useEventSource } from '@vueuse/core'
 import { useOptimisticUpdate } from './composables/useOptimisticUpdate'
 
@@ -51,35 +51,7 @@ const { event, data } = useEventSource<['progress', 'completed', 'failed', 'acti
   },
 )
 
-const { update, confirm, isPending } = useOptimisticUpdate(3000)
-
-function pause(part: Part) {
-  update(
-    part.id,
-    () => {
-      activeDownloadsStore.removePart(part.id)
-      pausedDownloadsStore.addPart(part)
-    },
-    () => {
-      pausedDownloadsStore.removePart(part.id)
-      activeDownloadsStore.addPart(part)
-    },
-  )
-}
-
-function resume(part: Part) {
-  update(
-    part.id,
-    () => {
-      pausedDownloadsStore.removePart(part.id)
-      activeDownloadsStore.addPart(part)
-    },
-    () => {
-      activeDownloadsStore.removePart(part.id)
-      pausedDownloadsStore.addPart(part)
-    },
-  )
-}
+const { confirm, isPending } = useOptimisticUpdate(3000)
 
 onMounted(async () => {
   await bundlesStore.initialize()
@@ -116,6 +88,20 @@ watch(data, (d) => {
   else if (d && event.value === 'delayed') {
     console.log('delayed', JSON.parse(d))
     const { jobId } = JSON.parse(d) as DelayedEvent
+    if (isPending(jobId)) {
+      confirm(jobId)
+    }
+  }
+  else if (d && event.value === 'paused') {
+    console.log('paused', JSON.parse(d))
+    const { jobId } = JSON.parse(d) as ActiveEvent
+    if (isPending(jobId)) {
+      confirm(jobId)
+    }
+  }
+  else if (d && event.value === 'resumed') {
+    console.log('resumed', JSON.parse(d))
+    const { jobId } = JSON.parse(d) as ActiveEvent
     if (isPending(jobId)) {
       confirm(jobId)
     }
@@ -157,7 +143,7 @@ watch(data, (d) => {
           {{ bundle.name }}
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :name="part.name" :progress-data="part.progress" :job-id="part.id" :state="part.state" @pause="pause(part)" @resume="resume(part)" />
+          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :part="part" />
         </div>
       </div>
     </div>
