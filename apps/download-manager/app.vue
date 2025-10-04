@@ -3,6 +3,7 @@ import type { JobNode } from 'bullmq'
 import type FileCheck from './components/FileCheck.vue'
 import type { CompletedEvent, Part, ProgressEvent, RemovedEvent } from './types'
 import { useEventSource } from '@vueuse/core'
+import { useOptimisticUpdate } from './composables/useOptimisticUpdate'
 
 const clipboardContent = ref('')
 const bundleName = ref('')
@@ -49,38 +50,39 @@ const { event, data } = useEventSource<['progress', 'completed', 'failed', 'acti
   },
 )
 
-type JobStatus = 'active' | 'delayed'
-interface PendingAction { timeoutId?: ReturnType<typeof setTimeout>, next: JobStatus }
-
-const pending = ref<Map<string, PendingAction>>(new Map())
+// Zjednodušený optimistic update
+const { update, confirm, isPending } = useOptimisticUpdate(3000)
 
 function pause(part: Part) {
-  activeDownloadsStore.removePart(part.id)
-  pausedDownloadsStore.addPart(part)
-
-  const timeoutId = setTimeout(() => {
-    pausedDownloadsStore.removePart(part.id)
-    activeDownloadsStore.addPart(part)
-  }, 3000)
-  pending.value.set(part.id, { timeoutId, next: 'delayed' })
+  update(
+    part.id,
+    // Optimistic akce - okamžitě přesune do paused
+    () => {
+      activeDownloadsStore.removePart(part.id)
+      pausedDownloadsStore.addPart(part)
+    },
+    // Rollback akce - vrátí zpět do active
+    () => {
+      pausedDownloadsStore.removePart(part.id)
+      activeDownloadsStore.addPart(part)
+    },
+  )
 }
 
 function resume(part: Part) {
-  pausedDownloadsStore.removePart(part.id)
-  activeDownloadsStore.addPart(part)
-
-  const timeoutId = setTimeout(() => {
-    activeDownloadsStore.removePart(part.id)
-    pausedDownloadsStore.addPart(part)
-  }, 3000)
-  pending.value.set(part.id, { timeoutId, next: 'active' })
-}
-
-function clearPending(jobId: string) {
-  const p = pending.value.get(jobId)
-  if (p?.timeoutId)
-    clearTimeout(p.timeoutId)
-  pending.value.delete(jobId)
+  update(
+    part.id,
+    // Optimistic akce - okamžitě přesune do active
+    () => {
+      pausedDownloadsStore.removePart(part.id)
+      activeDownloadsStore.addPart(part)
+    },
+    // Rollback akce - vrátí zpět do paused
+    () => {
+      activeDownloadsStore.removePart(part.id)
+      pausedDownloadsStore.addPart(part)
+    },
+  )
 }
 
 onMounted(async () => {
@@ -108,9 +110,10 @@ watch(data, (d) => {
   else if (d && event.value === 'active') {
     console.log('active', d)
     const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    // activeDownloadsStore.addPart(jobId)
-    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'active')
-      clearPending(jobId)
+    // Potvrdí optimistic update pokud je pending
+    if (isPending(jobId)) {
+      confirm(jobId)
+    }
   }
   else if (d && event.value === 'added') {
     console.log('added', d)
@@ -119,14 +122,18 @@ watch(data, (d) => {
   else if (d && event.value === 'delayed') {
     console.log('delayed', d)
     const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'delayed')
-      clearPending(jobId)
+    // Potvrdí optimistic update pokud je pending
+    if (isPending(jobId)) {
+      confirm(jobId)
+    }
   }
   else if (d && event.value === 'resumed') {
     console.log('resumed', d)
     const { jobId } = JSON.parse(d) as { jobId: string, prev: string }
-    if (pending.value.has(jobId) && pending.value.get(jobId)?.next === 'active')
-      clearPending(jobId)
+    // Potvrdí optimistic update pokud je pending
+    if (isPending(jobId)) {
+      confirm(jobId)
+    }
   }
   else if (d && event.value === 'removed') {
     console.log('removed', d)
