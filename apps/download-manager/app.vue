@@ -138,14 +138,12 @@ watch(data, (d) => {
           <FileCheck v-for="url in urlsToCheck" :key="url" ref="fileCheckRefs" :url="url" />
         </div>
       </div>
-      <div v-for="bundle in bundlesStore.bundles" :key="bundle.id">
-        <h3 class="text-white/80 text-sm">
-          {{ bundle.name }}
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <ThreadCard v-for="part in partsByBundle(bundle.id)" :key="part.id" :part="part" />
-        </div>
-      </div>
+      <BundleDownload
+        v-for="bundle in bundlesStore.bundles"
+        :key="bundle.id"
+        :bundle="bundle"
+        :parts="partsByBundle(bundle.id)"
+      />
     </div>
   </div>
 </template>
