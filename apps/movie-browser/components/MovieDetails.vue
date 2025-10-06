@@ -22,7 +22,9 @@ const filters = ref<Omit<SearchParams, 'page' | 'limit'>>({
 
 /** Klíč a fetcher */
 function keyFor(p: number) {
-  return ['movies', filters.value.sortBy, filters.value.ratingSource, filters.value.order, p, pageSize].join(':')
+  const key = ['movies', filters.value.sortBy, filters.value.ratingSource, filters.value.order, filters.value.genreId, p, pageSize].join(':')
+
+  return key
 }
 
 interface MoviesResponse {
@@ -146,6 +148,7 @@ useImagePreloader(nextMovie)
 watch(
   filters,
   async () => {
+    console.log('filters changed', filters.value)
     movieIndex.value = 0
     currentPage.value = 1
 

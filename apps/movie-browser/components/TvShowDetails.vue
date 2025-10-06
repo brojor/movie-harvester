@@ -23,7 +23,7 @@ const filters = ref<Omit<SearchParams, 'page' | 'limit'>>({
 
 /** Klíč a fetcher */
 function keyFor(p: number) {
-  return ['tv-shows', filters.value.sortBy, filters.value.ratingSource, filters.value.order, p, pageSize].join(':')
+  return ['tv-shows', filters.value.sortBy, filters.value.ratingSource, filters.value.order, filters.value.genreId, p, pageSize].join(':')
 }
 
 interface TvShowsResponse {
