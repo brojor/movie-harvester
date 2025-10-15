@@ -6,6 +6,21 @@ export const useBundlesStore = defineStore('bundles', {
     bundles: {} as Record<string, Bundle>,
   }),
 
+  getters: {
+    progress: _state => (bundleId: string) => {
+      const activeDownloadsStore = useActiveDownloadsStore()
+      const parts = activeDownloadsStore.partsByBundle(bundleId)
+      const progress = parts.reduce((acc, part) => {
+        acc.length += part.progress.length
+        acc.transferred += part.progress.transferred
+        acc.speed += part.progress.speed
+        acc.percentage = acc.length > 0 ? acc.transferred / acc.length : 0
+        return acc
+      }, { length: 0, transferred: 0, percentage: 0, speed: 0 })
+      return progress
+    },
+  },
+
   actions: {
     async addBundleJob(job: Job, partIds?: string[]) {
       if (!job.id || !job.name) {
