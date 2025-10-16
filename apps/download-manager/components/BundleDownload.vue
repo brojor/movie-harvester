@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Bundle } from '../types'
-import { formatBytes, formatSpeed } from '../utils'
+import { formatBytes, formatSeconds, formatSpeed } from '../utils'
 import ThreadCard from './ThreadCard.vue'
 
 const props = defineProps<{
@@ -22,6 +22,7 @@ const parts = computed(() => [...activeDownloadsStore.partsByBundle(props.bundle
     <p class="text-white/80 text-sm">
       {{ formatBytes(bundlesStore.progress(bundle.id).transferred) }} / {{ formatBytes(bundlesStore.progress(bundle.id).length) }} ({{ Math.round(bundlesStore.progress(bundle.id).percentage * 100) }}%) @ {{ formatSpeed(bundlesStore.progress(bundle.id).speed) }}
     </p>
+    <p>ETA: {{ formatSeconds(bundlesStore.progress(bundle.id).eta) }}</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <ThreadCard v-for="part in parts" :key="part.id" :part="part" />
     </div>

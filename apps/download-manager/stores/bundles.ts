@@ -14,10 +14,12 @@ export const useBundlesStore = defineStore('bundles', {
         acc.length += part.progress.length
         acc.transferred += part.progress.transferred
         acc.speed += part.progress.speed
+        acc.remaining += part.progress.remaining
         acc.percentage = acc.length > 0 ? acc.transferred / acc.length : 0
         return acc
-      }, { length: 0, transferred: 0, percentage: 0, speed: 0 })
-      return progress
+      }, { length: 0, transferred: 0, percentage: 0, speed: 0, remaining: 0 })
+      const eta = progress.speed > 0 ? progress.remaining / progress.speed : 0
+      return { ...progress, eta }
     },
   },
 

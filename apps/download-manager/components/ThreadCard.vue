@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Part } from '../types'
 import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
-import { formatBytes, formatSpeed } from '../utils'
+import { formatBytes, formatSeconds, formatSpeed } from '../utils'
 
 const props = defineProps<{
   part: Part
@@ -74,7 +74,7 @@ function cancel() {
       </div>
     </div>
     <div class="flex justify-between text-xs text-white/80">
-      <span>{{ formatBytes(part.progress.transferred, 2, false) }} / {{ formatBytes(part.progress.length) }}</span>
+      <span>{{ formatBytes(part.progress.transferred, 2, false) }} / {{ formatBytes(part.progress.length) }} (ETA: {{ formatSeconds(part.progress.eta) }})</span>
       <span>{{ (part.progress.percentage).toFixed(1) }}%</span>
     </div>
   </div>

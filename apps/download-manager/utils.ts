@@ -10,3 +10,9 @@ export function formatBytes(bytes: number, decimals = 2, showUnit = true): strin
 export function formatSpeed(speed: number, decimals = 2): string {
   return `${formatBytes(speed, decimals, true)}/s`
 }
+
+export function formatSeconds(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
