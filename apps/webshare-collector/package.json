@@ -1,0 +1,27 @@
+{
+  "name": "@repo/webshare-collector",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Webshare collector",
+  "exports": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "start": "node ./dist/index.js",
+    "build": "tsup",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "catalog:prod",
+    "@repo/queues": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "fast-xml-parser": "catalog:prod",
+    "zod": "catalog:prod"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:dev",
+    "tsup": "catalog:dev",
+    "typescript": "catalog:dev"
+  }
+}
