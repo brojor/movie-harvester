@@ -42,6 +42,14 @@ const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
       bundleName,
     })
 
+    const hb = setInterval(async () => {
+      try {
+        // pošli poslední známý stav (nebo jen “ping”)
+        await job.updateProgress({ status: 'heartbeat' })
+      }
+      catch {}
+    }, 15_000) // každých 15 s
+
     activeDownloads.set(job.id!, manager)
 
     try {
@@ -64,6 +72,9 @@ const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
       }
       throw error
     }
+    finally {
+      clearInterval(hb)
+    }
   },
-  { connection, prefix: 'webshare', concurrency: 10 },
+  { connection, prefix: 'webshare', concurrency: env.CONCURRENCY, lockDuration: env.LOCK_DURATION, stalledInterval: env.STALLED_INTERVAL },
 )

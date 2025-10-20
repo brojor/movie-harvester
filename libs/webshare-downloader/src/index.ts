@@ -121,9 +121,8 @@ export class DownloadManager {
       cancelToken: this.cancelTokenSource.token,
     })
 
-    const totalBytes = totalSize + this.downloadedBytes
     const writer = fs.createWriteStream(this.filePath, { flags: this.downloadedBytes > 0 ? 'a' : 'w' })
-    const progressStream = progress({ length: totalBytes, time: 100, transferred: this.downloadedBytes })
+    const progressStream = progress({ length: totalSize, time: 100, transferred: this.downloadedBytes })
 
     progressStream.on('progress', (p: Progress) => {
       this.options.onProgress?.(p)
