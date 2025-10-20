@@ -85,6 +85,7 @@ const __bundleWorker = new Worker(
   'bundle-download',
   async (job) => {
     const bundleName = job.name
+    console.log('[worker] bundleName:', bundleName)
     // check, if /mnt/data/<bundleName> exists and is a directory
     if (!fs.statSync(path.join('/mnt/data', bundleName)).isDirectory()) {
       throw new Error(`Bundle ${bundleName} is not a directory`)
@@ -97,6 +98,7 @@ const __bundleWorker = new Worker(
     }
 
     // rename the file to <bundleName>.mkv
+    console.log('[worker] renaming file to:', path.join('/mnt/data', bundleName, `${bundleName}.mkv`))
     fs.renameSync(path.join('/mnt/data', bundleName, files[0]), path.join('/mnt/data', bundleName, `${bundleName}.mkv`))
 
     await new Promise(resolve => setTimeout(resolve, Infinity))
