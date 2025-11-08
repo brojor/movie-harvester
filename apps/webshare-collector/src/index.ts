@@ -3,7 +3,6 @@ import type { TMDBMovie, TMDBResponse } from './types/tmdb.js'
 import type { AudioStream, WebshareFile, WebshareFileInfoResponse, WebshareResponse } from './types/webshare.js'
 import process from 'node:process'
 import { XMLParser } from 'fast-xml-parser'
-import { addToQueue } from './queue.js'
 import '@dotenvx/dotenvx/config'
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
@@ -23,20 +22,23 @@ async function discoverMovies(page: number = 1): Promise<TMDBResponse> {
     page: page.toString(),
   })
   const bearerToken = `Bearer ${TMDB_API_KEY}`
+  console.log('Fetching page:', page)
   const response = await fetch(`${TMDB_BASE_URL}/discover/movie?${params.toString()}`, {
     headers: {
       Authorization: bearerToken,
     },
   })
   const data = await response.json() as TMDBResponse
+  console.log('Found', data.results.length, 'movies on page:', page)
   return data
 }
 
 async function getTmdbMovies(): Promise<TMDBMovie[]> {
   const { total_pages } = await discoverMovies()
-  const maxPages = 3
+  const maxPages = Math.min(total_pages)
+  console.log('Total pages:', maxPages)
   const movies: TMDBMovie[] = []
-  for (let page = 1; page <= Math.min(maxPages, total_pages); page++) {
+  for (let page = 1; page <= maxPages; page++) {
     const { results } = await discoverMovies(page)
     movies.push(...results)
   }
@@ -70,11 +72,16 @@ async function searchOnWebshare(searchTerm: string): Promise<WebshareFile[]> {
   })
   const data = await response.text()
   const parser = new XMLParser()
-  const { response: webshareResponse } = parser.parse(data) as { response: WebshareResponse }
+  const parsed = parser.parse(data) as { response?: WebshareResponse }
+  const webshareResponse = parsed.response
+  if (!webshareResponse) {
+    console.warn(`Failed to parse webshare search for term: ${searchTerm}. Response:`, data.substring(0, 200))
+    return []
+  }
   return webshareResponse.file ? webshareResponse.file : []
 }
 
-async function getFileInfo(ident: string): Promise<WebshareFileInfoResponse> {
+async function getFileInfo(ident: string): Promise<WebshareFileInfoResponse | null> {
   const form = new FormData()
   form.append('ident', ident)
   const fileInfo = await fetch(`${WEBSHARE_BASE_URL}/file_info/`, {
@@ -83,7 +90,12 @@ async function getFileInfo(ident: string): Promise<WebshareFileInfoResponse> {
   })
   const fileInfoData = await fileInfo.text()
   const parser = new XMLParser()
-  const { response: fileInfoResponse } = parser.parse(fileInfoData) as { response: WebshareFileInfoResponse }
+  const parsed = parser.parse(fileInfoData) as { response?: WebshareFileInfoResponse }
+  const fileInfoResponse = parsed.response
+  if (!fileInfoResponse) {
+    console.warn(`Failed to parse file info for ident: ${ident}. Response:`, fileInfoData.substring(0, 200))
+    return null
+  }
   return fileInfoResponse
 }
 
@@ -96,7 +108,10 @@ async function getFileInfo(ident: string): Promise<WebshareFileInfoResponse> {
 //   return `${Number.parseFloat((bytes / k ** i).toFixed(decimals))} ${showUnit ? sizes[i] : ''}`
 // }
 
-function getAudioLanguages(fileInfoResponse: WebshareFileInfoResponse): string[] {
+function getAudioLanguages(fileInfoResponse: WebshareFileInfoResponse | null): string[] {
+  if (!fileInfoResponse) {
+    return []
+  }
   const langs = new Set<string>()
   if (fileInfoResponse.audio?.stream) {
     const audioStreams = Array.isArray(fileInfoResponse.audio.stream)
@@ -108,21 +123,25 @@ function getAudioLanguages(fileInfoResponse: WebshareFileInfoResponse): string[]
 }
 
 async function main(): Promise<void> {
+  console.log('Starting TMDB movies discovery...')
   const movies = await getTmdbMovies()
+  console.log('Found', movies.length, 'movies')
   const notOwnedMovies: TMDBMovie[] = []
   for (const movie of movies) {
     const jellyfinItems = await searchOnJellyfin(movie.title)
     const match = jellyfinItems.find((result: any) => result.ProviderIds.Tmdb === movie.id.toString())
     if (!match) {
+      console.log('No match found for', movie.title)
       notOwnedMovies.push(movie)
     }
   }
-
+  // 18.28 mm
   for (const movie of notOwnedMovies) {
+    if (movie.vote_average < 7.5 || movie.vote_count < 100) {
+      continue
+    }
     const year = movie.release_date.split('-')[0]
-    const sectionTitle = `${movie.title.toUpperCase()} (${year})`
-    console.log(sectionTitle)
-    console.log('='.repeat(sectionTitle.length))
+    const sectionTitle = `${movie.title.toUpperCase()} (${year}) ${movie.vote_average * 10}%`
     const searchTerm1 = `${movie.original_title.toLowerCase().replace('the ', '')} ${year}`
     const searchTerm2 = `${movie.title.toLowerCase()} ${year}`
     const webshareFiles1 = await searchOnWebshare(searchTerm1)
@@ -134,6 +153,9 @@ async function main(): Promise<void> {
     const withCzechAudio: WebshareFile[] = []
     for (const file of filtredFiles) {
       const fileInfoResponse = await getFileInfo(file.ident)
+      if (!fileInfoResponse) {
+        continue
+      }
       const langs = getAudioLanguages(fileInfoResponse)
       if (langs.includes('CZE') || file.name.toLowerCase().includes('cz')) {
         withCzechAudio.push(file)
@@ -145,7 +167,12 @@ async function main(): Promise<void> {
     }
     const fileName = `${movie.original_title} (${year})`
     const fileUrl = `https://webshare.cz/#/file/${withCzechAudio[0].ident}`
-    addToQueue(fileName, fileUrl)
+    const movieRating = movie.vote_average
+    console.log('='.repeat(sectionTitle.length))
+    console.log('\n')
+    console.log(`${fileName}: ${fileUrl} - ${movieRating * 10}% (${movie.vote_count} votes)`)
+    console.log(sectionTitle)
+    // addToQueue(fileName, fileUrl)
   }
 }
 

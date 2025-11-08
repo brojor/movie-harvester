@@ -20,16 +20,20 @@ const flowProducer = new FlowProducer({
 })
 
 export async function addToQueue(bundleName: string, url: string): Promise<void> {
-  const children = [
+  await flowProducer.add(
     {
       name: bundleName,
-      data: { url, bundleName },
-      queueName: 'download',
+      queueName: 'bundle-download',
+      children: [
+        {
+          name: bundleName,
+          data: { url, bundleName },
+          queueName: 'download',
+          opts: {
+            delay: 365 * 24 * 60 * 60 * 1000,
+          },
+        },
+      ],
     },
-  ]
-  await flowProducer.add({
-    name: bundleName,
-    queueName: 'bundle-download',
-    children,
-  })
+  )
 }
