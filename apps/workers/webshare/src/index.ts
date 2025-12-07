@@ -91,23 +91,23 @@ const __bundleWorker = new Worker(
   async (job) => {
     const bundleName = job.name
     console.log('[worker] bundleName:', bundleName)
-    // check, if /mnt/data/<bundleName> exists and is a directory
-    if (!fs.statSync(path.join('/mnt/data', bundleName)).isDirectory()) {
+    // check, if /mnt/download/<bundleName> exists and is a directory
+    if (!fs.statSync(path.join('/mnt/download', bundleName)).isDirectory()) {
       throw new Error(`Bundle ${bundleName} is not a directory`)
     }
 
-    // check, if /mnt/data/<bundleName> has single mkv file
-    const files = fs.readdirSync(path.join('/mnt/data', bundleName))
+    // check, if /mnt/download/<bundleName> has single mkv file
+    const files = fs.readdirSync(path.join('/mnt/download', bundleName))
     if (files.length !== 1 || !files[0].endsWith('.mkv')) {
       throw new Error(`Bundle ${bundleName} does not have a single mkv file`)
     }
 
     // rename the file to <bundleName>.mkv
-    console.log('[worker] renaming file to:', path.join('/mnt/data', bundleName, `${bundleName}.mkv`))
-    fs.renameSync(path.join('/mnt/data', bundleName, files[0]), path.join('/mnt/data', bundleName, `${bundleName}.mkv`))
+    console.log('[worker] renaming file to:', path.join('/mnt/download', bundleName, `${bundleName}.mkv`))
+    fs.renameSync(path.join('/mnt/download', bundleName, files[0]), path.join('/mnt/download', bundleName, `${bundleName}.mkv`))
 
     // move folder to /mnt/movies_nfs
-    fs.renameSync(path.join('/mnt/data', bundleName), path.join('/mnt/movies_nfs', bundleName))
+    fs.renameSync(path.join('/mnt/download', bundleName), path.join('/mnt/movies', bundleName))
 
     return { success: true, status: 'finished' }
   },
