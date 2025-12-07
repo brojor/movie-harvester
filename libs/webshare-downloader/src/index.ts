@@ -1,5 +1,6 @@
 import type { CancelTokenSource } from 'axios'
 import type { Progress } from 'progress-stream'
+import type { ThrottleGroup } from 'stream-throttle'
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -19,6 +20,7 @@ export interface DownloadManagerOptions {
   password: string
   downloadDir: string
   bundleName?: string
+  throttleGroup?: ThrottleGroup
 }
 
 // Přihlášení k Webshare
@@ -122,7 +124,7 @@ export class DownloadManager {
     })
 
     const writer = fs.createWriteStream(this.filePath, { flags: this.downloadedBytes > 0 ? 'a' : 'w' })
-    const progressStream = progress({ length: totalSize, time: 100, transferred: this.downloadedBytes })
+    const progressStream = progress({ length: totalSize, time: 500, transferred: this.downloadedBytes })
 
     progressStream.on('progress', (p: Progress) => {
       this.options.onProgress?.(p)
@@ -132,7 +134,17 @@ export class DownloadManager {
       writer.on('finish', resolve)
       writer.on('error', reject)
       dataStream.on('error', reject)
-      dataStream.pipe(progressStream).pipe(writer)
+
+      // Pokud je k dispozici throttleGroup, vložíme throttling PŘED progress-stream
+      if (this.options.throttleGroup) {
+        // Prázdný objekt - rate je určen skupinou, opts jsou pro Transform stream
+        const throttleStream = this.options.throttleGroup.throttle({} as any)
+        throttleStream.on('error', reject)
+        dataStream.pipe(throttleStream).pipe(progressStream).pipe(writer)
+      }
+      else {
+        dataStream.pipe(progressStream).pipe(writer)
+      }
     })
   }
 

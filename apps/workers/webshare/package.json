@@ -18,6 +18,10 @@
     "@repo/webshare-downloader": "workspace:*",
     "bullmq": "catalog:prod",
     "dotenv": "catalog:prod",
+    "stream-throttle": "catalog:prod",
     "zod": "catalog:prod"
+  },
+  "devDependencies": {
+    "@types/stream-throttle": "catalog:dev"
   }
 }

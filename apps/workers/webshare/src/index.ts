@@ -4,11 +4,15 @@ import path from 'node:path'
 import { ControlBus } from '@repo/queues'
 import { DownloadManager } from '@repo/webshare-downloader'
 import { DelayedError, Worker } from 'bullmq'
+import { ThrottleGroup } from 'stream-throttle'
 import { env } from './env.js'
 
 const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT, password: env.REDIS_PASSWORD }
 const controlBus = new ControlBus(connection)
 const activeDownloads = new Map<string, DownloadManager>()
+
+// Globální throttle skupina sdílená všemi paralelními downloady
+const globalThrottle = new ThrottleGroup({ rate: env.WEBSHARE_GLOBAL_RATE_BPS })
 
 // Inicializace control bus
 controlBus.init().then(() => {
@@ -42,6 +46,7 @@ const _downloadWorker = new Worker<DownloadJobData, DownloadJobResult>(
       password: env.WEBSHARE_PASSWORD,
       downloadDir: env.WEBSHARE_DOWNLOAD_DIR,
       bundleName,
+      throttleGroup: globalThrottle,
     })
 
     const hb = setInterval(async () => {

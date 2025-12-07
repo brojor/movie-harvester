@@ -18,9 +18,11 @@
     "axios": "catalog:prod",
     "crypt3-md5": "catalog:prod",
     "progress-stream": "catalog:prod",
+    "stream-throttle": "catalog:prod",
     "ufo": "catalog:prod"
   },
   "devDependencies": {
-    "@types/progress-stream": "catalog:dev"
+    "@types/progress-stream": "catalog:dev",
+    "@types/stream-throttle": "catalog:dev"
   }
 }

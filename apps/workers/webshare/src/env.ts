@@ -15,6 +15,8 @@ const envSchema = z.object({
   LOCK_DURATION: z.number().default(30 * 60_000),
   STALLED_INTERVAL: z.number().default(60_000),
   CONCURRENCY: z.number().default(10),
+  // Globální rychlostní limit v B/s (výchozí: 1 MB/s = 1 * 1024 * 1024)
+  WEBSHARE_GLOBAL_RATE_BPS: z.coerce.number().default(1 * 1024 * 1024),
 })
 
 export const env = envSchema.parse(process.env)
