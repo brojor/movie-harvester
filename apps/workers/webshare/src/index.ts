@@ -103,11 +103,19 @@ const __bundleWorker = new Worker(
     }
 
     // rename the file to <bundleName>.mkv
-    console.log('[worker] renaming file to:', path.join('/mnt/download', bundleName, `${bundleName}.mkv`))
-    fs.renameSync(path.join('/mnt/download', bundleName, files[0]), path.join('/mnt/download', bundleName, `${bundleName}.mkv`))
+    const originalFile = path.join('/mnt/download', bundleName, files[0])
+    const newFile = path.join('/mnt/download', bundleName, `${bundleName}.mkv`)
+    console.log('[worker] renaming file to:', newFile)
+    fs.renameSync(originalFile, newFile)
 
-    // move folder to /mnt/movies_nfs
-    fs.renameSync(path.join('/mnt/download', bundleName), path.join('/mnt/movies', bundleName))
+    // create folder in /mnt/movies
+    const newFolder = path.join('/mnt/movies', bundleName)
+    console.log('[worker] creating folder:', newFolder)
+    fs.mkdirSync(newFolder, { recursive: true })
+
+    // move file to /mnt/movies
+    console.log('[worker] moving file to:', newFolder)
+    fs.renameSync(newFile, path.join(newFolder, `${bundleName}.mkv`))
 
     return { success: true, status: 'finished' }
   },
